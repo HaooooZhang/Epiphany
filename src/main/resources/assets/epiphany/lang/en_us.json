@@ -3,6 +3,7 @@
   "epiphany.configuration.section.epiphany.common.toml": "Epiphany",
   "epiphany.configuration.section.epiphany.common.toml.title": "Epiphany Configs",
   "epiphany.configuration.maxEpiphanySlots": "Max Epiphany Slots",
+  "epiphany.configuration.moduleSelectCost": "Module Select Cost",
   "epiphany.configuration.baseAptitudeCap": "Base Aptitude Cap",
   "epiphany.configuration.aptitudeCapGrowth": "Aptitude Cap Growth"
 }

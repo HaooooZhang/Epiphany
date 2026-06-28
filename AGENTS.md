@@ -61,9 +61,19 @@ Root: `/epiphany` with sub-command groups: `aptitude`, `insight`, `module`, `epi
 ## Confirmed Design Decisions
 
 - **Epiphany → Path direction**: Epiphany has optional `"path"` field; Path does NOT hold an epiphany list. One Epiphany belongs to at most one Path.
-- **Insight tree via depth**: Module JSON defines `"insights"` as an array of `{"id": "...", "depth": N}`. Depth determines parent-child — lower depth = ancestor. Depth 0 = root.
-- **Aptitude acquisition**: Data pack JSON mapping table (`action_type` + `target_id` → `aptitude_value`) plus API events for mod extensibility.
+- **Insight tree via depth**: Module JSON defines `"insights"` as an array of `{"id": "...", "depth": N}`. Same-depth Insights are AND-related — all at depth 0 must be unlocked before depth 1, etc. Parent of a depth-N Insight is the nearest preceding depth-(N-1) entry in the array.
+- **Insight unlock requirements**: Module must be selected + all ancestor Insights (all lower depths) must be unlocked.
+- **Module select cost**: Uniform across all modules, configured via `moduleSelectCost` in Config (default 1, range 0–100). Not per-module.
+- **Module `initial_state` semantics**:
+  - `locked` + no condition → can only be unlocked via API/command (developer-triggered flow).
+  - `locked` + condition → auto-unlocks when condition is met.
+  - `selectable` → visible and selectable immediately (no condition needed).
+- **`ModuleCompleteEvent` cancel behavior**: If cancelled (Pre event), no reward is granted, no Epiphany slot is added, and `ModuleCompletedEvent` is NOT fired. Module stays in "all Insights unlocked, not completed" state — completion can be re-triggered later.
+- **Aptitude acquisition**: Data pack JSON mapping table (`action_type` + `target_id` → `aptitude_value`) plus API events for mod extensibility. Exact format TBD.
 - **Reset semantics**: No single-point undo during gameplay. `/epiphany reset all` full wipe; `/epiphany reset select` clears module/epiphany choices but keeps aptitude/points. All admin-only.
+- **Registry entry removal**: If a datapack update removes an unlocked Insight/Module/Epiphany, refund the spent resources (points/slots) to prevent progress loss.
+- **Condition logic**: AND/OR/NOT combinators using `{"type": "epiphany:and", "conditions": [...]}` pattern.
+- **Network sync**: NeoForge `AttachmentType.Builder#serialize` + `copyOnDeath` for syncing player data to client.
 
 ## Dependencies
 

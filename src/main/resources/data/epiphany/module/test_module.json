@@ -1,0 +1,16 @@
+{
+  "name": "测试模块",
+  "description": "这是一个示例模块，用于验证注册表加载",
+  "initial_state": "selectable",
+  "insights": [
+    {
+      "id": "epiphany:test_insight_a",
+      "depth": 0
+    },
+    {
+      "id": "epiphany:test_insight_b",
+      "depth": 1
+    }
+  ],
+  "weight": 100
+}

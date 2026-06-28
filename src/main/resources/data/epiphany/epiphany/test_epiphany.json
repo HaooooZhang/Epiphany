@@ -1,0 +1,6 @@
+{
+  "name": "测试顿悟",
+  "description": "一个示例顿悟效果",
+  "initial_state": "selectable",
+  "weight": 100
+}
