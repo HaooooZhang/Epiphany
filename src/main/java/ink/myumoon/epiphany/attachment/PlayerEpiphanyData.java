@@ -57,4 +57,54 @@ public record PlayerEpiphanyData(
     // network sync
     public static final StreamCodec<RegistryFriendlyByteBuf, PlayerEpiphanyData> STREAM_CODEC =
             ByteBufCodecs.fromCodecWithRegistries(CODEC);
+
+    // ============================================================
+    // Immutable "with" helpers — create a new record with one field changed
+    // ============================================================
+
+    public PlayerEpiphanyData withAptitude(long v) {
+        return new PlayerEpiphanyData(v, insightPoints, totalInsightPointsSpent,
+                modules, insights, epiphanies, epiphanySlots, usedEpiphanySlots);
+    }
+
+    public PlayerEpiphanyData withInsightPoints(int v) {
+        return new PlayerEpiphanyData(aptitude, v, totalInsightPointsSpent,
+                modules, insights, epiphanies, epiphanySlots, usedEpiphanySlots);
+    }
+
+    public PlayerEpiphanyData withTotalInsightPointsSpent(int v) {
+        return new PlayerEpiphanyData(aptitude, insightPoints, v,
+                modules, insights, epiphanies, epiphanySlots, usedEpiphanySlots);
+    }
+
+    public PlayerEpiphanyData withEpiphanySlots(int v) {
+        return new PlayerEpiphanyData(aptitude, insightPoints, totalInsightPointsSpent,
+                modules, insights, epiphanies, v, usedEpiphanySlots);
+    }
+
+    public PlayerEpiphanyData withUsedEpiphanySlots(int v) {
+        return new PlayerEpiphanyData(aptitude, insightPoints, totalInsightPointsSpent,
+                modules, insights, epiphanies, epiphanySlots, v);
+    }
+
+    public PlayerEpiphanyData withModuleState(ResourceLocation id, ModulePlayerState state) {
+        var copy = new HashMap<>(modules);
+        copy.put(id, state);
+        return new PlayerEpiphanyData(aptitude, insightPoints, totalInsightPointsSpent,
+                copy, insights, epiphanies, epiphanySlots, usedEpiphanySlots);
+    }
+
+    public PlayerEpiphanyData withInsightState(ResourceLocation id, InsightPlayerState state) {
+        var copy = new HashMap<>(insights);
+        copy.put(id, state);
+        return new PlayerEpiphanyData(aptitude, insightPoints, totalInsightPointsSpent,
+                modules, copy, epiphanies, epiphanySlots, usedEpiphanySlots);
+    }
+
+    public PlayerEpiphanyData withEpiphanyState(ResourceLocation id, EpiphanyPlayerState state) {
+        var copy = new HashMap<>(epiphanies);
+        copy.put(id, state);
+        return new PlayerEpiphanyData(aptitude, insightPoints, totalInsightPointsSpent,
+                modules, insights, copy, epiphanySlots, usedEpiphanySlots);
+    }
 }

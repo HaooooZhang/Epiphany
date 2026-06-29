@@ -2,7 +2,6 @@ package ink.myumoon.epiphany.content.reward;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
-import ink.myumoon.epiphany.content.EpiphanyData;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
 import ink.myumoon.epiphany.util.DefaultedCodec;
 import net.minecraft.server.level.ServerPlayer;
@@ -29,9 +28,6 @@ public interface EpiphanyReward {
 
     /**
      * Applies this reward to the given player.
-     *
-     * @param player    the target player
-     * @param epiphany  the Epiphany definition that this reward belongs to
      */
-    void apply(ServerPlayer player, EpiphanyData epiphany);
+    void apply(ServerPlayer player);
 }

@@ -1,7 +1,6 @@
 package ink.myumoon.epiphany.content.reward;
 
 import com.mojang.serialization.MapCodec;
-import ink.myumoon.epiphany.content.EpiphanyData;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
@@ -19,7 +18,7 @@ public enum NoOpEpiphanyReward implements EpiphanyReward {
     }
 
     @Override
-    public void apply(ServerPlayer player, EpiphanyData epiphany) {
+    public void apply(ServerPlayer player) {
         // No-op
     }
 }

@@ -5,5 +5,32 @@
   "epiphany.configuration.maxEpiphanySlots": "Max Epiphany Slots",
   "epiphany.configuration.moduleSelectCost": "Module Select Cost",
   "epiphany.configuration.baseAptitudeCap": "Base Aptitude Cap",
-  "epiphany.configuration.aptitudeCapGrowth": "Aptitude Cap Growth"
+  "epiphany.configuration.aptitudeCapGrowth": "Aptitude Cap Growth",
+
+  "commands.epiphany.aptitude.add.success": "Added %s aptitude to %s",
+  "commands.epiphany.aptitude.set.success": "Set aptitude to %s for %s",
+  "commands.epiphany.aptitude.query.success": "%s — Aptitude: %s, Insight Points: %s, Total Spent: %s",
+  "commands.epiphany.aptitude.fill.success": "Filled aptitude to cap (%s) for %s",
+
+  "commands.epiphany.insight.unlock.success": "Force-unlocked insight %s for %s",
+  "commands.epiphany.insight.reset.success": "Reset insight %s for %s",
+  "commands.epiphany.insight.query.success": "Insight %s for %s — unlocked: %s, moduleSelected: %s",
+  "commands.epiphany.insight.points.add.success": "Added %s Insight Points to %s",
+  "commands.epiphany.insight.points.set.success": "Set Insight Points to %s for %s",
+
+  "commands.epiphany.module.unlock.success": "Unlocked module %s for %s",
+  "commands.epiphany.module.select.success": "Force-selected module %s for %s",
+  "commands.epiphany.module.complete.success": "Force-completed module %s for %s",
+  "commands.epiphany.module.reset.success": "Reset module %s for %s",
+  "commands.epiphany.module.query.success": "Module %s for %s — unlocked: %s, selected: %s, completed: %s",
+
+  "commands.epiphany.epiphany.unlock.success": "Unlocked epiphany %s for %s",
+  "commands.epiphany.epiphany.select.success": "Force-selected epiphany %s for %s",
+  "commands.epiphany.epiphany.reset.success": "Reset epiphany %s for %s",
+  "commands.epiphany.epiphany.query.success": "Epiphany %s for %s — unlocked: %s, selected: %s",
+
+  "commands.epiphany.path.list.success": "Registered paths: %s",
+
+  "commands.epiphany.reset.all.success": "Fully reset %s — all Epiphany data cleared",
+  "commands.epiphany.reset.select.success": "Reset module/epiphany selections for %s (aptitude and insight points preserved)"
 }

@@ -2,7 +2,6 @@ package ink.myumoon.epiphany.content.reward;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
-import ink.myumoon.epiphany.content.InsightData;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
 import ink.myumoon.epiphany.util.DefaultedCodec;
 import net.minecraft.server.level.ServerPlayer;
@@ -30,9 +29,6 @@ public interface InsightReward {
 
     /**
      * Applies this reward to the given player.
-     *
-     * @param player  the target player
-     * @param insight the Insight definition that this reward belongs to
      */
-    void apply(ServerPlayer player, InsightData insight);
+    void apply(ServerPlayer player);
 }

@@ -3,8 +3,6 @@ package ink.myumoon.epiphany.content.reward;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import ink.myumoon.epiphany.content.EpiphanyData;
-import ink.myumoon.epiphany.content.InsightData;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.ResourceLocation;
@@ -45,18 +43,12 @@ public record AttributeReward(
     ).apply(instance, AttributeReward::new));
 
     @Override
-    @SuppressWarnings("unchecked")
     public MapCodec<AttributeReward> codec() {
         return CODEC;
     }
 
     @Override
-    public void apply(ServerPlayer player, InsightData insight) {
-        applyModifier(player);
-    }
-
-    @Override
-    public void apply(ServerPlayer player, EpiphanyData epiphany) {
+    public void apply(ServerPlayer player) {
         applyModifier(player);
     }
 
