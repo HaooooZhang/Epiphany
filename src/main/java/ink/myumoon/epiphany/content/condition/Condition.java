@@ -15,13 +15,10 @@ import java.util.function.Function;
  * the {@code "type"} field in JSON maps to a registry key,
  * which resolves to the corresponding {@link MapCodec} for deserialization.
  * <p>
- * Sealed hierarchy includes combinators (AND/OR/NOT), built-in checks
- * (advancement, always, never), and is extensible via the
- * {@link EpiphanyRegistries#CONDITION_SERIALIZERS} registry.
+ * Extensible via the {@link EpiphanyRegistries#CONDITION_SERIALIZERS} registry
+ * — other mods can register new condition types via {@code DeferredRegister}.
  */
-public sealed interface Condition
-        permits AndCondition, OrCondition, NotCondition,
-                AdvancementCondition, AlwaysCondition, NeverCondition {
+public interface Condition {
 
     Codec<Condition> CODEC = DefaultedCodec.registryDispatch(
             EpiphanyRegistries.CONDITION_SERIALIZERS,

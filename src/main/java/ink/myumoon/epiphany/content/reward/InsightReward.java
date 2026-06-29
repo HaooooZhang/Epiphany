@@ -17,8 +17,7 @@ import java.util.function.Function;
  * <p>
  * Extensible via the {@link EpiphanyRegistries#INSIGHT_REWARD_SERIALIZERS} registry.
  */
-public sealed interface InsightReward
-        permits AttributeReward, NoOpInsightReward {
+public interface InsightReward {
 
     Codec<InsightReward> CODEC = DefaultedCodec.registryDispatch(
             EpiphanyRegistries.INSIGHT_REWARD_SERIALIZERS,

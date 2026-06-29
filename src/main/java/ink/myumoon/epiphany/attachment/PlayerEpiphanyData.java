@@ -28,10 +28,7 @@ public record PlayerEpiphanyData(
         int usedEpiphanySlots
 ) {
 
-    // ============================================================
-    // Default factory
-    // ============================================================
-
+    // default factory
     /** Creates a fresh default instance with all values at zero and empty maps. */
     public static PlayerEpiphanyData createDefault() {
         return new PlayerEpiphanyData(
@@ -41,10 +38,8 @@ public record PlayerEpiphanyData(
         );
     }
 
-    // ============================================================
-    // Codec — NBT serialization via AttachmentType.Builder#serialize
-    // ============================================================
 
+    // codec
     public static final Codec<PlayerEpiphanyData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             Codec.LONG.fieldOf("aptitude").forGetter(PlayerEpiphanyData::aptitude),
             Codec.INT.fieldOf("insightPoints").forGetter(PlayerEpiphanyData::insightPoints),
@@ -59,10 +54,7 @@ public record PlayerEpiphanyData(
             Codec.INT.fieldOf("usedEpiphanySlots").forGetter(PlayerEpiphanyData::usedEpiphanySlots)
     ).apply(instance, PlayerEpiphanyData::new));
 
-    // ============================================================
-    // StreamCodec — network sync via AttachmentType.Builder#sync
-    // ============================================================
-
+    // network sync
     public static final StreamCodec<RegistryFriendlyByteBuf, PlayerEpiphanyData> STREAM_CODEC =
             ByteBufCodecs.fromCodecWithRegistries(CODEC);
 }

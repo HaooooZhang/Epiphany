@@ -18,7 +18,7 @@ public record InsightPlayerState(
             Codec.BOOL.fieldOf("moduleSelected").forGetter(InsightPlayerState::moduleSelected)
     ).apply(instance, InsightPlayerState::new));
 
-    /** Creates a default state — not selected, module not selected. */
+    // create a default state
     public static InsightPlayerState createDefault() {
         return new InsightPlayerState(false, false);
     }

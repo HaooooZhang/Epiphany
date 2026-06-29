@@ -15,7 +15,7 @@ public record EpiphanyPlayerState(
             Codec.BOOL.fieldOf("unlocked").forGetter(EpiphanyPlayerState::unlocked)
     ).apply(instance, EpiphanyPlayerState::new));
 
-    /** Creates a default state — not selected, not unlocked. */
+    // create a default state
     public static EpiphanyPlayerState createDefault() {
         return new EpiphanyPlayerState(false, false);
     }

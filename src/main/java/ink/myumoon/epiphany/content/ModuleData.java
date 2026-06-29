@@ -33,7 +33,7 @@ public record ModuleData(
             ComponentSerialization.CODEC.optionalFieldOf("description").forGetter(ModuleData::description),
             ResourceLocation.CODEC.optionalFieldOf("icon").forGetter(ModuleData::icon),
             Condition.CODEC.optionalFieldOf("condition").forGetter(ModuleData::condition),
-            InitialState.CODEC.optionalFieldOf("initial_state", InitialState.LOCKED)
+            InitialState.CODEC.optionalFieldOf("initial_state", InitialState.SELECTABLE)
                     .forGetter(ModuleData::initialState),
             InsightEntry.CODEC.listOf().optionalFieldOf("insights", List.of())
                     .forGetter(ModuleData::insights),

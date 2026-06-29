@@ -16,8 +16,7 @@ import java.util.function.Function;
  * <p>
  * Extensible via the {@link EpiphanyRegistries#EPIPHANY_REWARD_SERIALIZERS} registry.
  */
-public sealed interface EpiphanyReward
-        permits AttributeReward, NoOpEpiphanyReward {
+public interface EpiphanyReward {
 
     Codec<EpiphanyReward> CODEC = DefaultedCodec.registryDispatch(
             EpiphanyRegistries.EPIPHANY_REWARD_SERIALIZERS,

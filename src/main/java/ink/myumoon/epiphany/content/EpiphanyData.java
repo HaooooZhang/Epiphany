@@ -34,7 +34,7 @@ public record EpiphanyData(
             ResourceLocation.CODEC.optionalFieldOf("icon").forGetter(EpiphanyData::icon),
             ResourceLocation.CODEC.optionalFieldOf("path").forGetter(EpiphanyData::path),
             Condition.CODEC.optionalFieldOf("condition").forGetter(EpiphanyData::condition),
-            InitialState.CODEC.optionalFieldOf("initial_state", InitialState.LOCKED)
+            InitialState.CODEC.optionalFieldOf("initial_state", InitialState.SELECTABLE)
                     .forGetter(EpiphanyData::initialState),
             EpiphanyReward.CODEC.optionalFieldOf("reward").forGetter(EpiphanyData::reward),
             Codec.INT.optionalFieldOf("weight", 100).forGetter(EpiphanyData::weight)
