@@ -37,7 +37,10 @@ public final class EpiphanyManager {
     public static boolean isUnlocked(ServerPlayer player, ResourceLocation epiphanyId) {
         EpiphanyPlayerState state = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)
                 .epiphanies().get(epiphanyId);
-        return state != null && state.unlocked();
+        if (state != null) return state.unlocked();
+
+        EpiphanyData epiphany = epiphanyRegistry(player).get(epiphanyId);
+        return epiphany != null && epiphany.initialState() == InitialState.SELECTABLE;
     }
 
     public static boolean isSelected(ServerPlayer player, ResourceLocation epiphanyId) {
@@ -84,17 +87,10 @@ public final class EpiphanyManager {
         if (epiphany == null) return;
 
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
-        EpiphanyPlayerState state = data.epiphanies().get(epiphanyId);
+        EpiphanyPlayerState state = data.epiphanies()
+                .getOrDefault(epiphanyId, EpiphanyPlayerState.createDefault());
 
-        // Initialize selectable epiphanies with unlocked=true
-        if (state == null && epiphany.initialState() == InitialState.SELECTABLE) {
-            state = new EpiphanyPlayerState(false, true);
-            player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
-                    data.withEpiphanyState(epiphanyId, state));
-        }
-        if (state == null) state = EpiphanyPlayerState.createDefault();
-
-        if (!state.unlocked()) return;
+        if (!isUnlocked(player, epiphanyId)) return;
         if (state.selected()) return;
 
         int maxSlots = Config.MAX_EPIPHANY_SLOTS.get();

@@ -38,27 +38,24 @@ public final class ModuleManager {
                 .registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY);
     }
 
-    /**
-     * Gets or creates state. Selectable modules are initialized with unlocked=true.
-     */
-    private static ModulePlayerState ensureState(PlayerEpiphanyData data, ServerPlayer player,
-                                                  ResourceLocation id, ModuleData module) {
-        ModulePlayerState state = data.modules().get(id);
-        if (state == null && module.initialState() == InitialState.SELECTABLE) {
-            state = new ModulePlayerState(true, false, false, java.util.Set.of());
-            player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, data.withModuleState(id, state));
-        }
-        return state != null ? state : ModulePlayerState.createDefault();
-    }
-
     // ============================================================
     // State queries
     // ============================================================
 
+    /**
+     * A module is considered "unlocked" if:
+     * <ul>
+     *   <li>Its state record exists and {@code unlocked=true}, OR</li>
+     *   <li>No state record exists yet, but the module is {@code selectable}</li>
+     * </ul>
+     */
     public static boolean isUnlocked(ServerPlayer player, ResourceLocation moduleId) {
         ModulePlayerState state = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)
                 .modules().get(moduleId);
-        return state != null && state.unlocked();
+        if (state != null) return state.unlocked();
+
+        ModuleData module = moduleRegistry(player).get(moduleId);
+        return module != null && module.initialState() == InitialState.SELECTABLE;
     }
 
     public static boolean isSelected(ServerPlayer player, ResourceLocation moduleId) {
@@ -107,13 +104,9 @@ public final class ModuleManager {
      */
     public static void select(ServerPlayer player, ResourceLocation moduleId) {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
-        ModuleData module = moduleRegistry(player).get(moduleId);
-        if (module == null) return;
+        ModulePlayerState state = data.modules().getOrDefault(moduleId, ModulePlayerState.createDefault());
 
-        // Ensure selectable modules start with unlocked=true
-        ModulePlayerState state = ensureState(data, player, moduleId, module);
-
-        if (!state.unlocked()) return;
+        if (!isUnlocked(player, moduleId)) return;
         if (state.selected()) return;
 
         int cost = Config.MODULE_SELECT_COST.get();
@@ -132,6 +125,7 @@ public final class ModuleManager {
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
 
         // Apply on_select_reward
+        ModuleData module = moduleRegistry(player).get(moduleId);
         if (module != null) {
             module.onSelectReward().ifPresent(r -> r.apply(player));
         }

@@ -335,10 +335,11 @@ public final class EpiphanyCommand {
     // ============================================================
 
     private static Component t(String key, Object... args) {
-        return Component.translatable(key, args);
-    }
-
-    private static Component msg(String key, Object... args) {
+        for (int i = 0; i < args.length; i++) {
+            if (args[i] instanceof ResourceLocation rl) args[i] = rl.toString();
+            else if (args[i] instanceof Boolean b) args[i] = b.toString();
+            else if (args[i] instanceof Number n) args[i] = n.toString();
+        }
         return Component.translatable(key, args);
     }
 
