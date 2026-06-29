@@ -7,6 +7,7 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import ink.myumoon.epiphany.api.*;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
+import ink.myumoon.epiphany.content.InsightTreeResolver;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
 import net.minecraft.commands.CommandSourceStack;
@@ -82,8 +83,10 @@ public final class EpiphanyCommand {
                                 .executes(ctx -> {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                     long required = AptitudeFormula.calcRequiredAptitude(
-                                            AptitudeManager.getTotalInsightPointsSpent(target));
-                                    AptitudeManager.setAptitude(target, required);
+                                            AptitudeManager.getTotalInsightPointsSpent(target),
+                                            AptitudeManager.getInsightPoints(target));
+                                    long toAdd = required - AptitudeManager.getAptitude(target);
+                                    if (toAdd > 0) AptitudeManager.addAptitude(target, toAdd);
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.aptitude.fill.success", required, target.getGameProfile().getName()), true);
                                     return 1;
@@ -101,14 +104,29 @@ public final class EpiphanyCommand {
                                 .registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY).keySet(), builder));
 
         return Commands.literal("insight")
-                .then(Commands.literal("unlock")
+                .then(Commands.literal("select")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(insightArg.executes(ctx -> {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                     ResourceLocation id = ResourceLocationArgument.getId(ctx, "insight");
                                     InsightManager.forceSelect(target, id, findModuleForInsight(target, id));
                                     ctx.getSource().sendSuccess(
-                                            () -> t("commands.epiphany.insight.unlock.success", id, target.getGameProfile().getName()), true);
+                                            () -> t("commands.epiphany.insight.select.success", id, target.getGameProfile().getName()), true);
+                                    return 1;
+                                }))))
+                .then(Commands.literal("try_select")
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .then(insightArg.executes(ctx -> {
+                                    ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                    ResourceLocation id = ResourceLocationArgument.getId(ctx, "insight");
+                                    ResourceLocation mid = findModuleForInsight(target, id);
+                                    if (!InsightTreeResolver.canUnlock(target.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA), mid, target.server.registryAccess().registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY).get(mid), id)) {
+                                        ctx.getSource().sendFailure(Component.literal("Cannot select insight (check tree prerequisites and points)"));
+                                        return 0;
+                                    }
+                                    InsightManager.select(target, id, mid);
+                                    ctx.getSource().sendSuccess(
+                                            () -> t("commands.epiphany.insight.select.success", id, target.getGameProfile().getName()), true);
                                     return 1;
                                 }))))
                 .then(Commands.literal("reset")
@@ -189,6 +207,20 @@ public final class EpiphanyCommand {
                                             () -> t("commands.epiphany.module.select.success", id, target.getGameProfile().getName()), true);
                                     return 1;
                                 }))))
+                .then(Commands.literal("try_select")
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .then(moduleArg.executes(ctx -> {
+                                    ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                    ResourceLocation id = ResourceLocationArgument.getId(ctx, "module");
+                                    if (!ModuleManager.isUnlocked(target, id)) {
+                                        ctx.getSource().sendFailure(Component.literal("Module not unlocked or insufficient points"));
+                                        return 0;
+                                    }
+                                    ModuleManager.select(target, id);
+                                    ctx.getSource().sendSuccess(
+                                            () -> t("commands.epiphany.module.select.success", id, target.getGameProfile().getName()), true);
+                                    return 1;
+                                }))))
                 .then(Commands.literal("complete")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(moduleArg.executes(ctx -> {
@@ -250,6 +282,20 @@ public final class EpiphanyCommand {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                     ResourceLocation id = ResourceLocationArgument.getId(ctx, "epiphany");
                                     EpiphanyManager.forceSelect(target, id);
+                                    ctx.getSource().sendSuccess(
+                                            () -> t("commands.epiphany.epiphany.select.success", id, target.getGameProfile().getName()), true);
+                                    return 1;
+                                }))))
+                .then(Commands.literal("try_select")
+                        .then(Commands.argument("player", EntityArgument.player())
+                                .then(epiphanyArg.executes(ctx -> {
+                                    ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                    ResourceLocation id = ResourceLocationArgument.getId(ctx, "epiphany");
+                                    if (!EpiphanyManager.isUnlocked(target, id)) {
+                                        ctx.getSource().sendFailure(Component.literal("Epiphany not unlocked or no slots available"));
+                                        return 0;
+                                    }
+                                    EpiphanyManager.select(target, id);
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.epiphany.select.success", id, target.getGameProfile().getName()), true);
                                     return 1;

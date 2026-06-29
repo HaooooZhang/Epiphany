@@ -52,8 +52,9 @@ public final class ModuleManager {
     public static boolean isUnlocked(ServerPlayer player, ResourceLocation moduleId) {
         ModulePlayerState state = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)
                 .modules().get(moduleId);
+        // State record exists -> respect it (allows dev to re-lock)
         if (state != null) return state.unlocked();
-
+        // No state yet -> selectable modules default to unlocked
         ModuleData module = moduleRegistry(player).get(moduleId);
         return module != null && module.initialState() == InitialState.SELECTABLE;
     }
@@ -117,10 +118,12 @@ public final class ModuleManager {
         if (pre.isCanceled()) return;
 
         int newPoints = data.insightPoints() - cost;
+        int newTotalSpent = data.totalInsightPointsSpent() + cost;
         ModulePlayerState newState = new ModulePlayerState(
                 state.unlocked(), true, state.completed(), state.unlockedInsights()
         );
         PlayerEpiphanyData newData = data.withInsightPoints(newPoints)
+                .withTotalInsightPointsSpent(newTotalSpent)
                 .withModuleState(moduleId, newState);
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
 
@@ -263,6 +266,13 @@ public final class ModuleManager {
         }
 
         ModulePlayerState newState = ModulePlayerState.createDefault();
+
+        // Selectable modules stay unlocked after reset
+        ModuleData module = moduleRegistry(player).get(moduleId);
+        if (module != null && module.initialState() == InitialState.SELECTABLE) {
+            newState = new ModulePlayerState(true, false, false, Set.of());
+        }
+
         PlayerEpiphanyData newData = data.withModuleState(moduleId, newState)
                 .withInsightPoints(data.insightPoints() + refund);
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);

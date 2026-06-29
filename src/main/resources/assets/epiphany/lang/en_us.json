@@ -12,7 +12,7 @@
   "commands.epiphany.aptitude.query.success": "%s — Aptitude: %s, Insight Points: %s, Total Spent: %s",
   "commands.epiphany.aptitude.fill.success": "Filled aptitude to cap (%s) for %s",
 
-  "commands.epiphany.insight.unlock.success": "Force-unlocked insight %s for %s",
+  "commands.epiphany.insight.select.success": "Force-selected insight %s for %s",
   "commands.epiphany.insight.reset.success": "Reset insight %s for %s",
   "commands.epiphany.insight.query.success": "Insight %s for %s — unlocked: %s, moduleSelected: %s",
   "commands.epiphany.insight.points.add.success": "Added %s Insight Points to %s",

@@ -38,7 +38,7 @@ public final class AptitudeManager {
      */
     public static void setAptitude(ServerPlayer player, long value) {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
-        long cap = AptitudeFormula.calcRequiredAptitude(data.totalInsightPointsSpent());
+        long cap = AptitudeFormula.calcRequiredAptitude(data.totalInsightPointsSpent(), data.insightPoints());
         long newValue = Math.max(0, Math.min(value, cap));
         if (newValue == data.aptitude()) return;
 
@@ -47,46 +47,39 @@ public final class AptitudeManager {
     }
 
     /**
-     * Adds aptitude. Excess beyond the current cap is discarded,
-     * but level-ups may increase the cap and re-consume remaining aptitude.
+     * Adds aptitude. Excess beyond the cap triggers Insight Point level-ups,
+     * consuming the required amount and carrying over the remainder.
      * <p>
      * Multiple {@link AptitudeLevelUpEvent}s may fire in a single call.
+     * {@code totalInsightPointsSpent} is NOT increased — that only happens
+     * when the player spends Insight Points.
      */
     public static void addAptitude(ServerPlayer player, long amount) {
         if (amount <= 0) return;
 
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         long aptitude = data.aptitude() + amount;
-        long required = AptitudeFormula.calcRequiredAptitude(data.totalInsightPointsSpent());
+        long oldValue = data.aptitude();
+        int pointsEarned = 0;
 
-        // Step 1: clamp to current cap and fire Changed
-        aptitude = Math.min(aptitude, required);
-        player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, data.withAptitude(aptitude));
-        NeoForge.EVENT_BUS.post(new AptitudeChangedEvent(player, data.aptitude(), aptitude));
-
-        // Step 2: level-up loop
-        data = data.withAptitude(aptitude);
-        int insightPoints = data.insightPoints();
-        int totalSpent = data.totalInsightPointsSpent();
-        int leveled = 0;
-
-        while (data.aptitude() >= required) {
-            aptitude = data.aptitude() - required;
-            totalSpent++;
-            insightPoints++;
-            leveled++;
-            data = data.withAptitude(aptitude)
-                    .withTotalInsightPointsSpent(totalSpent)
-                    .withInsightPoints(insightPoints);
+        // Level-up loop: keep consuming until below the cap
+        long required;
+        while ((required = AptitudeFormula.calcRequiredAptitude(data.totalInsightPointsSpent(), data.insightPoints())) <= aptitude) {
+            aptitude -= required;
+            pointsEarned++;
+            data = data.withAptitude(aptitude).withInsightPoints(data.insightPoints() + 1);
             player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, data);
-            NeoForge.EVENT_BUS.post(new AptitudeLevelUpEvent(player, totalSpent));
-            required = AptitudeFormula.calcRequiredAptitude(totalSpent);
+            // totalInsightPointsSpent unchanged — earning is not spending
+            NeoForge.EVENT_BUS.post(new AptitudeLevelUpEvent(player, data.insightPoints()));
         }
 
-        if (leveled == 0) {
-            // Ensure final setData if no level-up occurred (already done above but safe)
+        // If no level-up, just update aptitude
+        if (pointsEarned == 0) {
+            data = data.withAptitude(aptitude);
             player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, data);
         }
+
+        NeoForge.EVENT_BUS.post(new AptitudeChangedEvent(player, oldValue, aptitude));
     }
 
     /** Admin: directly set Insight Points without firing events. */

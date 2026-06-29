@@ -38,7 +38,6 @@ public final class EpiphanyManager {
         EpiphanyPlayerState state = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)
                 .epiphanies().get(epiphanyId);
         if (state != null) return state.unlocked();
-
         EpiphanyData epiphany = epiphanyRegistry(player).get(epiphanyId);
         return epiphany != null && epiphany.initialState() == InitialState.SELECTABLE;
     }

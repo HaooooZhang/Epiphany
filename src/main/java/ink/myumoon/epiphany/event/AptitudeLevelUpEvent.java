@@ -7,13 +7,13 @@ import net.minecraft.server.level.ServerPlayer;
  */
 public class AptitudeLevelUpEvent extends EpiphanyEvent {
 
-    private final long newTotalSpent;
+    private final int newInsightPoints;
 
-    public AptitudeLevelUpEvent(ServerPlayer player, long newTotalSpent) {
+    public AptitudeLevelUpEvent(ServerPlayer player, int newInsightPoints) {
         super(player);
-        this.newTotalSpent = newTotalSpent;
+        this.newInsightPoints = newInsightPoints;
     }
 
-    /** Total Insight Points spent (after the level-up). */
-    public long getNewTotalSpent() { return newTotalSpent; }
+    /** Total available Insight Points (after the level-up). */
+    public int getNewInsightPoints() { return newInsightPoints; }
 }
