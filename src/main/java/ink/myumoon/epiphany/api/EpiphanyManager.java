@@ -136,6 +136,11 @@ public final class EpiphanyManager {
         EpiphanyPlayerState state = data.epiphanies().get(epiphanyId);
         if (state == null) return;
 
+        EpiphanyData epiphany = epiphanyRegistry(player).get(epiphanyId);
+        if (epiphany != null && state.selected()) {
+            epiphany.reward().ifPresent(r -> r.remove(player));
+        }
+
         int refund = state.selected() ? 1 : 0;
         EpiphanyPlayerState newState = EpiphanyPlayerState.createDefault();
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,

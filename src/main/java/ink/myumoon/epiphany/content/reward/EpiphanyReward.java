@@ -26,8 +26,9 @@ public interface EpiphanyReward {
 
     MapCodec<? extends EpiphanyReward> codec();
 
-    /**
-     * Applies this reward to the given player.
-     */
+    /** Applies this reward to the given player. */
     void apply(ServerPlayer player);
+
+    /** Removes this reward from the given player. Default no-op. */
+    default void remove(ServerPlayer player) {}
 }

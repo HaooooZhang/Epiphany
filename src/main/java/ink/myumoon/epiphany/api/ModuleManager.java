@@ -258,6 +258,7 @@ public final class ModuleManager {
             InsightData insight = iRegistry.get(insightId);
             if (insight != null) {
                 refund += insight.cost();
+                insight.reward().ifPresent(r -> r.remove(player));
             }
         }
         // Also refund the module selection cost
@@ -273,8 +274,15 @@ public final class ModuleManager {
             newState = new ModulePlayerState(true, false, false, Set.of());
         }
 
+        // Remove module rewards
+        if (module != null) {
+            module.onSelectReward().ifPresent(r -> r.remove(player));
+            module.onCompleteReward().ifPresent(r -> r.remove(player));
+        }
+
         PlayerEpiphanyData newData = data.withModuleState(moduleId, newState)
-                .withInsightPoints(data.insightPoints() + refund);
+                .withInsightPoints(data.insightPoints() + refund)
+                .withTotalInsightPointsSpent(Math.max(0, data.totalInsightPointsSpent() - refund));
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
     }
 }

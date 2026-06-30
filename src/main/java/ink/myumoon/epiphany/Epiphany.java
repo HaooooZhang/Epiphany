@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
+import ink.myumoon.epiphany.api.ModuleManager;
 import ink.myumoon.epiphany.command.EpiphanyCommand;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyConditionTypes;
@@ -15,6 +16,8 @@ import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
+import net.neoforged.neoforge.event.entity.player.AdvancementEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 
 @Mod(Epiphany.MODID)
 public class Epiphany {
@@ -30,6 +33,12 @@ public class Epiphany {
 
         NeoForge.EVENT_BUS.addListener(RegisterCommandsEvent.class, event ->
                 EpiphanyCommand.register(event.getDispatcher()));
+
+        NeoForge.EVENT_BUS.addListener(PlayerEvent.PlayerLoggedInEvent.class, event ->
+                ModuleManager.checkAutoUnlock((net.minecraft.server.level.ServerPlayer) event.getEntity()));
+
+        NeoForge.EVENT_BUS.addListener(AdvancementEvent.AdvancementEarnEvent.class, event ->
+                ModuleManager.checkAutoUnlock((net.minecraft.server.level.ServerPlayer) event.getEntity()));
 
         LOGGER.info("Epiphany initialized");
     }

@@ -143,6 +143,7 @@ public final class InsightManager {
         ModulePlayerState newModuleState = new ModulePlayerState(
                 moduleState.unlocked(), moduleState.selected(), moduleState.completed(), newUnlocked
         );
+        insight.reward().ifPresent(r -> r.apply(player));
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
                 data.withModuleState(moduleId, newModuleState));
 
@@ -158,6 +159,7 @@ public final class InsightManager {
         for (var entry : data.modules().entrySet()) {
             ModulePlayerState state = entry.getValue();
             if (state.unlockedInsights().contains(insightId)) {
+                insight.reward().ifPresent(r -> r.remove(player));
                 Set<ResourceLocation> newUnlocked = new HashSet<>(state.unlockedInsights());
                 newUnlocked.remove(insightId);
                 ModulePlayerState newState = new ModulePlayerState(
@@ -165,7 +167,8 @@ public final class InsightManager {
                 );
                 player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
                         data.withModuleState(entry.getKey(), newState)
-                                .withInsightPoints(data.insightPoints() + insight.cost()));
+                                .withInsightPoints(data.insightPoints() + insight.cost())
+                                .withTotalInsightPointsSpent(Math.max(0, data.totalInsightPointsSpent() - insight.cost())));
                 return;
             }
         }

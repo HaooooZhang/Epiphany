@@ -49,22 +49,24 @@ public record AttributeReward(
 
     @Override
     public void apply(ServerPlayer player) {
-        applyModifier(player);
-    }
-
-    private void applyModifier(ServerPlayer player) {
         var attr = player.getAttribute(attribute);
         if (attr == null) return;
-
-        // Generate a deterministic UUID from (attributeId, amount, operation)
-        String idStr = attribute.value().getDescriptionId()
-                + amount + operation.name();
-        UUID uuid = UUID.nameUUIDFromBytes(idStr.getBytes(StandardCharsets.UTF_8));
-        ResourceLocation modifierId = ResourceLocation.fromNamespaceAndPath("epiphany",
-                "reward_" + uuid);
-
         attr.addPermanentModifier(
-                new AttributeModifier(modifierId, amount, operation)
-        );
+                new AttributeModifier(modifierId(), amount, operation));
+    }
+
+    @Override
+    public void remove(ServerPlayer player) {
+        var attr = player.getAttribute(attribute);
+        if (attr != null) {
+            attr.removeModifier(modifierId());
+        }
+    }
+
+    /** Deterministic UUID from (attribute, amount, operation) so apply/remove match. */
+    private ResourceLocation modifierId() {
+        String idStr = attribute.value().getDescriptionId() + amount + operation.name();
+        UUID uuid = UUID.nameUUIDFromBytes(idStr.getBytes(StandardCharsets.UTF_8));
+        return ResourceLocation.fromNamespaceAndPath("epiphany", "reward_" + uuid);
     }
 }

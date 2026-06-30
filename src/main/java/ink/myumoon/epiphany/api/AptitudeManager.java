@@ -37,13 +37,18 @@ public final class AptitudeManager {
      * Fires {@link AptitudeChangedEvent}.
      */
     public static void setAptitude(ServerPlayer player, long value) {
-        PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
-        long cap = AptitudeFormula.calcRequiredAptitude(data.totalInsightPointsSpent(), data.insightPoints());
-        long newValue = Math.max(0, Math.min(value, cap));
-        if (newValue == data.aptitude()) return;
-
-        player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, data.withAptitude(newValue));
-        NeoForge.EVENT_BUS.post(new AptitudeChangedEvent(player, data.aptitude(), newValue));
+        long delta = value - getAptitude(player);
+        if (delta == 0) return;
+        if (delta > 0) {
+            addAptitude(player, delta);
+        } else {
+            // Reducing aptitude: clamp to >=0, no level-down
+            PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+            long newValue = Math.max(0, value);
+            if (newValue == data.aptitude()) return;
+            player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, data.withAptitude(newValue));
+            NeoForge.EVENT_BUS.post(new AptitudeChangedEvent(player, data.aptitude(), newValue));
+        }
     }
 
     /**

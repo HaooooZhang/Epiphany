@@ -4,7 +4,6 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import com.mojang.brigadier.context.CommandContext;
 import ink.myumoon.epiphany.api.*;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.content.InsightTreeResolver;
@@ -121,7 +120,7 @@ public final class EpiphanyCommand {
                                     ResourceLocation id = ResourceLocationArgument.getId(ctx, "insight");
                                     ResourceLocation mid = findModuleForInsight(target, id);
                                     if (!InsightTreeResolver.canUnlock(target.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA), mid, target.server.registryAccess().registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY).get(mid), id)) {
-                                        ctx.getSource().sendFailure(Component.literal("Cannot select insight (check tree prerequisites and points)"));
+                                        ctx.getSource().sendFailure(t("commands.epiphany.insight.try_select.fail"));
                                         return 0;
                                     }
                                     InsightManager.select(target, id, mid);
@@ -213,7 +212,7 @@ public final class EpiphanyCommand {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                     ResourceLocation id = ResourceLocationArgument.getId(ctx, "module");
                                     if (!ModuleManager.isUnlocked(target, id)) {
-                                        ctx.getSource().sendFailure(Component.literal("Module not unlocked or insufficient points"));
+                                        ctx.getSource().sendFailure(t("commands.epiphany.module.try_select.fail"));
                                         return 0;
                                     }
                                     ModuleManager.select(target, id);
@@ -292,7 +291,7 @@ public final class EpiphanyCommand {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                     ResourceLocation id = ResourceLocationArgument.getId(ctx, "epiphany");
                                     if (!EpiphanyManager.isUnlocked(target, id)) {
-                                        ctx.getSource().sendFailure(Component.literal("Epiphany not unlocked or no slots available"));
+                                        ctx.getSource().sendFailure(t("commands.epiphany.epiphany.try_select.fail"));
                                         return 0;
                                     }
                                     EpiphanyManager.select(target, id);
@@ -349,6 +348,7 @@ public final class EpiphanyCommand {
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                    removeAllRewards(target);
                                     target.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
                                             PlayerEpiphanyData.createDefault());
                                     ctx.getSource().sendSuccess(
@@ -359,6 +359,7 @@ public final class EpiphanyCommand {
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                    removeAllRewards(target);
                                     PlayerEpiphanyData data = target.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
                                     PlayerEpiphanyData cleaned = new PlayerEpiphanyData(
                                             data.aptitude(),
@@ -374,6 +375,37 @@ public final class EpiphanyCommand {
                                             () -> t("commands.epiphany.reset.select.success", target.getGameProfile().getName()), true);
                                     return 1;
                                 })));
+    }
+
+    /** Removes all rewards from a player before resetting their data. */
+    private static void removeAllRewards(ServerPlayer player) {
+        var access = player.server.registryAccess();
+        var iReg = access.registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY);
+        var mReg = access.registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY);
+        var eReg = access.registryOrThrow(EpiphanyRegistries.EPIPHANY_REGISTRY_KEY);
+
+        PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+
+        // Modules: on_select, on_complete, and all unlocked insight rewards
+        for (var me : data.modules().entrySet()) {
+            var module = mReg.get(me.getKey());
+            if (module != null) {
+                module.onSelectReward().ifPresent(r -> r.remove(player));
+                module.onCompleteReward().ifPresent(r -> r.remove(player));
+            }
+            for (ResourceLocation iId : me.getValue().unlockedInsights()) {
+                var insight = iReg.get(iId);
+                if (insight != null) insight.reward().ifPresent(r -> r.remove(player));
+            }
+        }
+
+        // Epiphanies
+        for (var ee : data.epiphanies().entrySet()) {
+            if (ee.getValue().selected()) {
+                var epiphany = eReg.get(ee.getKey());
+                if (epiphany != null) epiphany.reward().ifPresent(r -> r.remove(player));
+            }
+        }
     }
 
     // ============================================================
