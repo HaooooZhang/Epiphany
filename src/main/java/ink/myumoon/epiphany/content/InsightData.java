@@ -23,6 +23,7 @@ public record InsightData(
         Optional<ResourceLocation> icon,
         int cost,
         Optional<InsightReward> reward,
+        Optional<Component> rewardDescription,
         int weight
 ) {
     public static final Codec<InsightData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -31,6 +32,7 @@ public record InsightData(
             ResourceLocation.CODEC.optionalFieldOf("icon").forGetter(InsightData::icon),
             Codec.INT.optionalFieldOf("cost", 1).forGetter(InsightData::cost),
             InsightReward.CODEC.optionalFieldOf("reward").forGetter(InsightData::reward),
+            ComponentSerialization.CODEC.optionalFieldOf("reward_description").forGetter(InsightData::rewardDescription),
             Codec.INT.optionalFieldOf("weight", 100).forGetter(InsightData::weight)
     ).apply(instance, InsightData::new));
 }

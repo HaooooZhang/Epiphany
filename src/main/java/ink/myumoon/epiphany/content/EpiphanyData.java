@@ -26,6 +26,7 @@ public record EpiphanyData(
         Optional<Condition> condition,
         InitialState initialState,
         Optional<EpiphanyReward> reward,
+        Optional<Component> rewardDescription,
         int weight
 ) {
     public static final Codec<EpiphanyData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -37,6 +38,7 @@ public record EpiphanyData(
             InitialState.CODEC.optionalFieldOf("initial_state", InitialState.SELECTABLE)
                     .forGetter(EpiphanyData::initialState),
             EpiphanyReward.CODEC.optionalFieldOf("reward").forGetter(EpiphanyData::reward),
+            ComponentSerialization.CODEC.optionalFieldOf("reward_description").forGetter(EpiphanyData::rewardDescription),
             Codec.INT.optionalFieldOf("weight", 100).forGetter(EpiphanyData::weight)
     ).apply(instance, EpiphanyData::new));
 }

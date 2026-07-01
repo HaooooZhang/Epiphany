@@ -26,6 +26,8 @@ public record ModuleData(
         List<InsightEntry> insights,
         Optional<InsightReward> onSelectReward,
         Optional<InsightReward> onCompleteReward,
+        Optional<Component> onSelectRewardDescription,
+        Optional<Component> onCompleteRewardDescription,
         int weight
 ) {
     public static final Codec<ModuleData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
@@ -41,6 +43,10 @@ public record ModuleData(
                     .forGetter(ModuleData::onSelectReward),
             InsightReward.CODEC.optionalFieldOf("on_complete_reward")
                     .forGetter(ModuleData::onCompleteReward),
+            ComponentSerialization.CODEC.optionalFieldOf("on_select_reward_description")
+                    .forGetter(ModuleData::onSelectRewardDescription),
+            ComponentSerialization.CODEC.optionalFieldOf("on_complete_reward_description")
+                    .forGetter(ModuleData::onCompleteRewardDescription),
             Codec.INT.optionalFieldOf("weight", 100).forGetter(ModuleData::weight)
     ).apply(instance, ModuleData::new));
 }

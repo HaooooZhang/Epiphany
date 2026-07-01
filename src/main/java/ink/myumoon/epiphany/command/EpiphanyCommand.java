@@ -6,7 +6,7 @@ import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import ink.myumoon.epiphany.api.*;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
-import ink.myumoon.epiphany.content.InsightTreeResolver;
+import ink.myumoon.epiphany.client.ui.EpiphanyUIFactory;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
 import net.minecraft.commands.CommandSourceStack;
@@ -35,6 +35,7 @@ public final class EpiphanyCommand {
                 .then(epiphanyGroup())
                 .then(pathGroup())
                 .then(resetGroup())
+                .then(openGroup())
         );
     }
 
@@ -118,14 +119,18 @@ public final class EpiphanyCommand {
                                 .then(insightArg.executes(ctx -> {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                     ResourceLocation id = ResourceLocationArgument.getId(ctx, "insight");
-                                    ResourceLocation mid = findModuleForInsight(target, id);
-                                    if (!InsightTreeResolver.canUnlock(target.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA), mid, target.server.registryAccess().registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY).get(mid), id)) {
+                                    if (InsightManager.isSelected(target, id)) {
                                         ctx.getSource().sendFailure(t("commands.epiphany.insight.try_select.fail"));
                                         return 0;
                                     }
+                                    ResourceLocation mid = findModuleForInsight(target, id);
                                     InsightManager.select(target, id, mid);
+                                    if (!InsightManager.isSelected(target, id)) {
+                                        ctx.getSource().sendFailure(t("commands.epiphany.insight.try_select.fail"));
+                                        return 0;
+                                    }
                                     ctx.getSource().sendSuccess(
-                                            () -> t("commands.epiphany.insight.select.success", id, target.getGameProfile().getName()), true);
+                                            () -> t("commands.epiphany.insight.try_select.success", id, target.getGameProfile().getName()), true);
                                     return 1;
                                 }))))
                 .then(Commands.literal("reset")
@@ -211,13 +216,17 @@ public final class EpiphanyCommand {
                                 .then(moduleArg.executes(ctx -> {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                     ResourceLocation id = ResourceLocationArgument.getId(ctx, "module");
-                                    if (!ModuleManager.isUnlocked(target, id)) {
+                                    if (ModuleManager.isSelected(target, id) || !ModuleManager.isUnlocked(target, id)) {
                                         ctx.getSource().sendFailure(t("commands.epiphany.module.try_select.fail"));
                                         return 0;
                                     }
                                     ModuleManager.select(target, id);
+                                    if (!ModuleManager.isSelected(target, id)) {
+                                        ctx.getSource().sendFailure(t("commands.epiphany.module.try_select.fail"));
+                                        return 0;
+                                    }
                                     ctx.getSource().sendSuccess(
-                                            () -> t("commands.epiphany.module.select.success", id, target.getGameProfile().getName()), true);
+                                            () -> t("commands.epiphany.module.try_select.success", id, target.getGameProfile().getName()), true);
                                     return 1;
                                 }))))
                 .then(Commands.literal("complete")
@@ -290,13 +299,17 @@ public final class EpiphanyCommand {
                                 .then(epiphanyArg.executes(ctx -> {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                     ResourceLocation id = ResourceLocationArgument.getId(ctx, "epiphany");
-                                    if (!EpiphanyManager.isUnlocked(target, id)) {
+                                    if (EpiphanyManager.isSelected(target, id) || !EpiphanyManager.isUnlocked(target, id)) {
                                         ctx.getSource().sendFailure(t("commands.epiphany.epiphany.try_select.fail"));
                                         return 0;
                                     }
                                     EpiphanyManager.select(target, id);
+                                    if (!EpiphanyManager.isSelected(target, id)) {
+                                        ctx.getSource().sendFailure(t("commands.epiphany.epiphany.try_select.fail"));
+                                        return 0;
+                                    }
                                     ctx.getSource().sendSuccess(
-                                            () -> t("commands.epiphany.epiphany.select.success", id, target.getGameProfile().getName()), true);
+                                            () -> t("commands.epiphany.epiphany.try_select.success", id, target.getGameProfile().getName()), true);
                                     return 1;
                                 }))))
                 .then(Commands.literal("reset")
@@ -375,6 +388,24 @@ public final class EpiphanyCommand {
                                             () -> t("commands.epiphany.reset.select.success", target.getGameProfile().getName()), true);
                                     return 1;
                                 })));
+    }
+
+    // ============================================================
+    // open — opens the main Epiphany UI for the target player.
+    // This requires permission 2 (admin), as it bypasses the normal
+    // client key-binding trigger (which any player can use).
+    // ============================================================
+
+    private static LiteralArgumentBuilder<CommandSourceStack> openGroup() {
+        return Commands.literal("open")
+                .then(Commands.argument("player", EntityArgument.player())
+                        .executes(ctx -> {
+                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                            EpiphanyUIFactory.openFor(target);
+                            ctx.getSource().sendSuccess(
+                                    () -> t("commands.epiphany.open.success", target.getGameProfile().getName()), true);
+                            return 1;
+                        }));
     }
 
     /** Removes all rewards from a player before resetting their data. */

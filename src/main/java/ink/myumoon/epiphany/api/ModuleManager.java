@@ -113,6 +113,11 @@ public final class ModuleManager {
         int cost = Config.MODULE_SELECT_COST.get();
         if (data.insightPoints() < cost) return;
 
+        // Module selection limit
+        long selectedCount = data.modules().values().stream()
+                .filter(ModulePlayerState::selected).count();
+        if (selectedCount >= Config.MAX_SELECTED_MODULES.get()) return;
+
         ModuleSelectEvent pre = new ModuleSelectEvent(player, moduleId);
         NeoForge.EVENT_BUS.post(pre);
         if (pre.isCanceled()) return;

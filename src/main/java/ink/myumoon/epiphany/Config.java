@@ -15,6 +15,11 @@ public class Config {
             .comment("Insight Points required to select a Module")
             .defineInRange("moduleSelectCost", 1, 0, 100);
 
+    // 最大选择模块数量
+    public static final ModConfigSpec.IntValue MAX_SELECTED_MODULES = BUILDER
+            .comment("Maximum number of Modules a player can have selected at once")
+            .defineInRange("maxSelectedModules", 8, 1, 64);
+
     // 阅历计算公式
     public static final ModConfigSpec.LongValue BASE_APTITUDE_CAP = BUILDER
             .comment("Base aptitude required to earn the first Insight Point")

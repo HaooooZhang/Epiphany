@@ -2,5 +2,6 @@
   "name": "测试心得A",
   "description": "depth=0 的根心得",
   "cost": 1,
+  "reward_description": "效果：获得 +2 最大生命值",
   "weight": 100
 }

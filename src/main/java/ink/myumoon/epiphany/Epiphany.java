@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
 
 import ink.myumoon.epiphany.api.ModuleManager;
+import ink.myumoon.epiphany.client.ui.EpiphanyUIFactory;
 import ink.myumoon.epiphany.command.EpiphanyCommand;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyConditionTypes;
@@ -14,6 +15,7 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 import net.neoforged.neoforge.event.entity.player.AdvancementEvent;
@@ -30,6 +32,11 @@ public class Epiphany {
         EpiphanyConditionTypes.REGISTRY.register(modEventBus);
         EpiphanyInsightRewardTypes.REGISTRY.register(modEventBus);
         EpiphanyEpiphanyRewardTypes.REGISTRY.register(modEventBus);
+
+        // Register the main UI on both sides. PlayerUIMenuType.register must
+        // happen after registries, so defer to common setup via enqueueWork.
+        modEventBus.addListener(FMLCommonSetupEvent.class, event ->
+                event.enqueueWork(EpiphanyUIFactory::register));
 
         NeoForge.EVENT_BUS.addListener(RegisterCommandsEvent.class, event ->
                 EpiphanyCommand.register(event.getDispatcher()));
