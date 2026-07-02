@@ -1,0 +1,1 @@
+{"name": "狂战士", "description": "半血以下时伤害翻倍", "condition": {"type": "epiphany:none"}, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.attack_speed", "amount": 0.3, "operation": "ADD_VALUE"}, "reward_description": "+0.3 攻速", "path": "epiphany:warrior", "weight": 90}

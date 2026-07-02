@@ -1,0 +1,1 @@
+{"name": "夜行者", "description": "夜间移动速度增加", "condition": {"type": "epiphany:none"}, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.movement_speed", "amount": 0.2, "operation": "ADD_MULTIPLIED_TOTAL"}, "reward_description": "+20% 夜间移速", "weight": 80}

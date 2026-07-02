@@ -1,0 +1,1 @@
+{"name": "护甲强化", "description": "护甲值 +2", "cost": 1, "weight": 100, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.armor", "amount": 2.0, "operation": "ADD_VALUE"}, "reward_description": "+2 护甲"}

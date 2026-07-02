@@ -1,0 +1,1 @@
+{"name": "奥术学徒", "description": "经验获取量增加", "condition": {"type": "epiphany:none"}, "path": "epiphany:mage", "weight": 100}

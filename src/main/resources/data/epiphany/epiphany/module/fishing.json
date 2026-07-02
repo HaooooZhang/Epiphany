@@ -1,0 +1,10 @@
+{
+  "name": "钓鱼达人",
+  "description": "【图标测试】默认图标（无 icon 字段，应为书与笔）",
+  "initial_state": "selectable",
+  "insights": [
+    {"id": "epiphany:fishing_luck", "depth": 0},
+    {"id": "epiphany:fishing_treasure", "depth": 1}
+  ],
+  "weight": 65
+}

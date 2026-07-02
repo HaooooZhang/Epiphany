@@ -1,0 +1,1 @@
+{"name": "巨龙之怒", "description": "【Advancement 条件测试】需击杀末影龙", "condition": {"type": "epiphany:advancement", "advancement": "minecraft:end/kill_dragon"}, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.attack_damage", "amount": 4.0, "operation": "ADD_VALUE"}, "reward_description": "+4 攻击伤害", "path": "epiphany:warrior", "weight": 60}

@@ -46,6 +46,7 @@
   "epiphany.ui.apt_ratio": "%s / %s",
   "epiphany.ui.select_placeholder": "+ 选择",
   "epiphany.ui.select": "选择",
+  "epiphany.ui.insight_cost": "消耗: %s 心得点",
   "epiphany.ui.press_esc_to_close": "按 ESC 关闭",
   "epiphany.ui.module.select_title": "选择新的模块",
   "epiphany.ui.epiphany.select_title": "选择你的顿悟",

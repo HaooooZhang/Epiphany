@@ -1,0 +1,9 @@
+{
+  "name": "炼药术",
+  "description": "【单 insight 测试】只有一个心得节点",
+  "initial_state": "selectable",
+  "insights": [
+    {"id": "epiphany:potion_brew", "depth": 0}
+  ],
+  "weight": 60
+}

@@ -1,0 +1,1 @@
+{"name": "顶点", "description": "【5 层树】需完成升华，最高层级", "cost": 5, "weight": 50, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.max_health", "amount": 4.0, "operation": "ADD_VALUE"}, "reward_description": "+4 最大生命"}

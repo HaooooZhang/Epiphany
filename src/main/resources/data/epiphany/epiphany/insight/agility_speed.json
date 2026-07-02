@@ -1,0 +1,1 @@
+{"name": "轻灵", "description": "移动速度 +15%", "cost": 1, "weight": 100, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.movement_speed", "amount": 0.15, "operation": "ADD_MULTIPLIED_TOTAL"}, "reward_description": "+15% 移速"}

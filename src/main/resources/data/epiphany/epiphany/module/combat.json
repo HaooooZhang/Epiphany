@@ -1,0 +1,11 @@
+{
+  "name": "战斗技巧",
+  "description": "掌握基础战斗技能，提升近战伤害",
+  "initial_state": "selectable",
+  "insights": [
+    {"id": "epiphany:combat_power", "depth": 0},
+    {"id": "epiphany:combat_speed", "depth": 0},
+    {"id": "epiphany:combat_crit", "depth": 1}
+  ],
+  "weight": 100
+}

@@ -1,0 +1,575 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- Epiphany main UI template (Phase A: skeleton + click-to-log).
+
+     Structure: #root is an outer column wrapper (no background).
+       ├── #title-tab            ← sits on top, naturally outside #panel
+       └── #panel                ← the 4:3 main panel with RECT bg
+             ├── #top-bar        ← apt bar + point badge
+             └── #content        ← module grid + epiphany column
+     Because #title-tab is a sibling of #panel (not a child), positioning it
+     above the panel border is trivial — no position:absolute hacks needed.
+-->
+<ldlib2-ui xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:noNamespaceSchemaLocation="https://raw.githubusercontent.com/Low-Drag-MC/LDLib2/refs/heads/1.21/ldlib2-ui.xsd">
+    <stylesheet location="ldlib2:lss/gdp.lss"/>
+    <style>
+        /* ============================================================
+           #root — outer container. Fixed 80%×80% sizing per the user request.
+           Density will come from layout (more slots/cards per row), not from
+           shrinking the window.
+           ============================================================ */
+        #root {
+            flex-direction: column;
+            align-items: stretch;
+            position: relative;          /* absolute children (.popup-overlay) need this as containing block */
+            width: 85%;
+            height: 90%;
+            padding-all: 0;
+            gap-all: 0;
+        }
+
+        /* ============================================================
+           #title-tab — "Build System" header as a small icon-style tab.
+           Uses TAB_DARK but narrower (80px) to feel more icon-like.
+           ============================================================ */
+        /* ============================================================
+           #title-tab — text-only header (TAB texture abandoned per user).
+           Sits at top-left as a small label. No background.
+           ============================================================ */
+        #title-tab {
+            align-items: center;
+            justify-content: center;
+            align-self: start;
+            height: 14;
+            padding-horizontal: 4;
+            padding-vertical: 0;
+            background: empty;
+        }
+        #title-tab label {
+            text-color: #FFFFFF;
+            text-shadow: true;
+            font-size: 9;
+        }
+
+        /* ============================================================
+           #panel — the main panel body. flex:1, RECT bg.
+           ============================================================ */
+        #panel {
+            flex: 1;
+            flex-direction: column;
+            padding-all: 6;
+            gap-all: 4;
+            background: built-in(ui-gdp:RECT);
+        }
+
+        /* ============================================================
+           Top bar — combos (apt-bar + point-badge) centered horizontally.
+           ============================================================ */
+        #top-bar {
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            height: 22%;
+            min-height: 36;
+        }
+        /* The combo holds the apt bar frame + point badge and occupies 75%
+           of the top-bar width (not 100%) so the right side stays empty. */
+        #top-combo {
+            flex-direction: row;
+            align-items: center;
+            gap-all: 8;
+            width: 75%;
+            padding-horizontal: 8;
+        }
+
+        /* ============================================================
+           apt-frame — holds the bar and the two top-corner labels.
+           Transparent background (no BORDER_THICK_RT2 wrapper per user).
+           ============================================================ */
+        #apt-frame {
+            flex: 1;
+            flex-direction: column;
+            gap-all: 2;
+            padding-all: 0;
+            background: empty;
+        }
+        /* row that holds apt-title (left) + apt-ratio (right) on the same line. */
+        #apt-label-row {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;   /* left + right */
+            width: 100%;
+        }
+        /* top-left + top-right labels: text-color / text-shadow are TextStyle props.
+           Now used as children of #apt-label-row, no align-self needed. */
+        .top-left-label {
+            text-color: #FFFFFF;
+            text-shadow: true;
+            font-size: 10;
+        }
+        .top-right-label {
+            text-color: #FFFFFF;
+            text-shadow: true;
+            font-size: 10;
+        }
+        /* The bar itself: explicit pixel height (aspect-ratio is NOT supported by LDLib2 LSS). */
+        #apt-bar {
+            width: 100%;
+            aspect-ratio: 20 / 1;     /* 1:20 width-to-height (bar is wide and thin) */
+            /* No explicit height — derived from aspect-ratio */
+        }
+
+        /* point-badge — 32×32 square. Number + unit on a row, baseline-aligned
+           at bottom so "点" sits at the number's bottom-right. */
+        #point-badge {
+            width: 32;
+            height: 32;
+            flex-direction: row;
+            align-items: flex-end;
+            justify-content: center;
+            padding-all: 2;
+            margin-left: 4;
+            margin-top: -5;
+            background: built-in(ui-gdp:BORDER_THICK_RT2);
+        }
+        #point-value {
+            text-color: #FFFFFF;
+            text-shadow: true;
+            font-size: 16;
+            adaptive-width: true;
+            margin-left: 0;
+            margin-top: 8;
+        }
+        .point-unit-label {
+            text-color: #FFFFFF;
+            text-shadow: false;
+            font-size: 8;
+            align-self: flex-end;
+            margin-bottom: 0;
+        }
+        /* highlight when > 0 (future Phase B toggle via Java) */
+        .__point_available__ {
+            background: built-in(ui-gdp:BORDER1_RT1) !important;
+        }
+
+        /* ======== Content row: 80% module + 20% epiphany ========= */
+        #content {
+            flex: 1;
+            flex-direction: row;
+            gap-all: 4;
+        }
+        /* Content sub-panels — RECT per design.md §整体风格 RECT. */
+        #module-area {
+            flex: 4;                 /* 80% — four parts */
+            flex-direction: column;
+            padding-all: 2;         /* tighter padding for denser card packing */
+            background: built-in(ui-gdp:RECT);
+        }
+        #module-scroll {
+            flex: 1;
+            width: 100%;
+            scroller-view-mode: vertical;
+            scroller-vertical-display: auto;
+        }
+        #module-grid {
+            flex-direction: row;
+            flex-wrap: wrap;
+            justify-content: flex-start;
+            align-content: flex-start;
+            gap-all: 2;
+            width: 100%;
+        }
+        #epiphany-area {
+            flex: 1;
+            flex-direction: column;
+            padding-all: 4;
+            background: built-in(ui-gdp:RECT);
+        }
+        #epiphany-scroll {
+            flex: 1;
+            width: 100%;
+            scroller-view-mode: vertical;
+            scroller-vertical-display: auto;
+        }
+        #epiphany-col {
+            flex-direction: column;
+            align-items: center;
+            justify-content: start;
+            gap-all: 4;
+            padding-all: 4;
+            width: 100%;
+        }
+
+        /* ======== Module cards: 90×100 with flex-grow to eat leftover pixels
+           flex-grow:1 stretches all cards on the same row to divide the leftover
+           horizontal space equally. min-width:90 prevents collapsing too small. */
+        .module-card {
+            flex-direction: column;
+            width: 90;
+            min-width: 90;
+            height: 100;
+            flex-grow: 1;          /* stretch to consume leftover right-edge pixels */
+            flex-shrink: 1;
+            background: built-in(ui-gdp:RECT_DARK);
+        }
+        .module-card-title {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            height: 14;
+            padding-horizontal: 2;
+            background: built-in(ui-gdp:RECT_LIGHT);
+        }
+        .empty-slot {
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 90;
+            min-width: 90;
+            height: 100;
+            flex-grow: 1;
+            flex-shrink: 1;
+            background: built-in(ui-gdp:RECT_DARK);
+        }
+        /* Java adds this class to cards on the last incomplete row so they
+           don't auto-stretch — keeps them at true 90×100. */
+        .last-row {
+            flex-grow: 0;
+            flex-shrink: 0;
+        }
+
+        /* ======== Epiphany slots ========
+           Outer border: default 15% of container width, minimum 22px.
+           Fixed square shape — height set to match the resolved width by using
+           the same pixel floor for height. Tiger-stripe zig-zag via margin-left. */
+        .epiphany-slot {
+            /* Use both pixel floor and percentage so the slot scales with container
+               but never gets smaller than 22px. */
+            width: 15%;
+            min-width: 22;
+            height: 22;
+            min-height: 22;
+            flex-shrink: 0;
+            align-items: center;
+            justify-content: center;
+        }
+        .epiphany-slot-empty {
+            background: built-in(ui-gdp:RECT_RD);          /* bright — slots you can click to choose */
+        }
+        .epiphany-slot-selected {
+            background: built-in(ui-gdp:RECT_RD);          /* same bright as selectable — filled with icon */
+        }
+        .epiphany-slot-disabled {
+            background: built-in(ui-gdp:RECT_RD_DARK);     /* dark — no free epiphany slot available */
+        }
+        /* Epiphany slots: two-slot zig-zag pair. Pair center = column midline,
+           so use opposite offsets — slot.even pulled left half-pair-width,
+           slot.odd pushed right by the other half. Net visual: both centered. */
+        .epiphany-slot-even {
+            margin-left: -10;
+        }
+        .epiphany-slot-odd {
+            margin-left: 10;
+        }
+        /* legacy class kept for compatibility (no longer assigned by Java). */
+        .epiphany-offset {
+            margin-left: 20;
+        }
+
+        /* ============================================================
+           Popup overlay infrastructure.
+           .popup-overlay covers the whole root with a dark translucent backdrop,
+           centered content via flex. display:none by default; Java toggles setDisplay(true).
+           Rendering order: popups are declared LAST in #root, so they paint on top
+           (LDLib2 has no zIndex).
+           ============================================================ */
+        .popup-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            background: color(0xC0202020);
+        }
+        /* The actual popup panel — padding matches #panel (main UI) for visual consistency. */
+        .popup-panel {
+            flex-direction: column;
+            align-items: stretch;
+            padding-all: 6;               /* same as #panel */
+            gap-all: 4;                   /* same as #panel */
+            background: built-in(ui-gdp:BORDER);
+        }
+        /* Header — explicit width:100% per width-transfer investigation.
+           Implicit align-items:stretch fails in popup/absolute flex chains. */
+        .popup-header {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            height: 14;
+            padding-horizontal: 4;
+        }
+        .popup-title {
+            text-color: #FFFFFF;
+            text-shadow: true;
+            flex-shrink: 0;
+        }
+        .popup-error {
+            text-color: #FF5555;
+            text-shadow: true;
+            font-size: 8;
+            min-height: 8;
+            display: none;
+            width: 100%;
+        }
+        .popup-toggle-row {
+            flex-direction: row;
+            align-items: center;
+            gap-all: 4;
+            flex-shrink: 0;
+        }
+        .popup-scroll {
+            flex: 1;
+            width: 100%;
+            scroller-view-mode: vertical;
+            scroller-vertical-display: always;     /* always show scrollbar for Module popup */
+        }
+        .popup-list {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap-all: 2;               /* same as #module-grid */
+            padding-all: 0;           /* #module-grid has no padding, match it */
+            align-content: flex-start;
+            width: 100%;
+        }
+
+        /* ============================================================
+           Module select popup — explicit width for exactly 3 columns.
+           3 × 90px card + 2 × 2px gap + 2 × 4px padding = 284px.
+           ============================================================ */
+        /* Module popup: width = 3×90 card + 2×2 gap + 2×6 panel-padding + 2×5 viewPort-padding
+           + 4px safety margin = 300. Without this, the viewPort's internal padding
+           eats enough to force a 4th column to wrap. */
+        .popup-panel-module {
+            width: 301;
+            height: 70%;
+        }
+
+        .module-select-card {
+            flex-direction: column;
+            width: 90;
+            height: 100;
+            flex-shrink: 0;
+            background: built-in(ui-gdp:RECT_DARK);
+            gap-all: 2;
+            padding-all: 0;          /* match .module-card in main UI (no padding) */
+        }
+        /* Top row inside card: name (left) + select button (right). */
+        .module-select-card-top {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            height: 12;
+        }
+        .module-select-name {
+            text-color: #FFFFFF;
+            text-shadow: true;
+            font-size: 8;
+            flex-shrink: 0;
+        }
+        .module-select-btn {
+            flex-shrink: 0;
+        }
+
+        /* ======== Insight tree nodes (18×18) ======== */
+        .insight-node {
+            width: 18;
+            height: 18;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .insight-node-unlocked {
+            background: built-in(ui-gdp:BORDER1);
+        }
+        .insight-node-locked {
+            background: built-in(ui-gdp:BORDER_DARK);
+        }
+        .insight-node-can-unlock {
+            background: built-in(ui-gdp:BORDER1_DARK);
+        }
+
+        /* ======== Insight tree area inside cards (for both main grid + popup preview) ======== */
+        .insight-tree-area {
+            flex: 1;
+            width: 100%;
+            position: relative;
+            overflow: hidden;         /* clip nodes that overflow card bounds (large tree pan) */
+        }
+        .module-card-description {
+            flex: 1;
+            width: 100%;
+            align-items: center;
+            justify-content: center;
+            padding-all: 4;
+        }
+        .module-card-description label {
+            text-color: #AAAAAA;
+            text-shadow: true;
+            font-size: 8;
+        }
+
+        /* Cards in popup list: fixed 90px (no flex-grow — popup has fixed-width panel). */
+        .popup-list .module-card {
+            flex-grow: 0;
+            flex-shrink: 0;
+        }
+
+        /* ============================================================
+           Epiphany select popup specifics.
+           ============================================================ */
+        .popup-epiphany { width: 70%; height: 75%; }
+        .epiphany-paths-scroll {
+            flex: 1;
+            width: 100%;
+            scroller-view-mode: horizontal;
+            scroller-horizontal-display: auto;
+            scroller-vertical-display: never;
+        }
+        /* Paths row: width auto, each column flex-shrink:0 forces overflow when columns total
+           width exceeds scroll container width → triggers horizontal scroll. */
+        .epiphany-paths-row {
+            flex-direction: row;
+            align-items: flex-start;
+            gap-all: 8;
+            padding-all: 4;
+        }
+        .path-column {
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+            width: 80;
+            gap-all: 4;
+            padding-all: 4;
+            background: built-in(ui-gdp:RECT_DARK);
+        }
+        .path-column-title {
+            text-color: #FFFFFF;
+            text-shadow: true;
+            font-size: 10;
+            align-self: center;
+            margin-bottom: 4;
+        }
+        /* zig-zag: odd-index card shifted right within a column. */
+        .path-column .epiphany-slot-odd {
+            margin-left: 20;
+        }
+        .path-column-other {
+            background: empty;
+        }
+        .path-column-other .path-column-title {
+            display: none;
+        }
+        .epiphany-bottom-scroll {
+            height: 30;
+            width: 100%;
+            scroller-view-mode: horizontal;
+            scroller-horizontal-display: auto;
+        }
+        .epiphany-bottom-row {
+            flex-direction: row;
+            align-items: center;
+            gap-all: 4;
+            padding-all: 2;
+        }
+    </style>
+
+    <root id="root">
+        <!-- Main panel body. -->
+        <element id="panel">
+            <!-- Title label — lives at top-left inside #panel. -->
+            <element id="title-tab">
+                <label><lang key="epiphany.ui.title"/></label>
+            </element>
+
+            <!-- Top bar: a centered combo (apt bar + point badge). -->
+            <element id="top-bar">
+                <element id="top-combo">
+                    <element id="apt-frame">
+                        <!-- left-top: "阅历" label -->
+                        <label id="apt-title" class="top-left-label"><lang key="epiphany.ui.aptitude"/></label>
+                        <!-- the bar; the built-in label will display "current / cap" via Java. -->
+                        <progress-bar id="apt-bar" min-value="0" max-value="1" value="0" text=""/>
+                    </element>
+                    <element id="point-badge">
+                        <label id="point-value"/>
+                        <label id="point-unit" class="point-unit-label"><lang key="epiphany.ui.point"/></label>
+                    </element>
+                </element>
+            </element>
+
+            <!-- Content row -->
+            <element id="content">
+                <element id="module-area">
+                    <scroller-view id="module-scroll">
+                        <!-- cards are dynamically appended here by ModuleGridController -->
+                        <element id="module-grid"/>
+                    </scroller-view>
+                </element>
+                <element id="epiphany-area">
+                    <scroller-view id="epiphany-scroll">
+                        <!-- slots are dynamically appended here by EpiphanySlotColumnController -->
+                        <element id="epiphany-col"/>
+                    </scroller-view>
+                </element>
+            </element>
+        </element>
+
+        <!-- ============ Popup overlays — declared LAST so they render on top ============ -->
+        <!-- Module selection popup. Hidden initially; set via Java setDisplay(true). -->
+        <element id="module-popup" class="popup-overlay">
+            <element id="module-popup-panel" class="popup-panel popup-panel-module">
+                <element class="popup-header">
+                    <label class="popup-title"><lang key="epiphany.ui.module.select_title"/></label>
+                    <element class="popup-toggle-row">
+                        <switch id="module-show-locked"/>
+                        <label class="popup-hint"><lang key="epiphany.ui.module.show_locked"/></label>
+                    </element>
+                </element>
+                <label id="module-popup-error" class="popup-error"/>
+                <scroller-view class="popup-scroll">
+                    <!-- cards appended here by ModuleSelectController -->
+                    <element id="module-popup-list" class="popup-list"/>
+                </scroller-view>
+            </element>
+        </element>
+
+        <!-- Epiphany selection popup. -->
+        <element id="epiphany-popup" class="popup-overlay">
+            <element id="epiphany-popup-panel" class="popup-panel popup-epiphany">
+                <element class="popup-header">
+                    <label class="popup-title"><lang key="epiphany.ui.epiphany.select_title"/></label>
+                    <!-- Switch + label — wrapped so the row right-aligns. -->
+                    <element class="popup-toggle-row">
+                        <switch id="epiphany-show-locked"/>
+                        <label class="popup-hint"><lang key="epiphany.ui.epiphany.show_locked"/></label>
+                    </element>
+                </element>
+                <label id="epiphany-popup-error" class="popup-error"/>
+                <scroller-view class="epiphany-paths-scroll">
+                    <!-- path columns appended here by EpiphanySelectController -->
+                    <element id="epiphany-paths-container" class="epiphany-paths-row"/>
+                </scroller-view>
+                <!-- Bottom horizontal slot strip — replicate main UI selection status. -->
+                <scroller-view class="epiphany-bottom-scroll">
+                    <element id="epiphany-bottom-row" class="epiphany-bottom-row"/>
+                </scroller-view>
+            </element>
+        </element>
+    </root>
+</ldlib2-ui>

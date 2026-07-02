@@ -51,7 +51,7 @@
   "epiphany.ui.points": "points",
   "epiphany.ui.apt_ratio": "%s / %s",
   "epiphany.ui.select_placeholder": "+ Select",
-  "epiphany.ui.select": "Select",
+  "epiphany.ui.insight_cost": "Cost: %s Insight Points",
   "epiphany.ui.press_esc_to_close": "Press ESC",
   "epiphany.ui.module.select_title": "Select New Module",
   "epiphany.ui.epiphany.select_title": "Choose Your Epiphany",

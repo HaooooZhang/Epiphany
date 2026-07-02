@@ -1,0 +1,1 @@
+{"name": "驯兽师", "description": "驯服的狼和猫属性提升", "condition": {"type": "epiphany:advancement", "advancement": "minecraft:husbandry/tame_an_animal"}, "path": "epiphany:ranger", "weight": 85}

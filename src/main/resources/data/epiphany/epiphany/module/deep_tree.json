@@ -1,0 +1,1 @@
+{"name": "深渊学识", "description": "【深度测试】5 层深度心得树 (depth 0~4)，每层一个节点", "initial_state": "selectable", "insights": [{"id": "epiphany:deep_tier1", "depth": 0}, {"id": "epiphany:deep_tier2", "depth": 1}, {"id": "epiphany:deep_tier3", "depth": 2}, {"id": "epiphany:deep_tier4", "depth": 3}, {"id": "epiphany:deep_tier5", "depth": 4}], "weight": 120}

@@ -1,0 +1,11 @@
+{
+  "name": "敏捷",
+  "description": "【高权重测试】weight=200 排序应靠前",
+  "initial_state": "selectable",
+  "insights": [
+    {"id": "epiphany:agility_speed", "depth": 0},
+    {"id": "epiphany:agility_jump", "depth": 0},
+    {"id": "epiphany:agility_dodge", "depth": 1}
+  ],
+  "weight": 200
+}

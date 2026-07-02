@@ -1,0 +1,12 @@
+{
+  "name": "锻造工艺",
+  "description": "【平级测试】所有心得同 depth=0（AND 关系）",
+  "initial_state": "selectable",
+  "insights": [
+    {"id": "epiphany:smith_armor", "depth": 0},
+    {"id": "epiphany:smith_weapon", "depth": 0},
+    {"id": "epiphany:smith_tool", "depth": 0},
+    {"id": "epiphany:smith_trim", "depth": 0}
+  ],
+  "weight": 105
+}

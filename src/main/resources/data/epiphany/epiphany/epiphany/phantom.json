@@ -1,0 +1,1 @@
+{"name": "幽灵", "description": "【无 reward 测试】选中不获得属性奖励", "condition": {"type": "epiphany:none"}, "weight": 110}

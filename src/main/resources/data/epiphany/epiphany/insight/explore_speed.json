@@ -1,0 +1,1 @@
+{"name": "疾行", "description": "移动速度 +10%", "cost": 2, "weight": 100, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.movement_speed", "amount": 0.1, "operation": "ADD_MULTIPLIED_TOTAL"}, "reward_description": "+10% 移速"}

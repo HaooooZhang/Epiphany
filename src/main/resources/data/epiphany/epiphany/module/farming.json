@@ -1,0 +1,12 @@
+{
+  "name": "农耕时代",
+  "description": "【图标测试】自定义 icon 指向苹果纹理",
+  "icon": "minecraft:textures/item/apple.png",
+  "initial_state": "selectable",
+  "insights": [
+    {"id": "epiphany:farming_growth", "depth": 0},
+    {"id": "epiphany:farming_harvest", "depth": 0},
+    {"id": "epiphany:farming_breed", "depth": 1}
+  ],
+  "weight": 75
+}

@@ -1,0 +1,1 @@
+{"name": "攻速训练", "description": "攻速 +10%", "cost": 2, "weight": 90, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.attack_speed", "amount": 0.5, "operation": "ADD_VALUE"}, "reward_description": "+0.5 攻速"}

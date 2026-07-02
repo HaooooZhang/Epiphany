@@ -1,0 +1,1 @@
+{"name": "追踪者", "description": "箭矢命中敌人后显示其轮廓", "condition": {"type": "epiphany:none"}, "path": "epiphany:ranger", "weight": 100}

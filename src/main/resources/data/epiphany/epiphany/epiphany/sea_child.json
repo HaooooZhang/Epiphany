@@ -1,0 +1,1 @@
+{"name": "海之子", "description": "水下呼吸时间翻倍，水下挖掘加速", "condition": {"type": "epiphany:advancement", "advancement": "minecraft:adventure/under_lock_and_key"}, "weight": 70}

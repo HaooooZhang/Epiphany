@@ -1,0 +1,1 @@
+{"name": "炼金术士", "description": "酿造台产出双倍药水", "condition": {"type": "epiphany:advancement", "advancement": "minecraft:nether/brew_potion"}, "path": "epiphany:mage", "weight": 75}

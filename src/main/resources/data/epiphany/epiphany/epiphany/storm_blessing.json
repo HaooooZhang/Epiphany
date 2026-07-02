@@ -1,0 +1,1 @@
+{"name": "雷神之赐", "description": "被雷劈时获得力量与速度", "condition": {"type": "epiphany:none"}, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.armor", "amount": 2.0, "operation": "ADD_VALUE"}, "reward_description": "+2 护甲", "weight": 55}

@@ -1,0 +1,12 @@
+{
+  "name": "附魔学",
+  "description": "【树测试】三级深度心得树",
+  "initial_state": "selectable",
+  "insights": [
+    {"id": "epiphany:enchant_lvl1", "depth": 0},
+    {"id": "epiphany:enchant_lvl2a", "depth": 1},
+    {"id": "epiphany:enchant_lvl2b", "depth": 1},
+    {"id": "epiphany:enchant_lvl3", "depth": 2}
+  ],
+  "weight": 110
+}

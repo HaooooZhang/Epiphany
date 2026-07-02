@@ -1,0 +1,11 @@
+{
+  "name": "探索者",
+  "description": "【高 cost 测试】心得消耗 5 点以上",
+  "initial_state": "selectable",
+  "insights": [
+    {"id": "epiphany:explore_speed", "depth": 0},
+    {"id": "epiphany:explore_map", "depth": 0},
+    {"id": "epiphany:explore_elytra", "depth": 1}
+  ],
+  "weight": 55
+}

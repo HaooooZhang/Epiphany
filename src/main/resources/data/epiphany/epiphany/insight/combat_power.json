@@ -1,0 +1,1 @@
+{"name": "力量训练", "description": "近战伤害 +2", "cost": 1, "weight": 100, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.attack_damage", "amount": 2.0, "operation": "ADD_VALUE"}, "reward_description": "+2 近战伤害"}
