@@ -409,7 +409,8 @@
             flex: 1;
             width: 100%;
             position: relative;
-            overflow: hidden;         /* clip nodes that overflow card bounds (large tree pan) */
+            overflow: hidden;
+            padding-all: 0;
         }
         .module-card-description {
             flex: 1;

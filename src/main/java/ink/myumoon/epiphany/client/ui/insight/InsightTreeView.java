@@ -43,7 +43,7 @@ public class InsightTreeView {
 
         int colPitch = NODE_SIZE + 10;
         int rowPitch = NODE_SIZE + 12;
-        int contentWidth = maxPerDepth * colPitch;
+        int contentWidth = (maxPerDepth - 1) * colPitch + NODE_SIZE;  // exactly node bounds
         int contentHeight = (maxDepth + 1) * rowPitch;
 
         // Inner content wrapper.
@@ -54,7 +54,7 @@ public class InsightTreeView {
             l.width(contentWidth).height(contentHeight);
         });
 
-        // Node positions.
+        // Pass 1: compute node positions (needed for both lines and nodes).
         Map<ResourceLocation, int[]> nodePositions = new HashMap<>();
 
         for (var depthEntry : byDepth.entrySet()) {
@@ -65,6 +65,38 @@ public class InsightTreeView {
                 InsightEntry ie = entries.get(col);
                 int x = col * colPitch;
                 nodePositions.put(ie.id(), new int[]{x, y});
+            }
+        }
+
+        // Pass 2: draw lines FIRST (renders behind nodes).
+        for (var ie : insights) {
+            var ancestors = InsightTreeResolver.findAncestors(module, ie.id());
+            var childPos = nodePositions.get(ie.id());
+            if (childPos == null) continue;
+            int cCX = childPos[0] + NODE_SIZE / 2;
+            int cTY = childPos[1];
+            for (var ancestorId : ancestors) {
+                var parentPos = nodePositions.get(ancestorId);
+                if (parentPos == null) continue;
+                int pCX = parentPos[0] + NODE_SIZE / 2;
+                int pBY = parentPos[1] + NODE_SIZE;
+                int midY = pBY + (cTY - pBY) / 2;
+                addLine(content, pCX, pBY, 1, Math.max(1, midY - pBY));
+                int hs = Math.min(pCX, cCX);
+                int he = Math.max(pCX, cCX);
+                if (he > hs) addLine(content, hs, midY, he - hs, 1);
+                addLine(content, cCX, midY, 1, Math.max(1, cTY - midY));
+            }
+        }
+
+        // Pass 3: draw nodes on TOP of lines.
+        for (var depthEntry : byDepth.entrySet()) {
+            int depth = depthEntry.getKey();
+            var entries = depthEntry.getValue();
+            int y = depth * rowPitch;
+            for (int col = 0; col < entries.size(); col++) {
+                InsightEntry ie = entries.get(col);
+                int x = col * colPitch;
 
                 InsightData idata = ClientData.insight(ie.id());
                 InsightNodeElement.State ns;
@@ -89,48 +121,14 @@ public class InsightTreeView {
             }
         }
 
-        // Lines: each ancestor → child (parent bottom-center → midY → child top-center).
-        for (var ie : insights) {
-            var ancestors = InsightTreeResolver.findAncestors(module, ie.id());
-            var childPos = nodePositions.get(ie.id());
-            if (childPos == null) continue;
-            int cCX = childPos[0] + NODE_SIZE / 2;
-            int cTY = childPos[1];
-            for (var ancestorId : ancestors) {
-                var parentPos = nodePositions.get(ancestorId);
-                if (parentPos == null) continue;
-                int pCX = parentPos[0] + NODE_SIZE / 2;
-                int pBY = parentPos[1] + NODE_SIZE;
-                int midY = pBY + (cTY - pBY) / 2;
-                addLine(content, pCX, pBY, 1, Math.max(1, midY - pBY));
-                int hs = Math.min(pCX, cCX);
-                int he = Math.max(pCX, cCX);
-                if (he > hs) addLine(content, hs, midY, he - hs, 1);
-                addLine(content, cCX, midY, 1, Math.max(1, cTY - midY));
-            }
-        }
-
-        // Center content in container.
+        // Center content in container. LAYOUT_CHANGED fires after every layout pass.
         container.addChild(content);
-        final boolean[] centered = {false};
-        final int[] tc = {0};
-        container.addEventListener(UIEvents.TICK, e -> {
-            if (centered[0] || tc[0]++ > 10) return;
-            float cw = container.getSizeWidth();
-            float ch = container.getSizeHeight();
-            if (cw > 0 && ch > 0) {
-                float ox = Math.max(0, (cw - contentWidth) / 2f);
-                float oy = Math.max(0, (ch - contentHeight) / 2f);
-                content.layout(l -> l.left(ox).top(oy));
-                centered[0] = true;
-            }
-        });
         container.addEventListener(UIEvents.LAYOUT_CHANGED, e -> {
             float cw = container.getSizeWidth();
             float ch = container.getSizeHeight();
             if (cw > 0 && ch > 0) {
                 float ox = Math.max(0, (cw - contentWidth) / 2f);
-                float oy = Math.max(0, (ch - contentHeight) / 2f);
+                float oy = Math.max(4, (ch - contentHeight) / 2f);
                 content.layout(l -> l.left(ox).top(oy));
             }
         });

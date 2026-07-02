@@ -9,6 +9,8 @@ import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.lowdragmc.lowdraglib2.syncdata.rpc.RPCSender;
 import com.lowdragmc.lowdraglib2.utils.XmlUtils;
 import ink.myumoon.epiphany.Epiphany;
+import ink.myumoon.epiphany.api.EpiphanyManager;
+import ink.myumoon.epiphany.api.InsightManager;
 import ink.myumoon.epiphany.client.ui.epiphany.EpiphanySlotColumnController;
 import ink.myumoon.epiphany.client.ui.module.ModuleGridController;
 import net.minecraft.resources.ResourceLocation;
@@ -112,6 +114,26 @@ public final class EpiphanyUIFactory {
         Player target = sender.asPlayer();
         if (target instanceof ServerPlayer serverPlayer) {
             openFor(serverPlayer);
+        }
+    }
+
+    /** Server-side: client clicked an Insight node. */
+    @RPCPacket(value = "epiphany.select_insight", modId = Epiphany.MODID)
+    public static void onSelectInsightRpc(RPCSender sender, String insightIdStr, String moduleIdStr) {
+        Player target = sender.asPlayer();
+        if (target instanceof ServerPlayer sp) {
+            InsightManager.select(sp,
+                    ResourceLocation.parse(insightIdStr),
+                    ResourceLocation.parse(moduleIdStr));
+        }
+    }
+
+    /** Server-side: client clicked an Epiphany card. */
+    @RPCPacket(value = "epiphany.select_epiphany", modId = Epiphany.MODID)
+    public static void onSelectEpiphanyRpc(RPCSender sender, String epiphanyIdStr) {
+        Player target = sender.asPlayer();
+        if (target instanceof ServerPlayer sp) {
+            EpiphanyManager.select(sp, ResourceLocation.parse(epiphanyIdStr));
         }
     }
 }

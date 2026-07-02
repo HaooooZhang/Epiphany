@@ -99,10 +99,12 @@ public final class ModuleSelectController {
                 .textAlignHorizontal(com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal.LEFT));
         titleBar.addChild(nameLabel);
 
-        // Select button (right side of title bar).
+        // Select button — hardcoded absolute at top-right (Taffy flex space-between unreliable).
         Button btn = new Button();
         btn.setText(Component.translatable("epiphany.ui.select"));
         if (!affordable) btn.disabled();
+        btn.layout(l -> l.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
+                .right(2).top(0).flexShrink(0));
         btn.setOnServerClick(e -> {
             ServerPlayer sp = (ServerPlayer) e.currentElement.getModularUI().player;
             int cost = Config.MODULE_SELECT_COST.get();
@@ -119,21 +121,31 @@ public final class ModuleSelectController {
             Overlay.hide(ui, MODULE_POPUP);
         });
         btn.addClass("module-select-btn");
-        btn.layout(l -> l.flexShrink(0));
         titleBar.addChild(btn);
         card.addChild(titleBar);
 
         // --- Body: description (default) / insight tree (hover) ---
-        // Hardcoded description: explicit padding + centered text in Java.
+        // Hardcoded description: manual line-split (Taffy Label doesn't auto-wrap).
         UIElement descArea = new UIElement();
         descArea.layout(l -> l.flex(1).widthPercent(100).paddingAll(4)
                 .justifyContent(dev.vfyjxf.taffy.style.AlignContent.CENTER)
                 .alignItems(dev.vfyjxf.taffy.style.AlignItems.CENTER));
         if (module.description().isPresent()) {
+            String raw = module.description().get().getString();
+            // Split into lines of ~10 chars (82px card width / fontSize 8).
+            var lines = new java.util.ArrayList<String>();
+            int maxPerLine = 10;
+            int start = 0;
+            while (start < raw.length()) {
+                int end = Math.min(start + maxPerLine, raw.length());
+                lines.add(raw.substring(start, end));
+                start = end;
+            }
             Label descLabel = new Label();
-            descLabel.setText(module.description().get());
+            descLabel.setText(Component.literal(String.join("\n", lines)));
             descLabel.textStyle(t -> t.fontSize(8).textColor(0xFFAAAAAA).textShadow(true)
-                    .textAlignHorizontal(com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal.CENTER));
+                    .textAlignHorizontal(com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal.CENTER)
+                    .textAlignVertical(com.lowdragmc.lowdraglib2.gui.ui.data.Vertical.CENTER));
             descLabel.layout(l -> l.widthPercent(100));
             descArea.addChild(descLabel);
         }

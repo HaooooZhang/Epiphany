@@ -41,8 +41,8 @@ public final class ModuleGridController {
     private static final String LAST_ROW_CLASS = "last-row";
     /** Popup overlay selector opened when an empty slot is clicked. */
     private static final String MODULE_POPUP = "#module-popup";
-    /** Re-render check interval (in ticks). */
-    private static final int REFRESH_INTERVAL = 20;
+    /** Re-render check interval (in ticks). Check every tick for instant Insight feedback. */
+    private static final int REFRESH_INTERVAL = 1;
 
     private ModuleGridController() {
     }
@@ -165,7 +165,7 @@ public final class ModuleGridController {
         nameLabel.textStyle(t -> t.textAlignHorizontal(com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal.LEFT));
         card.addChild(titleBar.addChild(nameLabel));
 
-        // Hover on title bar → Module tooltip with details.
+        // Hover on title bar → Module tooltip.
         titleBar.addEventListener(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents.HOVER_TOOLTIPS, e -> {
             var lines = new java.util.ArrayList<net.minecraft.network.chat.Component>();
             lines.add(Component.literal(name).withStyle(net.minecraft.ChatFormatting.WHITE));
@@ -234,17 +234,20 @@ public final class ModuleGridController {
         return slot;
     }
 
-    /** Snapshot signature: selected modules + their unlocked insights (for change detection). */
+    /** Snapshot signature: selected modules + state flags + unlocked insights. */
     private static String currentSignature() {
         var data = ClientData.clientData();
         if (data == null) return "";
         var sb = new StringBuilder();
+        sb.append("pts=").append(data.insightPoints()).append('|');
         data.modules().entrySet().stream()
                 .filter(e -> e.getValue().selected())
                 .sorted(java.util.Map.Entry.comparingByKey())
                 .forEach(e -> {
-                    sb.append(e.getKey()).append(':');
-                    e.getValue().unlockedInsights().stream().sorted().forEach(id -> sb.append(id).append(';'));
+                    var s = e.getValue();
+                    sb.append(e.getKey()).append(':')
+                            .append(s.completed() ? 'c' : '-').append(s.unlocked() ? 'u' : '-').append(':');
+                    s.unlockedInsights().stream().sorted().forEach(id -> sb.append(id).append(';'));
                     sb.append(',');
                 });
         return sb.toString();

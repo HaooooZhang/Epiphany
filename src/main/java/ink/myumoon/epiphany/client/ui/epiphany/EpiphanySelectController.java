@@ -231,19 +231,11 @@ public final class EpiphanySelectController {
             card.addChild(icon);
         }
         if (unlocked) {
-            card.addServerEventListener(UIEvents.MOUSE_DOWN, e -> {
+            // Direct RPC to server (bypass LDLib2 dynamic-element listener issue).
+            card.addEventListener(UIEvents.MOUSE_DOWN, e -> {
                 com.lowdragmc.lowdraglib2.gui.util.UISoundUtils.playButtonClickSound();
-                ServerPlayer sp = (ServerPlayer) e.currentElement.getModularUI().player;
-                var d = sp.getData(ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes.EPIPHANY_DATA);
-                if (d.usedEpiphanySlots() >= d.epiphanySlots()) {
-                    showError(ui, Component.translatable("epiphany.ui.error.no_slot"));
-                    return;
-                }
-                if (!EpiphanyManager.isUnlocked(sp, id)) {
-                    showError(ui, Component.translatable("epiphany.ui.error.not_unlocked"));
-                    return;
-                }
-                EpiphanyManager.select(sp, id);
+                com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor.rpcToServer(
+                        "epiphany.select_epiphany", id.toString());
                 Overlay.hide(ui, EPIPHANY_POPUP);
             });
         }

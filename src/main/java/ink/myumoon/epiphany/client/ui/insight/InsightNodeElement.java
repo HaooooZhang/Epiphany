@@ -71,19 +71,13 @@ public class InsightNodeElement extends UIElement {
         // Hover tooltip.
         addEventListener(UIEvents.HOVER_TOOLTIPS, this::onHoverTooltips);
 
-        // Click handler (server-side if interactive).
+        // Click: client-side sound + direct RPC to server (bypass LDLib2 dynamic-element issue).
         if (interactive && clickHandler != null && state == State.CAN_UNLOCK) {
-            addServerEventListener(UIEvents.MOUSE_DOWN, this::onNodeClick);
-        }
-    }
-
-    private void onNodeClick(UIEvent event) {
-        try {
-            com.lowdragmc.lowdraglib2.gui.util.UISoundUtils.playButtonClickSound();
-            ServerPlayer sp = (ServerPlayer) event.currentElement.getModularUI().player;
-            clickHandler.onClick(sp, insightId, moduleId);
-        } catch (Throwable ignored) {
-            // Best-effort log — never break the click flow.
+            addEventListener(UIEvents.MOUSE_DOWN, e -> {
+                com.lowdragmc.lowdraglib2.gui.util.UISoundUtils.playButtonClickSound();
+                com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor.rpcToServer(
+                        "epiphany.select_insight", insightId.toString(), moduleId.toString());
+            });
         }
     }
 

@@ -27,7 +27,7 @@ public final class EpiphanySlotColumnController {
     /** Popup overlay selector opened on empty-slot click. */
     private static final String EPIPHANY_POPUP = "#epiphany-popup";
     /** Re-render check interval (in ticks). */
-    private static final int REFRESH_INTERVAL = 20;
+    private static final int REFRESH_INTERVAL = 1;
 
     private EpiphanySlotColumnController() {
     }
@@ -69,31 +69,81 @@ public final class EpiphanySlotColumnController {
             });
         }
 
-        // Selected slot = filled first.
-        for (ResourceLocation id : selected) {
-            col.addChild(buildFilledSlot(ui));
-        }
-        // Fill up to maxSlots with empty slots (zig-zag alternating).
-        // If player has no free epiphany slot, all empty slots are disabled.
         int freeSlots = (data != null) ? Math.max(0, data.epiphanySlots() - data.usedEpiphanySlots()) : 0;
-        int emptyCount = Math.max(0, maxSlots - selected.size());
-        for (int i = 0; i < emptyCount; i++) {
-            boolean offset = (selected.size() + i) % 2 == 1;
-            boolean canChoose = i < freeSlots;
-            col.addChild(buildEmptySlot(ui, offset, canChoose));
+
+        // Render slots 0..maxSlots-1, zigzag alternating by global index.
+        for (int idx = 0; idx < maxSlots; idx++) {
+            boolean offset = idx % 2 == 1;
+            if (idx < selected.size()) {
+                col.addChild(buildFilledSlot(lookup, selected.get(idx), offset));
+            } else {
+                boolean canChoose = (idx - selected.size()) < freeSlots;
+                col.addChild(buildEmptySlot(ui, offset, canChoose));
+            }
         }
     }
 
-    /** Build a filled slot for an already-selected epiphany — no click handler. */
-    private static UIElement buildFilledSlot(UI ui) {
+    /** Build a filled slot with epiphany icon + zigzag offset + tooltip. */
+    private static UIElement buildFilledSlot(
+            net.minecraft.core.HolderLookup.RegistryLookup<ink.myumoon.epiphany.content.EpiphanyData> lookup,
+            ResourceLocation id, boolean offset) {
         UIElement slot = new UIElement();
         slot.addClass("epiphany-slot");
         slot.addClass("epiphany-slot-selected");
+        slot.addClass(offset ? "epiphany-slot-odd" : "epiphany-slot-even");
+        // Icon — same resolution as EpiphanySelectController.
+        var key = net.minecraft.resources.ResourceKey.create(
+                ink.myumoon.epiphany.registry.EpiphanyRegistries.EPIPHANY_REGISTRY_KEY, id);
+        var epiphanyData = lookup != null ? lookup.get(key).map(h -> h.value()).orElse(null) : null;
+        if (epiphanyData != null) {
+            var iconOpt = ink.myumoon.epiphany.client.EpiphanyIcons.iconTexture(epiphanyData, id);
+            if (iconOpt.isPresent() && resourceExists(iconOpt.get())) {
+                slot.style(s -> s.background(
+                        com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture.of(iconOpt.get())));
+            } else {
+                var icon = new ink.myumoon.epiphany.client.ui.ItemIconElement(
+                        ink.myumoon.epiphany.client.EpiphanyIcons.defaultEpiphany());
+                icon.layout(l -> l.width(16).height(16));
+                slot.addChild(icon);
+            }
+        }
+        // Tooltip (text-only).
+        slot.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
+            var lines = new java.util.ArrayList<net.minecraft.network.chat.Component>();
+            String name = epiphanyData != null && epiphanyData.name().isPresent()
+                    ? epiphanyData.name().get().getString() : id.toString();
+            lines.add(net.minecraft.network.chat.Component.literal(name)
+                    .withStyle(net.minecraft.ChatFormatting.WHITE));
+            if (epiphanyData != null && epiphanyData.description().isPresent()) {
+                lines.add(epiphanyData.description().get().copy()
+                        .withStyle(net.minecraft.ChatFormatting.GRAY));
+            }
+            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+                if (epiphanyData != null && epiphanyData.rewardDescription().isPresent()) {
+                    lines.add(net.minecraft.network.chat.Component.translatable("epiphany.tooltip.reward")
+                            .append(": ").append(epiphanyData.rewardDescription().get())
+                            .withStyle(net.minecraft.ChatFormatting.GOLD));
+                }
+            } else {
+                if (epiphanyData != null && epiphanyData.rewardDescription().isPresent()) {
+                    lines.add(net.minecraft.network.chat.Component.translatable("epiphany.ui.shift_hint")
+                            .withStyle(net.minecraft.ChatFormatting.DARK_GRAY, net.minecraft.ChatFormatting.ITALIC));
+                }
+            }
+            e.hoverTooltips = com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips.empty();
+            for (var ln : lines) e.hoverTooltips = e.hoverTooltips.append(ln);
+        });
         return slot;
     }
 
+    private static boolean resourceExists(ResourceLocation rl) {
+        try {
+            return net.minecraft.client.Minecraft.getInstance().getResourceManager().getResource(rl).isPresent();
+        } catch (Throwable ignored) { return false; }
+    }
+
     /**
-     * Build an empty epiphany slot. ZERO layout/style — LSS owns it.
+     * Build an empty epiphany slot with tooltip. ZERO layout/style — LSS owns it.
      * If {@code canChoose} is false (no free slot available),
      * use .epiphany-slot-disabled (RECT_RD_DARK) and no click handler.
      */
@@ -105,16 +155,25 @@ public final class EpiphanySlotColumnController {
         if (canChoose) {
             slot.addEventListener(UIEvents.MOUSE_DOWN, e -> Overlay.show(ui, EPIPHANY_POPUP));
         }
+        // Tooltip.
+        slot.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
+            var key = canChoose ? "epiphany.ui.epiphany.empty_slot" : "epiphany.ui.epiphany.no_slots";
+            e.hoverTooltips = com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips.empty()
+                    .append(net.minecraft.network.chat.Component.translatable(key)
+                            .withStyle(net.minecraft.ChatFormatting.DARK_GRAY));
+        });
         return slot;
     }
 
-    /** Snapshot signature for change detection. */
+    /** Snapshot signature: selected epiphanies + slot counts (for change detection). */
     private static String currentSignature() {
         var data = ClientData.clientData();
         if (data == null) return "";
         var sb = new StringBuilder();
+        sb.append("s=").append(data.epiphanySlots()).append("u=").append(data.usedEpiphanySlots()).append('|');
         data.epiphanies().entrySet().stream()
                 .filter(e -> e.getValue().selected())
+                .sorted(java.util.Map.Entry.comparingByKey())
                 .forEach(e -> sb.append(e.getKey()).append(','));
         return sb.toString();
     }
