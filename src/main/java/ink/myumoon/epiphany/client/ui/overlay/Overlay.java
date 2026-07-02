@@ -1,109 +1,72 @@
 package ink.myumoon.epiphany.client.ui.overlay;
 
+import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
-import org.appliedenergistics.yoga.YogaEdge;
-import org.appliedenergistics.yoga.YogaPositionType;
-import dev.vfyjxf.taffy.style.AlignContent;
-import dev.vfyjxf.taffy.style.AlignItems;
-import dev.vfyjxf.taffy.style.FlexDirection;
-import net.minecraft.network.chat.Component;
+
+import java.util.Optional;
 
 /**
- * Common Overlay infrastructure for Epiphany popups.
+ * Lightweight popup overlay infrastructure.
  * <p>
- * The overlay is placed as the last child of the target UIElement (after the
- * main content) and uses {@code setVisible(false)} / {@code true} to toggle
- * visibility.
+ * Popups are pre-declared in main.xml as {@code .popup-overlay} elements at the
+ * end of {@code #root} (last in DOM = drawn on top, since LDLib2 has no zIndex).
+ * Show/hide by toggling {@code setDisplay(true/false)} — the LSS rule
+ * {@code .popup-overlay { display: none; }} keeps them hidden by default.
  * <p>
- * <b>Click-outside-to-close</b>: a MOUSE_DOWN listener is attached to BOTH
- * the backdrop (closes the overlay) and the panel (does nothing — but its
- * presence ensures that we can detect "user clicked panel vs backdrop" by
- * comparing {@code e.currentElement} identity).
+ * Click-outside-to-close: we attach a MOUSE_DOWN listener on the overlay itself;
+ * if the event's target IS the overlay (not bubbled from inside the panel), we
+ * close it. ESC close: KEY_DOWN with keyCode == 256 (GLFW_KEY_ESCAPE) on the
+ * overlay.
  */
 public final class Overlay {
 
-    private final UIElement wrapper;
-    private final UIElement backdrop;
-    private final UIElement panel;
+    /** GLFW_KEY_ESCAPE constant. Match LWJGL's GLFW_KEY_ESCAPE = 256. */
+    private static final int KEY_ESCAPE = 256;
 
-    private Overlay(UIElement wrapper, UIElement backdrop, UIElement panel) {
-        this.wrapper = wrapper;
-        this.backdrop = backdrop;
-        this.panel = panel;
+    private Overlay() {
+    }
+
+    /** Show the overlay identified by selector (e.g. {@code "#module-popup"}). */
+    public static void show(UI ui, String overlaySelector) {
+        findOverlay(ui, overlaySelector).ifPresent(el -> el.setDisplay(true));
+    }
+
+    /** Hide the overlay identified by selector. */
+    public static void hide(UI ui, String overlaySelector) {
+        findOverlay(ui, overlaySelector).ifPresent(el -> el.setDisplay(false));
     }
 
     /**
-     * Build an overlay wrapping the given panel. The returned wrapper is the
-     * element to add to the parent UIElement tree (typically as the last child
-     * of the root, after the main content).
+     * Attach close handlers for the given overlay.
+     * <ul>
+     *   <li>Click on the overlay backdrop (target == overlay itself) → close</li>
+     *   <li>ESC key on the overlay → close</li>
+     * </ul>
+     * Call once during attach(); the listeners stay registered for the overlay's
+     * lifetime. Safe even when the overlay is hidden — events just don't fire.
      */
-    public static Overlay of(UIElement panel) {
-        var backdrop = new UIElement();
-        backdrop.layout(l -> l
-                .flexDirection(FlexDirection.ROW)
-                .justifyContent(AlignContent.CENTER)
-                .alignItems(AlignItems.CENTER)
-                .widthPercent(100).heightPercent(100));
+    public static void attachCloseHandlers(UI ui, String overlaySelector) {
+        Optional<UIElement> overlayOpt = findOverlay(ui, overlaySelector);
+        if (overlayOpt.isEmpty()) return;
+        UIElement overlay = overlayOpt.get();
 
-        var wrapper = new UIElement();
-        // ABSOLUTE positioning: wrapper does NOT participate in the parent's
-        // flex flow. It floats over the parent's layout, covering it entirely
-        // via setPosition(YogaEdge.ALL, 0) which insets all four edges to 0.
-        wrapper.layout(l -> l
-                .positionType(YogaPositionType.ABSOLUTE)
-                .setPosition(YogaEdge.ALL, 0)
-                .widthPercent(100).heightPercent(100));
-        wrapper.addChild(backdrop);
-        backdrop.addChild(panel);
-
-        // Build overlay first, then attach handlers that reference it.
-        Overlay overlay = new Overlay(wrapper, backdrop, panel);
-
-        // Backdrop click: hide overlay ONLY when the user clicked on the
-        // backdrop itself (i.e. the actual hit target is the backdrop, not
-        // a bubbled event from inside the panel). We use {@code e.target}
-        // which is the element the mouse actually hit, not the listener owner.
-        // Additionally, panel adds its own MOUSE_DOWN listener that calls
-        // stopPropagation() defensively in case currentElement differs.
-        backdrop.addEventListener(UIEvents.MOUSE_DOWN, e -> {
-            if (e.target == backdrop) {
-                overlay.hide();
+        // Click on backdrop (target == overlay, not bubbled from inside panel) → close.
+        overlay.addEventListener(UIEvents.MOUSE_DOWN, e -> {
+            if (e.target == overlay) {
+                hide(ui, overlaySelector);
             }
         });
-        panel.addEventListener(UIEvents.MOUSE_DOWN, UIEvent::stopPropagation);
-
-        wrapper.setDisplay(false);
-        return overlay;
+        // ESC key → close.
+        overlay.addEventListener(UIEvents.KEY_DOWN, e -> {
+            if (e.keyCode == KEY_ESCAPE) {
+                hide(ui, overlaySelector);
+            }
+        });
     }
 
-    public UIElement wrapper() {
-        return wrapper;
-    }
-
-    public UIElement panel() {
-        return panel;
-    }
-
-    public void show() {
-        // setVisible(boolean) only toggles a flag and does NOT affect rendering.
-        // Use setDisplay(true) which sets TaffyDisplay.FLEX so the element is
-        // actually laid out and drawn.
-        wrapper.setDisplay(true);
-    }
-
-    public void hide() {
-        wrapper.setDisplay(false);
-    }
-
-    /** Convenience: build a title row for a popup panel. */
-    public static UIElement titleRow(Component title) {
-        var row = new UIElement();
-        row.layout(l -> l.flexDirection(FlexDirection.ROW)
-                .widthPercent(100).height(20)
-                .marginBottom(4));
-        row.addChild(new com.lowdragmc.lowdraglib2.gui.ui.elements.Label().setText(title));
-        return row;
+    private static Optional<UIElement> findOverlay(UI ui, String overlaySelector) {
+        return ui.select(overlaySelector).findFirst();
     }
 }

@@ -12,7 +12,6 @@ import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.Registry;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 
@@ -23,21 +22,28 @@ import javax.annotation.Nullable;
  * <p>
  * Centralizes two patterns used across all UI widgets:
  * <ul>
- *   <li>{@link #clientData()} — read the synced {@link PlayerEpiphanyData} mirror</li>
- *   <li>{@link #clientLookup(ResourceKey)} — read a datapack registry from the
- *       client's connection-level {@link RegistryAccess} (datapack registries
- *       are mirrored to the client automatically by vanilla)</li>
+ *   <li>{@link #clientData()} — read the synced {@link PlayerEpiphanyData} mirror
+ *       (kept up to date automatically by NeoForge Attachment sync)</li>
+ *   <li>{@link #clientLookup(ResourceKey)} — fetch a datapack registry view from the
+ *       client's connection-level {@link net.minecraft.core.RegistryAccess}</li>
+ * </ul>
+ * <p>
+ * <b>Important — S→C vs C-side usage:</b>
+ * <ul>
+ *   <li>These helpers touch {@code Minecraft.getInstance().player} (a {@link LocalPlayer}).
+ *     They are safe to call <b>from client-only contexts</b> (e.g. tooltip building, Shift
+ *     detection inside hover events).</li>
+ *   <li>They MUST NOT be used inside {@link com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder}
+ *     S→C getters — those lambdas run on the server thread. For server-side reads, fetch
+ *     the ServerPlayer via {@code element.getModularUI().player} and call
+ *     {@code player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)} directly.</li>
  * </ul>
  * <p>
  * <b>Why {@link HolderLookup.RegistryLookup} and not {@code Registry}?</b><br>
  * In 1.21.1, {@code RegistryAccess.lookup(key)} returns
- * {@code Optional<HolderLookup.RegistryLookup<T>>}. The returned object (an
- * anonymous {@code MappedRegistry$1}) implements
- * {@code HolderLookup.RegistryLookup<T>} but <b>not</b> {@code Registry<T>}
- * (the latter extends the former, not vice versa). Casting to
- * {@code Registry<T>} compiles but throws {@link ClassCastException} at
- * runtime. We therefore expose the {@code RegistryLookup} and helper methods
- * that unwrap {@link Holder.Reference#value()} for direct value access.
+ * {@code Optional<HolderLookup.RegistryLookup<T>>}. The returned object implements
+ * {@code HolderLookup.RegistryLookup<T>} but <b>not</b> {@code Registry<T>}.
+ * Casting to {@code Registry<T>} compiles but throws {@link ClassCastException} at runtime.
  */
 public final class ClientData {
 
@@ -75,7 +81,6 @@ public final class ClientData {
     public static <T> T getValue(ResourceKey<Registry<T>> registryKey, ResourceLocation id) {
         HolderLookup.RegistryLookup<T> lookup = clientLookup(registryKey);
         if (lookup == null) return null;
-        // HolderGetter.get takes ResourceKey<T>; we synthesize one with id+registryKey.
         return lookup.get(ResourceKey.create(registryKey, id))
                 .map(Holder.Reference::value)
                 .orElse(null);
@@ -133,4 +138,3 @@ public final class ClientData {
         return clientLookup(EpiphanyRegistries.PATH_REGISTRY_KEY);
     }
 }
-

@@ -39,12 +39,27 @@
 
   "commands.epiphany.open.success": "已为 %s 打开 Epiphany 界面",
 
-  "key.categories.epiphany": "Epiphany",
-  "key.epiphany.open_ui": "打开 Epiphany 界面",
-
   "epiphany.ui.title": "构筑系统",
   "epiphany.ui.aptitude": "阅历",
-  "epiphany.ui.point": "点心得点",
+  "epiphany.ui.point": "点",
+  "epiphany.ui.points": "心得点",
+  "epiphany.ui.apt_ratio": "%s / %s",
+  "epiphany.ui.select_placeholder": "+ 选择",
+  "epiphany.ui.select": "选择",
+  "epiphany.ui.press_esc_to_close": "按 ESC 关闭",
+  "epiphany.ui.module.select_title": "选择新的模块",
+  "epiphany.ui.epiphany.select_title": "选择你的顿悟",
+  "epiphany.ui.epiphany.show_locked": "显示不可选",
+  "epiphany.ui.epiphany.other": "其他感悟",
+  "epiphany.ui.epiphany.none": "暂无可选",
+  "epiphany.ui.epiphany.kpi": "已用 %s / %s",
+  "epiphany.ui.error.no_points": "心得点不足",
+  "epiphany.ui.error.already_selected": "已选择",
+  "epiphany.ui.error.no_slot": "顿悟槽位不足",
+  "epiphany.ui.error.not_unlocked": "未解锁",
+
+  "key.categories.epiphany": "Epiphany",
+  "key.epiphany.open_ui": "打开 Epiphany 界面",
 
   "epiphany.ui.tab.module": "模块",
   "epiphany.ui.tab.epiphany": "顿悟",
