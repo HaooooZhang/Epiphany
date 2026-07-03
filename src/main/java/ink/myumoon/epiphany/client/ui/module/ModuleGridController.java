@@ -49,6 +49,7 @@ public final class ModuleGridController {
 
     /** Attach to the UI tree, called from {@link ink.myumoon.epiphany.client.ui.EpiphanyUIFactory#register()}. */
     public static void attach(UI ui) {
+        cachedCardWidth = -1;  // reset each UI open (GUI scale may have changed)
         UIElement grid = selectOne(ui, "#module-grid", UIElement.class);
         Epiphany.LOGGER.info("ModuleGrid attached: grid identity = {}", System.identityHashCode(grid));
 
@@ -110,21 +111,28 @@ public final class ModuleGridController {
         scheduleEqualWidth(grid, slots);
     }
 
-    /** Measure the grid's actual width, then force every card to the same width so
-     *  cards on full rows and cards on the partial last row all match exactly. */
+    /** Cached equalized card width — measured once, reused across refreshes. */
+    private static float cachedCardWidth = -1;
+
+    /** Measure the grid's actual width once, then force every card to the same width. */
     private static void scheduleEqualWidth(UIElement grid, List<UIElement> slots) {
+        // If already cached, apply immediately and skip measurement.
+        if (cachedCardWidth > 0 && !slots.isEmpty()) {
+            for (UIElement card : slots) {
+                card.layout(l -> l.width(cachedCardWidth).flexGrow(0).flexShrink(0)
+                        .maxWidth(cachedCardWidth).minWidth(cachedCardWidth));
+            }
+            return;
+        }
         java.util.concurrent.atomic.AtomicBoolean adjusted = new java.util.concurrent.atomic.AtomicBoolean(false);
         Runnable adjust = () -> {
             if (adjusted.get()) return;
             if (grid.getModularUI() == null || grid.getContentWidth() <= 0) return;
             float parentWidth = grid.getContentWidth();
             if (parentWidth <= 0 || slots.isEmpty()) return;
-            // The LSS sets width:90 + min-width:90 + flex-grow:1 + gap-all:2.
-            // We let Taffy do the first layout pass, then read the actual width of
-            // a full-row card (slot 0) to use as the unified width for ALL cards.
             float actualCardWidth = slots.get(0).getSizeWidth();
             if (actualCardWidth <= 0) return;
-            // Apply to every card: explicit width + flexGrow:0 so all rows look identical.
+            cachedCardWidth = actualCardWidth;
             for (UIElement card : slots) {
                 final float w = actualCardWidth;
                 card.layout(l -> l.width(w).flexGrow(0).flexShrink(0).maxWidth(w).minWidth(w));
@@ -163,10 +171,11 @@ public final class ModuleGridController {
         Label nameLabel = new Label();
         nameLabel.setText(Component.literal(name));
         nameLabel.textStyle(t -> t.textAlignHorizontal(com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal.LEFT));
-        card.addChild(titleBar.addChild(nameLabel));
+        titleBar.addChild(nameLabel);
+        card.addChild(titleBar);
 
-        // Hover on title bar → Module tooltip.
-        titleBar.addEventListener(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents.HOVER_TOOLTIPS, e -> {
+        // Hover on card (capture) → Module tooltip. Capture beats any child handler.
+        card.addEventListener(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents.HOVER_TOOLTIPS, e -> {
             var lines = new java.util.ArrayList<net.minecraft.network.chat.Component>();
             lines.add(Component.literal(name).withStyle(net.minecraft.ChatFormatting.WHITE));
             if (moduleData != null && moduleData.description().isPresent()) {
@@ -195,7 +204,7 @@ public final class ModuleGridController {
             }
             e.hoverTooltips = com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips.empty();
             for (var ln : lines) e.hoverTooltips = e.hoverTooltips.append(ln);
-        });
+        }, true);
 
         // --- Insight tree area ---
         UIElement treeArea = new UIElement();

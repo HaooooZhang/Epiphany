@@ -77,6 +77,8 @@
   "epiphany.ui.module.empty_slot": "空槽位 (+)",
   "epiphany.ui.module.select_title": "选择模块",
   "epiphany.ui.module.show_locked": "显示锁定的",
+  "epiphany.ui.module.locked_hint": "模块已锁定",
+  "epiphany.ui.module.show_locked": "显示锁定的",
   "epiphany.ui.module.select_button": "选择",
   "epiphany.ui.module.locked_button": "（锁定）",
   "epiphany.ui.module.unnamed": "（未命名）",

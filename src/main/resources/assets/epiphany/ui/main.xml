@@ -537,10 +537,7 @@
             <element id="module-popup-panel" class="popup-panel popup-panel-module">
                 <element class="popup-header">
                     <label class="popup-title"><lang key="epiphany.ui.module.select_title"/></label>
-                    <element class="popup-toggle-row">
-                        <switch id="module-show-locked"/>
-                        <label class="popup-hint"><lang key="epiphany.ui.module.show_locked"/></label>
-                    </element>
+                    <element id="module-toggle-row" class="popup-toggle-row"/>
                 </element>
                 <label id="module-popup-error" class="popup-error"/>
                 <scroller-view class="popup-scroll">
@@ -555,11 +552,8 @@
             <element id="epiphany-popup-panel" class="popup-panel popup-epiphany">
                 <element class="popup-header">
                     <label class="popup-title"><lang key="epiphany.ui.epiphany.select_title"/></label>
-                    <!-- Switch + label — wrapped so the row right-aligns. -->
-                    <element class="popup-toggle-row">
-                        <switch id="epiphany-show-locked"/>
-                        <label class="popup-hint"><lang key="epiphany.ui.epiphany.show_locked"/></label>
-                    </element>
+                    <!-- Switch + label — hardcoded by Java. -->
+                    <element id="epiphany-toggle-row" class="popup-toggle-row"/>
                 </element>
                 <label id="epiphany-popup-error" class="popup-error"/>
                 <scroller-view class="epiphany-paths-scroll">

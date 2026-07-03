@@ -121,16 +121,68 @@ public class InsightTreeView {
             }
         }
 
-        // Center content in container. LAYOUT_CHANGED fires after every layout pass.
+        // Center or enable drag-to-pan for large trees (depth>3 or >3 per depth).
+        boolean largeTree = maxDepth > 3 || maxPerDepth > 3;
         container.addChild(content);
+        if (largeTree) {
+            addDragPan(container, content, contentWidth, contentHeight);
+        } else {
+            container.addEventListener(UIEvents.LAYOUT_CHANGED, e -> {
+                float cw = container.getSizeWidth();
+                float ch = container.getSizeHeight();
+                if (cw > 0 && ch > 0) {
+                    float ox = Math.max(0, (cw - contentWidth) / 2f);
+                    float oy = Math.max(4, (ch - contentHeight) / 2f);
+                    content.layout(l -> l.left(ox).top(oy));
+                }
+            });
+        }
+    }
+
+    /** Add mouse-drag pan for large trees. Initial center, then drag to scroll. */
+    private static void addDragPan(UIElement container, UIElement content,
+                                    int cw, int ch) {
+        final float[] ox = {0}, oy = {0};        // current content offset
+        final boolean[] centered = {false};
+        final boolean[] dragging = {false};
+        final float[] dragStartCX = {0}, dragStartCY = {0};  // content pos at drag start
+        final double[] dragStartMX = {0}, dragStartMY = {0}; // mouse pos at drag start
+
+        // Initial centering once layout is ready. Content starts at 0 if overflow, else centered.
         container.addEventListener(UIEvents.LAYOUT_CHANGED, e -> {
-            float cw = container.getSizeWidth();
-            float ch = container.getSizeHeight();
-            if (cw > 0 && ch > 0) {
-                float ox = Math.max(0, (cw - contentWidth) / 2f);
-                float oy = Math.max(4, (ch - contentHeight) / 2f);
-                content.layout(l -> l.left(ox).top(oy));
+            if (centered[0]) return;
+            float ccw = container.getSizeWidth();
+            float cch = container.getSizeHeight();
+            if (ccw > 0 && cch > 0) {
+                ox[0] = cw > ccw ? 0 : Math.max(0, (ccw - cw) / 2f);
+                oy[0] = ch > cch ? 0 : Math.max(4, (cch - ch) / 2f);
+                content.layout(l -> l.left(ox[0]).top(oy[0]));
+                centered[0] = true;
             }
+        });
+
+        container.addEventListener(UIEvents.MOUSE_DOWN, e -> {
+            if (!centered[0]) return;
+            dragging[0] = true;
+            dragStartCX[0] = ox[0];
+            dragStartCY[0] = oy[0];
+            dragStartMX[0] = net.minecraft.client.Minecraft.getInstance().mouseHandler.xpos();
+            dragStartMY[0] = net.minecraft.client.Minecraft.getInstance().mouseHandler.ypos();
+        });
+
+        container.addEventListener(UIEvents.MOUSE_UP, e -> dragging[0] = false);
+
+        container.addEventListener(UIEvents.TICK, e -> {
+            if (!dragging[0]) return;
+            double mx = net.minecraft.client.Minecraft.getInstance().mouseHandler.xpos();
+            double my = net.minecraft.client.Minecraft.getInstance().mouseHandler.ypos();
+            float dx = (float)(mx - dragStartMX[0]);
+            float dy = (float)(my - dragStartMY[0]);
+            float ccw = container.getSizeWidth();
+            float cch = container.getSizeHeight();
+            if (cw > ccw) ox[0] = Math.min(0, Math.max(ccw - cw, dragStartCX[0] + dx));
+            if (ch > cch) oy[0] = Math.min(0, Math.max(cch - ch, dragStartCY[0] + dy));
+            content.layout(l -> l.left(ox[0]).top(oy[0]));
         });
     }
 

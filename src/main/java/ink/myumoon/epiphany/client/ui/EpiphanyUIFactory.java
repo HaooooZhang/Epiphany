@@ -11,6 +11,7 @@ import com.lowdragmc.lowdraglib2.utils.XmlUtils;
 import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.api.EpiphanyManager;
 import ink.myumoon.epiphany.api.InsightManager;
+import ink.myumoon.epiphany.api.ModuleManager;
 import ink.myumoon.epiphany.client.ui.epiphany.EpiphanySlotColumnController;
 import ink.myumoon.epiphany.client.ui.module.ModuleGridController;
 import net.minecraft.resources.ResourceLocation;
@@ -134,6 +135,15 @@ public final class EpiphanyUIFactory {
         Player target = sender.asPlayer();
         if (target instanceof ServerPlayer sp) {
             EpiphanyManager.select(sp, ResourceLocation.parse(epiphanyIdStr));
+        }
+    }
+
+    /** Server-side: client clicked a Module card. */
+    @RPCPacket(value = "epiphany.select_module", modId = Epiphany.MODID)
+    public static void onSelectModuleRpc(RPCSender sender, String moduleIdStr) {
+        Player target = sender.asPlayer();
+        if (target instanceof ServerPlayer sp) {
+            ModuleManager.select(sp, ResourceLocation.parse(moduleIdStr));
         }
     }
 }

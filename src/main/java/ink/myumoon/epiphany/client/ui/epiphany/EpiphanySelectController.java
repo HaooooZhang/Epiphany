@@ -68,6 +68,33 @@ public final class EpiphanySelectController {
 
         refresh(ui);
 
+        // Hardcoded toggle row: label + switch with calculated width.
+        ui.select("#epiphany-toggle-row").findFirst().ifPresent(row -> {
+            String labelText = net.minecraft.network.chat.Component.translatable("epiphany.ui.epiphany.show_locked").getString();
+            int labelW = labelText.length() * 8;
+            int switchW = 24;
+            int gap = 4;
+            int totalW = labelW + gap + switchW;
+            row.layout(l -> l.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
+                    .right(4).top(0).width(totalW).height(14)
+                    .flexDirection(dev.vfyjxf.taffy.style.FlexDirection.ROW));
+
+            Label lbl = new Label();
+            lbl.setText(net.minecraft.network.chat.Component.literal(labelText));
+            lbl.textStyle(t -> t.fontSize(9).textColor(0xFFFFFFFF).textShadow(true)
+                    .textAlignVertical(com.lowdragmc.lowdraglib2.gui.ui.data.Vertical.CENTER));
+            lbl.layout(l -> l.width(labelW).height(14).flexShrink(0));
+            row.addChild(lbl);
+
+            var sw = new com.lowdragmc.lowdraglib2.gui.ui.elements.Switch();
+            sw.layout(l -> l.width(switchW).height(14).flexShrink(0).marginLeft(gap));
+            sw.setOnSwitchChanged(on -> {
+                showLocked = on;
+                refresh(ui);
+            });
+            row.addChild(sw);
+        });
+
         ui.select(SWITCH_SELECTOR, com.lowdragmc.lowdraglib2.gui.ui.elements.Switch.class)
                 .findFirst()
                 .ifPresent(sw -> sw.setOnSwitchChanged(on -> {
