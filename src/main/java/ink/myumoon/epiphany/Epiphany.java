@@ -57,7 +57,10 @@ public class Epiphany {
 
         // Re-apply persistent rewards (e.g. attribute modifiers) after entity rebuild (death, end portal)
         NeoForge.EVENT_BUS.addListener(PlayerEvent.PlayerRespawnEvent.class, event -> {
-            PersistentReward.reapplyAll((net.minecraft.server.level.ServerPlayer) event.getEntity());
+            var sp = (net.minecraft.server.level.ServerPlayer) event.getEntity();
+            PersistentReward.reapplyAll(sp);
+            // Entity rebuilt → max health may have increased from modifiers → pull current health up
+            sp.setHealth(sp.getMaxHealth());
         });
 
         LOGGER.info("Epiphany initialized");

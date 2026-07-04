@@ -24,6 +24,7 @@ public record EpiphanyData(
         Optional<ResourceLocation> icon,
         Optional<ResourceLocation> path,
         Optional<Condition> condition,
+        Optional<Component> conditionDescription,
         InitialState initialState,
         Optional<EpiphanyReward> reward,
         Optional<Component> rewardDescription,
@@ -35,6 +36,8 @@ public record EpiphanyData(
             ResourceLocation.CODEC.optionalFieldOf("icon").forGetter(EpiphanyData::icon),
             ResourceLocation.CODEC.optionalFieldOf("path").forGetter(EpiphanyData::path),
             Condition.CODEC.optionalFieldOf("condition").forGetter(EpiphanyData::condition),
+            ComponentSerialization.CODEC.optionalFieldOf("condition_description")
+                    .forGetter(EpiphanyData::conditionDescription),
             InitialState.CODEC.optionalFieldOf("initial_state", InitialState.SELECTABLE)
                     .forGetter(EpiphanyData::initialState),
             EpiphanyReward.CODEC.optionalFieldOf("reward").forGetter(EpiphanyData::reward),

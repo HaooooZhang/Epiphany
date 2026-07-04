@@ -22,6 +22,7 @@ public record ModuleData(
         Optional<Component> description,
         Optional<ResourceLocation> icon,
         Optional<Condition> condition,
+        Optional<Component> conditionDescription,
         InitialState initialState,
         List<InsightEntry> insights,
         Optional<InsightReward> onSelectReward,
@@ -35,6 +36,8 @@ public record ModuleData(
             ComponentSerialization.CODEC.optionalFieldOf("description").forGetter(ModuleData::description),
             ResourceLocation.CODEC.optionalFieldOf("icon").forGetter(ModuleData::icon),
             Condition.CODEC.optionalFieldOf("condition").forGetter(ModuleData::condition),
+            ComponentSerialization.CODEC.optionalFieldOf("condition_description")
+                    .forGetter(ModuleData::conditionDescription),
             InitialState.CODEC.optionalFieldOf("initial_state", InitialState.SELECTABLE)
                     .forGetter(ModuleData::initialState),
             InsightEntry.CODEC.listOf().optionalFieldOf("insights", List.of())

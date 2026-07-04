@@ -180,6 +180,10 @@ public final class ModuleSelectController {
                 var cd = ClientData.clientData();
                 var st = cd != null ? cd.modules().get(moduleId) : null;
                 boolean isUnlocked = st != null ? st.unlocked() : module.initialState() == InitialState.SELECTABLE;
+                if (!isUnlocked && module.conditionDescription().isPresent()) {
+                    lines.add(module.conditionDescription().get().copy()
+                            .withStyle(net.minecraft.ChatFormatting.DARK_RED));
+                }
                 lines.add(Component.translatable(isUnlocked ? "epiphany.ui.error.no_points" : "epiphany.ui.module.locked_hint")
                         .withStyle(net.minecraft.ChatFormatting.RED));
             }

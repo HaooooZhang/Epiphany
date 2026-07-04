@@ -1,6 +1,7 @@
 {
   "name": "生存专家",
   "description": "【开发者触发】无 condition + locked，只能 API 解锁",
+  "condition_description": "仅可通过命令或API解锁",
   "initial_state": "locked",
   "insights": [
     {"id": "epiphany:survival_health", "depth": 0},

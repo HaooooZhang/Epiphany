@@ -223,6 +223,8 @@ public final class EpiphanySelectController {
                 lines.add(net.minecraft.network.chat.Component.translatable("epiphany.tooltip.reward").append(": ").append(data.rewardDescription().get()).withStyle(net.minecraft.ChatFormatting.GOLD));
             else if (data.rewardDescription().isPresent())
                 lines.add(net.minecraft.network.chat.Component.translatable("epiphany.ui.shift_hint").withStyle(net.minecraft.ChatFormatting.DARK_GRAY, net.minecraft.ChatFormatting.ITALIC));
+            if (!unlocked && data.conditionDescription().isPresent())
+                lines.add(data.conditionDescription().get().copy().withStyle(net.minecraft.ChatFormatting.DARK_RED));
             e.hoverTooltips = com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips.empty();
             for (var ln : lines) e.hoverTooltips = e.hoverTooltips.append(ln);
         });
