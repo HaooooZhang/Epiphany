@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
 import ink.myumoon.epiphany.util.DefaultedCodec;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.function.Function;
@@ -26,9 +27,19 @@ public interface EpiphanyReward {
 
     MapCodec<? extends EpiphanyReward> codec();
 
-    /** Applies this reward to the given player. */
-    void apply(ServerPlayer player);
+    /**
+     * Applies this reward to the given player.
+     *
+     * @param player   the server-side player
+     * @param sourceId the registry ID of the Epiphany that grants this reward
+     */
+    void apply(ServerPlayer player, ResourceLocation sourceId);
 
-    /** Removes this reward from the given player. Default no-op. */
-    default void remove(ServerPlayer player) {}
+    /**
+     * Removes this reward from the given player.
+     *
+     * @param player   the server-side player
+     * @param sourceId the registry ID of the Epiphany that granted this reward
+     */
+    default void remove(ServerPlayer player, ResourceLocation sourceId) {}
 }

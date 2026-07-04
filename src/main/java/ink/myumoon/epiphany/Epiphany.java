@@ -8,6 +8,7 @@ import ink.myumoon.epiphany.api.EpiphanyManager;
 import ink.myumoon.epiphany.api.ModuleManager;
 import ink.myumoon.epiphany.client.ui.EpiphanyUIFactory;
 import ink.myumoon.epiphany.command.EpiphanyCommand;
+import ink.myumoon.epiphany.content.reward.PersistentReward;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyConditionTypes;
 import ink.myumoon.epiphany.registry.EpiphanyEpiphanyRewardTypes;
@@ -52,6 +53,11 @@ public class Epiphany {
             var sp = (net.minecraft.server.level.ServerPlayer) event.getEntity();
             ModuleManager.checkAutoUnlock(sp);
             EpiphanyManager.checkAutoUnlock(sp);
+        });
+
+        // Re-apply persistent rewards (e.g. attribute modifiers) after entity rebuild (death, end portal)
+        NeoForge.EVENT_BUS.addListener(PlayerEvent.PlayerRespawnEvent.class, event -> {
+            PersistentReward.reapplyAll((net.minecraft.server.level.ServerPlayer) event.getEntity());
         });
 
         LOGGER.info("Epiphany initialized");

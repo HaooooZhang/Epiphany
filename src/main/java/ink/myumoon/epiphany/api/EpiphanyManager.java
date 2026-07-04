@@ -108,7 +108,7 @@ public final class EpiphanyManager {
         PlayerEpiphanyData newData = data.withUsedEpiphanySlots(newUsedSlots)
                 .withEpiphanyState(epiphanyId, newState);
 
-        epiphany.reward().ifPresent(r -> r.apply(player));
+        epiphany.reward().ifPresent(r -> r.apply(player, epiphanyId));
 
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
         NeoForge.EVENT_BUS.post(new EpiphanySelectedEvent(player, epiphanyId));
@@ -128,7 +128,7 @@ public final class EpiphanyManager {
         PlayerEpiphanyData newData = data.withEpiphanyState(epiphanyId, newState)
                 .withUsedEpiphanySlots(data.usedEpiphanySlots() + 1);
 
-        epiphany.reward().ifPresent(r -> r.apply(player));
+        epiphany.reward().ifPresent(r -> r.apply(player, epiphanyId));
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
         NeoForge.EVENT_BUS.post(new EpiphanySelectedEvent(player, epiphanyId));
     }
@@ -141,7 +141,7 @@ public final class EpiphanyManager {
 
         EpiphanyData epiphany = epiphanyRegistry(player).get(epiphanyId);
         if (epiphany != null && state.selected()) {
-            epiphany.reward().ifPresent(r -> r.remove(player));
+            epiphany.reward().ifPresent(r -> r.remove(player, epiphanyId));
         }
 
         int refund = state.selected() ? 1 : 0;
@@ -169,7 +169,7 @@ public final class EpiphanyManager {
                 state = state != null ? state : EpiphanyPlayerState.createDefault();
                 EpiphanyPlayerState newState = new EpiphanyPlayerState(state.selected(), true);
                 data = data.withEpiphanyState(id, newState);
-                NeoForge.EVENT_BUS.post(new EpiphanyUnlockEvent(player, id));
+                NeoForge.EVENT_BUS.post(new EpiphanyUnlockedEvent(player, id));
                 changed = true;
             }
         }

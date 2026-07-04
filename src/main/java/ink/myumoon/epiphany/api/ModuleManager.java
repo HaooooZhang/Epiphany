@@ -135,7 +135,7 @@ public final class ModuleManager {
         // Apply on_select_reward
         ModuleData module = moduleRegistry(player).get(moduleId);
         if (module != null) {
-            module.onSelectReward().ifPresent(r -> r.apply(player));
+            module.onSelectReward().ifPresent(r -> r.apply(player, moduleId));
         }
 
         NeoForge.EVENT_BUS.post(new ModuleSelectedEvent(player, moduleId));
@@ -171,7 +171,7 @@ public final class ModuleManager {
         PlayerEpiphanyData newData = data.withEpiphanySlots(newSlots)
                 .withModuleState(moduleId, newState);
 
-        module.onCompleteReward().ifPresent(r -> r.apply(player));
+        module.onCompleteReward().ifPresent(r -> r.apply(player, moduleId));
 
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
         NeoForge.EVENT_BUS.post(new ModuleCompletedEvent(player, moduleId));
@@ -242,7 +242,7 @@ public final class ModuleManager {
         PlayerEpiphanyData newData = data.withEpiphanySlots(newSlots)
                 .withModuleState(moduleId, newState);
 
-        module.onCompleteReward().ifPresent(r -> r.apply(player));
+        module.onCompleteReward().ifPresent(r -> r.apply(player, moduleId));
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
         NeoForge.EVENT_BUS.post(new ModuleCompletedEvent(player, moduleId));
     }
@@ -263,7 +263,7 @@ public final class ModuleManager {
             InsightData insight = iRegistry.get(insightId);
             if (insight != null) {
                 refund += insight.cost();
-                insight.reward().ifPresent(r -> r.remove(player));
+                insight.reward().ifPresent(r -> r.remove(player, insightId));
             }
         }
         // Also refund the module selection cost
@@ -281,8 +281,8 @@ public final class ModuleManager {
 
         // Remove module rewards
         if (module != null) {
-            module.onSelectReward().ifPresent(r -> r.remove(player));
-            module.onCompleteReward().ifPresent(r -> r.remove(player));
+            module.onSelectReward().ifPresent(r -> r.remove(player, moduleId));
+            module.onCompleteReward().ifPresent(r -> r.remove(player, moduleId));
         }
 
         PlayerEpiphanyData newData = data.withModuleState(moduleId, newState)

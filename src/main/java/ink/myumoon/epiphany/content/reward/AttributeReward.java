@@ -10,14 +10,12 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.ai.attributes.Attribute;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 
-import java.nio.charset.StandardCharsets;
-import java.util.UUID;
-
 /**
  * Adds a permanent attribute modifier to the player.
  * <p>
- * Implements both {@link InsightReward} and {@link EpiphanyReward}
- * so it can be used as the reward for both Insight nodes and Epiphany abilities.
+ * Implements both {@link InsightReward}, {@link EpiphanyReward}, and
+ * {@link PersistentReward} so it can be used as the reward for both
+ * Insight nodes and Epiphany abilities, and survives player death.
  * <p>
  * JSON: {@code {"type": "epiphany:attribute", "attribute": "minecraft:generic.max_health",
  * "amount": 2.0, "operation": "addition"}}
@@ -26,7 +24,7 @@ public record AttributeReward(
         Holder<Attribute> attribute,
         double amount,
         AttributeModifier.Operation operation
-) implements InsightReward, EpiphanyReward {
+) implements InsightReward, EpiphanyReward, PersistentReward {
 
     private static final Codec<AttributeModifier.Operation> OPERATION_CODEC =
             Codec.STRING.xmap(
@@ -48,25 +46,31 @@ public record AttributeReward(
     }
 
     @Override
-    public void apply(ServerPlayer player) {
+    public void apply(ServerPlayer player, ResourceLocation sourceId) {
         var attr = player.getAttribute(attribute);
         if (attr == null) return;
-        attr.addPermanentModifier(
-                new AttributeModifier(modifierId(), amount, operation));
+        var id = modifierId(player, sourceId);
+        // 1.21.1: addModifier throws if same ID already present, so check first.
+        if (attr.getModifier(id) != null) return;
+        attr.addPermanentModifier(new AttributeModifier(id, amount, operation));
     }
 
     @Override
-    public void remove(ServerPlayer player) {
+    public void remove(ServerPlayer player, ResourceLocation sourceId) {
         var attr = player.getAttribute(attribute);
         if (attr != null) {
-            attr.removeModifier(modifierId());
+            attr.removeModifier(modifierId(player, sourceId));
         }
     }
 
-    /** Deterministic UUID from (attribute, amount, operation) so apply/remove match. */
-    private ResourceLocation modifierId() {
-        String idStr = attribute.value().getDescriptionId() + amount + operation.name();
-        UUID uuid = UUID.nameUUIDFromBytes(idStr.getBytes(StandardCharsets.UTF_8));
-        return ResourceLocation.fromNamespaceAndPath("epiphany", "reward_" + uuid);
+    /**
+     * Deterministic ResourceLocation from (player, sourceId).
+     * Each (player, insight/module/epiphany) pair gets a unique modifier,
+     * so two different Insights with the same attribute parameters stack correctly.
+     */
+    private ResourceLocation modifierId(ServerPlayer player, ResourceLocation sourceId) {
+        String path = "modifier/" + player.getStringUUID() + "/"
+                + sourceId.getNamespace() + "/" + sourceId.getPath();
+        return ResourceLocation.fromNamespaceAndPath("epiphany", path);
     }
 }

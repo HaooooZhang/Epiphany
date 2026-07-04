@@ -111,7 +111,7 @@ public final class InsightManager {
         );
 
         // Apply reward
-        insight.reward().ifPresent(r -> r.apply(player));
+        insight.reward().ifPresent(r -> r.apply(player, insightId));
 
         PlayerEpiphanyData newData = data.withInsightPoints(newPoints)
                 .withTotalInsightPointsSpent(newTotalSpent)
@@ -143,7 +143,7 @@ public final class InsightManager {
         ModulePlayerState newModuleState = new ModulePlayerState(
                 moduleState.unlocked(), moduleState.selected(), moduleState.completed(), newUnlocked
         );
-        insight.reward().ifPresent(r -> r.apply(player));
+        insight.reward().ifPresent(r -> r.apply(player, insightId));
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
                 data.withModuleState(moduleId, newModuleState));
 
@@ -159,7 +159,7 @@ public final class InsightManager {
         for (var entry : data.modules().entrySet()) {
             ModulePlayerState state = entry.getValue();
             if (state.unlockedInsights().contains(insightId)) {
-                insight.reward().ifPresent(r -> r.remove(player));
+                insight.reward().ifPresent(r -> r.remove(player, insightId));
                 Set<ResourceLocation> newUnlocked = new HashSet<>(state.unlockedInsights());
                 newUnlocked.remove(insightId);
                 ModulePlayerState newState = new ModulePlayerState(

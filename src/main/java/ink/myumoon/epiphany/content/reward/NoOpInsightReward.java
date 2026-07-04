@@ -1,6 +1,7 @@
 package ink.myumoon.epiphany.content.reward;
 
 import com.mojang.serialization.MapCodec;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
@@ -18,7 +19,7 @@ public enum NoOpInsightReward implements InsightReward {
     }
 
     @Override
-    public void apply(ServerPlayer player) {
+    public void apply(ServerPlayer player, ResourceLocation sourceId) {
         // No-op
     }
 }

@@ -421,12 +421,12 @@ public final class EpiphanyCommand {
         for (var me : data.modules().entrySet()) {
             var module = mReg.get(me.getKey());
             if (module != null) {
-                module.onSelectReward().ifPresent(r -> r.remove(player));
-                module.onCompleteReward().ifPresent(r -> r.remove(player));
+                module.onSelectReward().ifPresent(r -> r.remove(player, me.getKey()));
+                module.onCompleteReward().ifPresent(r -> r.remove(player, me.getKey()));
             }
             for (ResourceLocation iId : me.getValue().unlockedInsights()) {
                 var insight = iReg.get(iId);
-                if (insight != null) insight.reward().ifPresent(r -> r.remove(player));
+                if (insight != null) insight.reward().ifPresent(r -> r.remove(player, iId));
             }
         }
 
@@ -434,7 +434,7 @@ public final class EpiphanyCommand {
         for (var ee : data.epiphanies().entrySet()) {
             if (ee.getValue().selected()) {
                 var epiphany = eReg.get(ee.getKey());
-                if (epiphany != null) epiphany.reward().ifPresent(r -> r.remove(player));
+                if (epiphany != null) epiphany.reward().ifPresent(r -> r.remove(player, ee.getKey()));
             }
         }
     }
