@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
 
+import ink.myumoon.epiphany.api.EpiphanyManager;
 import ink.myumoon.epiphany.api.ModuleManager;
 import ink.myumoon.epiphany.client.ui.EpiphanyUIFactory;
 import ink.myumoon.epiphany.command.EpiphanyCommand;
@@ -41,11 +42,17 @@ public class Epiphany {
         NeoForge.EVENT_BUS.addListener(RegisterCommandsEvent.class, event ->
                 EpiphanyCommand.register(event.getDispatcher()));
 
-        NeoForge.EVENT_BUS.addListener(PlayerEvent.PlayerLoggedInEvent.class, event ->
-                ModuleManager.checkAutoUnlock((net.minecraft.server.level.ServerPlayer) event.getEntity()));
+        NeoForge.EVENT_BUS.addListener(PlayerEvent.PlayerLoggedInEvent.class, event -> {
+            var sp = (net.minecraft.server.level.ServerPlayer) event.getEntity();
+            ModuleManager.checkAutoUnlock(sp);
+            EpiphanyManager.checkAutoUnlock(sp);
+        });
 
-        NeoForge.EVENT_BUS.addListener(AdvancementEvent.AdvancementEarnEvent.class, event ->
-                ModuleManager.checkAutoUnlock((net.minecraft.server.level.ServerPlayer) event.getEntity()));
+        NeoForge.EVENT_BUS.addListener(AdvancementEvent.AdvancementEarnEvent.class, event -> {
+            var sp = (net.minecraft.server.level.ServerPlayer) event.getEntity();
+            ModuleManager.checkAutoUnlock(sp);
+            EpiphanyManager.checkAutoUnlock(sp);
+        });
 
         LOGGER.info("Epiphany initialized");
     }

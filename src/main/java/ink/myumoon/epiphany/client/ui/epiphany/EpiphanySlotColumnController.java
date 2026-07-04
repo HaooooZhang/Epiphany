@@ -153,7 +153,10 @@ public final class EpiphanySlotColumnController {
         slot.addClass(canChoose ? "epiphany-slot-empty" : "epiphany-slot-disabled");
         slot.addClass(offset ? "epiphany-slot-odd" : "epiphany-slot-even");
         if (canChoose) {
-            slot.addEventListener(UIEvents.MOUSE_DOWN, e -> Overlay.show(ui, EPIPHANY_POPUP));
+            slot.addEventListener(UIEvents.MOUSE_DOWN, e -> {
+                com.lowdragmc.lowdraglib2.gui.util.UISoundUtils.playButtonClickSound();
+                Overlay.show(ui, EPIPHANY_POPUP);
+            });
         }
         // Tooltip.
         slot.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {

@@ -37,9 +37,12 @@ public final class EpiphanyManager {
     public static boolean isUnlocked(ServerPlayer player, ResourceLocation epiphanyId) {
         EpiphanyPlayerState state = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)
                 .epiphanies().get(epiphanyId);
-        if (state != null) return state.unlocked();
+        if (state != null && state.unlocked()) return true;
         EpiphanyData epiphany = epiphanyRegistry(player).get(epiphanyId);
-        return epiphany != null && epiphany.initialState() == InitialState.SELECTABLE;
+        if (epiphany == null) return false;
+        if (state == null && epiphany.initialState() == InitialState.SELECTABLE
+                && epiphany.condition().isEmpty()) return true;
+        return epiphany.condition().map(c -> c.test(player)).orElse(false);
     }
 
     public static boolean isSelected(ServerPlayer player, ResourceLocation epiphanyId) {
@@ -101,7 +104,7 @@ public final class EpiphanyManager {
         if (pre.isCanceled()) return;
 
         int newUsedSlots = data.usedEpiphanySlots() + 1;
-        EpiphanyPlayerState newState = new EpiphanyPlayerState(true, state.unlocked());
+        EpiphanyPlayerState newState = new EpiphanyPlayerState(true, true);  // select implies unlock
         PlayerEpiphanyData newData = data.withUsedEpiphanySlots(newUsedSlots)
                 .withEpiphanyState(epiphanyId, newState);
 
@@ -146,5 +149,31 @@ public final class EpiphanyManager {
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
                 data.withEpiphanyState(epiphanyId, newState)
                         .withUsedEpiphanySlots(Math.max(0, data.usedEpiphanySlots() - refund)));
+    }
+
+    /** Periodically evaluate conditions and auto-unlock matching epiphanies. */
+    public static void checkAutoUnlock(ServerPlayer player) {
+        Registry<EpiphanyData> registry = epiphanyRegistry(player);
+        PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+        boolean changed = false;
+
+        for (var entry : registry.entrySet()) {
+            ResourceLocation id = entry.getKey().location();
+            EpiphanyData epiphany = entry.getValue();
+            if (epiphany.condition().isEmpty()) continue;
+
+            EpiphanyPlayerState state = data.epiphanies().get(id);
+            if (state != null && state.unlocked()) continue;
+
+            if (epiphany.condition().get().test(player)) {
+                state = state != null ? state : EpiphanyPlayerState.createDefault();
+                EpiphanyPlayerState newState = new EpiphanyPlayerState(state.selected(), true);
+                data = data.withEpiphanyState(id, newState);
+                NeoForge.EVENT_BUS.post(new EpiphanyUnlockEvent(player, id));
+                changed = true;
+            }
+        }
+
+        if (changed) player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, data);
     }
 }

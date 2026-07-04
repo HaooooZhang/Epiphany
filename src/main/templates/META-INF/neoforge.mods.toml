@@ -89,12 +89,11 @@ A modular skill-tree system for Minecraft. Unlock Modules, learn Insights, and g
     side="BOTH"
 
 [[dependencies.${mod_id}]]
-modId="ldlib2"
-type="required"
-# This version range declares a minimum of the current minecraft version up to but not including the next major version
-versionRange="[2.2.0,)"
-ordering="NONE"
-side="BOTH"
+    modId="ldlib2"
+    type="required"
+    versionRange="[2.2.0,)"
+    ordering="NONE"
+    side="BOTH"
 
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't

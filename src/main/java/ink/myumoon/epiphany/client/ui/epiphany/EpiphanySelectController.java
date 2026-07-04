@@ -36,229 +36,177 @@ public final class EpiphanySelectController {
 
     private static final String EPIPHANY_POPUP = "#epiphany-popup";
     private static final String PATHS_SELECTOR = "#epiphany-paths-container";
+    private static final String RIGHT_SELECTOR = "#epiphany-right-col";
     private static final String ERROR_SELECTOR = "#epiphany-popup-error";
-    private static final String SWITCH_SELECTOR = "#epiphany-show-locked";
-    private static final String BOTTOM_SELECTOR = "#epiphany-bottom-row";
 
-    /** Filter state — show locked items when true. Mutated by the Switch callback. */
+    /** Filter state. */
     private static boolean showLocked = false;
 
     private EpiphanySelectController() {
     }
 
     public static void attach(UI ui) {
+        showLocked = false;
         Overlay.attachCloseHandlers(ui, EPIPHANY_POPUP);
         clearError(ui);
 
-        // Refresh the popup's list whenever it becomes visible or attachment changes.
         var popup = ui.select(EPIPHANY_POPUP).findFirst();
         var lastSig = new String[]{""};
         var tickCount = new int[]{0};
+        var wasDisplayed = new boolean[]{false};
         popup.ifPresent(overlay -> overlay.addEventListener(UIEvents.TICK, e -> {
-            if (!overlay.isDisplayed()) return;
+            boolean now = overlay.isDisplayed();
+            if (!now) { wasDisplayed[0] = false; showLocked = false; return; }
+            if (!wasDisplayed[0]) { wasDisplayed[0] = true; lastSig[0] = ""; tickCount[0] = 99; }
             tickCount[0]++;
-            if (tickCount[0] < 10) return;
+            if (tickCount[0] < 1) return;
             tickCount[0] = 0;
             String sig = currentSignature();
-            if (!sig.equals(lastSig[0])) {
-                lastSig[0] = sig;
-                refresh(ui);
-            }
+            if (!sig.equals(lastSig[0])) { lastSig[0] = sig; refresh(ui); }
         }));
 
-        refresh(ui);
-
-        // Hardcoded toggle row: label + switch with calculated width.
         ui.select("#epiphany-toggle-row").findFirst().ifPresent(row -> {
-            String labelText = net.minecraft.network.chat.Component.translatable("epiphany.ui.epiphany.show_locked").getString();
+            String labelText = Component.translatable("epiphany.ui.epiphany.show_locked").getString();
             int labelW = labelText.length() * 8;
             int switchW = 24;
-            int gap = 4;
+            int gap = 6;
             int totalW = labelW + gap + switchW;
             row.layout(l -> l.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
                     .right(4).top(0).width(totalW).height(14)
                     .flexDirection(dev.vfyjxf.taffy.style.FlexDirection.ROW));
-
             Label lbl = new Label();
-            lbl.setText(net.minecraft.network.chat.Component.literal(labelText));
+            lbl.setText(Component.literal(labelText));
             lbl.textStyle(t -> t.fontSize(9).textColor(0xFFFFFFFF).textShadow(true)
                     .textAlignVertical(com.lowdragmc.lowdraglib2.gui.ui.data.Vertical.CENTER));
             lbl.layout(l -> l.width(labelW).height(14).flexShrink(0));
             row.addChild(lbl);
-
             var sw = new com.lowdragmc.lowdraglib2.gui.ui.elements.Switch();
             sw.layout(l -> l.width(switchW).height(14).flexShrink(0).marginLeft(gap));
-            sw.setOnSwitchChanged(on -> {
-                showLocked = on;
-                refresh(ui);
-            });
+            sw.setOnSwitchChanged(on -> { showLocked = on; refresh(ui); });
             row.addChild(sw);
         });
 
-        ui.select(SWITCH_SELECTOR, com.lowdragmc.lowdraglib2.gui.ui.elements.Switch.class)
-                .findFirst()
-                .ifPresent(sw -> sw.setOnSwitchChanged(on -> {
-                    showLocked = on;
-                    refresh(ui);
-                }));
+        refresh(ui);
     }
 
     private static void refresh(UI ui) {
         clearError(ui);
-        UIElement container = selectOne(ui, PATHS_SELECTOR, UIElement.class);
-        container.clearAllChildren();
         var lookup = ClientData.epiphanyLookup();
         var pathLookup = ClientData.pathLookup();
         var data = ClientData.clientData();
-        if (lookup == null || data == null) {
-            refreshBottomStrip(ui, java.util.Collections.emptyList());
-            return;
-        }        // Group epiphanies by path (sorted path weight asc; pathless → "其他").
-        var pathLookupLocal = pathLookup;
+        if (lookup == null || data == null) return;
+
+        // Collect candidates grouped by path.
         ResourceLocation OTHER = ResourceLocation.fromNamespaceAndPath("epiphany", "other");
         Map<ResourceLocation, List<Candidate>> grouped = new TreeMap<>(
-                Comparator.comparingInt((ResourceLocation p) -> p.equals(OTHER) ? Integer.MAX_VALUE : pathWeightVal(pathLookupLocal, p))
-                        .thenComparing(ResourceLocation::toString));
+                Comparator.comparingInt((ResourceLocation p) -> p.equals(OTHER) ? Integer.MAX_VALUE
+                        : pathWeightVal(pathLookup, p)).thenComparing(ResourceLocation::toString));
         grouped.put(OTHER, new ArrayList<>());
 
-        // Collect candidates (not yet selected).
-        record Cand(ResourceLocation id, EpiphanyData data, boolean unlocked, int weight) {}
-        List<Cand> cands = new ArrayList<>();
         lookup.listElements().forEach(holder -> {
             ResourceLocation id = holder.key().location();
             EpiphanyData e = holder.value();
             var state = data.epiphanies().get(id);
-            boolean selected = state != null && state.selected();
-            if (selected) return;
-            boolean unlocked = state != null
-                    ? state.unlocked()
-                    : e.initialState() == InitialState.SELECTABLE;
+            if (state != null && state.selected()) return;
+            boolean unlocked = state != null ? state.unlocked()
+                    : e.initialState() == InitialState.SELECTABLE && e.condition().isEmpty();
             if (!unlocked && !showLocked) return;
-            cands.add(new Cand(id, e, unlocked, e.weight()));
+            ResourceLocation pathKey = e.path().orElse(OTHER);
+            grouped.computeIfAbsent(pathKey, k -> new ArrayList<>()).add(new Candidate(id, e, unlocked));
         });
-        cands.sort(Comparator.<Cand, Integer>comparing(c -> c.weight)
-                .thenComparing(c -> c.id.toString()));
 
-        for (Cand c : cands) {
-            ResourceLocation pathKey = c.data.path().orElse(OTHER);
-            grouped.computeIfAbsent(pathKey, k -> new ArrayList<>())
-                    .add(new Candidate(c.id, c.data, c.unlocked));
-        }
-
-        // Render each group as a column. Other column gets "path-column-other" class.
+        // Left: path rows.
+        UIElement left = selectOne(ui, PATHS_SELECTOR, UIElement.class);
+        left.clearAllChildren();
         for (var entry : grouped.entrySet()) {
             if (entry.getValue().isEmpty()) continue;
-            ResourceLocation pathRl = entry.getKey();
-            boolean isOther = pathRl.equals(OTHER);
-            String columnName = "";
-            if (!isOther) {
-                PathData pd = null;
-                if (pathLookupLocal != null) {
-                    var pathKey = net.minecraft.resources.ResourceKey.create(ink.myumoon.epiphany.registry.EpiphanyRegistries.PATH_REGISTRY_KEY, pathRl);
-                    pd = pathLookupLocal.get(pathKey).map(h -> h.value()).orElse(null);
-                }
-                columnName = (pd != null && pd.name().isPresent())
-                        ? pd.name().get().getString()
-                        : pathRl.toString();
+            UIElement row = new UIElement();
+            row.addClass("epiphany-path-row");
+            String label;
+            if (!entry.getKey().equals(OTHER)) {
+                PathData pd = pathLookup != null ? pathLookup.get(
+                        net.minecraft.resources.ResourceKey.create(ink.myumoon.epiphany.registry.EpiphanyRegistries.PATH_REGISTRY_KEY, entry.getKey()))
+                        .map(h -> h.value()).orElse(null) : null;
+                label = (pd != null && pd.name().isPresent()) ? pd.name().get().getString() : entry.getKey().toString();
+            } else {
+                label = "全部感悟";
             }
-            container.addChild(buildPathColumn(ui, columnName, entry.getValue(), isOther));
+            UIElement titleBar = new UIElement();
+            titleBar.addClass("epiphany-path-title");
+            Label lbl = new Label();
+            lbl.setText(Component.literal(label));
+            lbl.textStyle(t -> t.fontSize(9).textColor(0xFFFFFFFF).textShadow(true)
+                    .textAlignVertical(com.lowdragmc.lowdraglib2.gui.ui.data.Vertical.CENTER));
+            lbl.layout(l -> l.height(14));
+            titleBar.addChild(lbl);
+            row.addChild(titleBar);
+            UIElement cardsRow = new UIElement();
+            cardsRow.addClass("epiphany-path-cards");
+            for (Candidate c : entry.getValue()) {
+                cardsRow.addChild(buildCard(ui, c.id, c.data, c.unlocked));
+            }
+            row.addChild(cardsRow);
+            left.addChild(row);
         }
-
-        if (container.getChildren().isEmpty()) {
+        if (left.getChildren().isEmpty()) {
             Label none = new Label();
             none.setText(Component.translatable("epiphany.ui.epiphany.none"));
-            container.addChild(none);
+            left.addChild(none);
         }
 
-        // Populate the bottom strip with selected epiphanies + count.
-        List<ResourceLocation> selectedIds = new ArrayList<>();
-        lookup.listElements().forEach(holder -> {
-            ResourceLocation id = holder.key().location();
-            var state = data.epiphanies().get(id);
-            if (state != null && state.selected()) selectedIds.add(id);
-        });
-        refreshBottomStrip(ui, selectedIds);
-    }
-
-    /** Build the bottom horizontal slot strip: shows ALL epiphany slots (filled + empty),
-     *  rather than just the selected ones, to replicate the main UI display horizontally. */
-    private static void refreshBottomStrip(UI ui, List<ResourceLocation> selectedIds) {
-        UIElement bottom = ui.select(BOTTOM_SELECTOR, UIElement.class).findFirst().orElse(null);
-        if (bottom == null) return;
-        bottom.clearAllChildren();
+        // Right: vertical slot column (same layout as main UI).
+        UIElement right = selectOne(ui, RIGHT_SELECTOR, UIElement.class);
+        right.clearAllChildren();
         int maxSlots = Config.MAX_EPIPHANY_SLOTS.get();
-        var data = ClientData.clientData();
-        int freeSlots = (data != null) ? Math.max(0, data.epiphanySlots() - data.usedEpiphanySlots()) : 0;
-        int totalSlots = Math.max(maxSlots, selectedIds.size());
-        for (int i = 0; i < totalSlots; i++) {
+        int freeSlots = Math.max(0, data.epiphanySlots() - data.usedEpiphanySlots());
+        List<ResourceLocation> selected = new ArrayList<>();
+        lookup.listElements().forEach(holder -> {
+            var st = data.epiphanies().get(holder.key().location());
+            if (st != null && st.selected()) selected.add(holder.key().location());
+        });
+        for (int i = 0; i < maxSlots; i++) {
+            boolean off = i % 2 == 1;
             UIElement slot = new UIElement();
             slot.addClass("epiphany-slot");
-            if (i < selectedIds.size()) {
+            slot.addClass(off ? "epiphany-slot-odd" : "epiphany-slot-even");
+            if (i < selected.size()) {
                 slot.addClass("epiphany-slot-selected");
-            } else if (i - selectedIds.size() < freeSlots) {
+                addSlotIcon(slot, lookup, selected.get(i));
+            } else if (i - selected.size() < freeSlots) {
                 slot.addClass("epiphany-slot-empty");
             } else {
                 slot.addClass("epiphany-slot-disabled");
             }
-            bottom.addChild(slot);
+            right.addChild(slot);
         }
     }
 
-    /** Compute a Path's weight by id (default 100 if missing). */
-    private static int pathWeightVal(HolderLookup.RegistryLookup<PathData> lookup, ResourceLocation key) {
-        if (lookup == null) return 100;
-        var pathKey = net.minecraft.resources.ResourceKey.create(ink.myumoon.epiphany.registry.EpiphanyRegistries.PATH_REGISTRY_KEY, key);
-        return lookup.get(pathKey).map(h -> h.value().weight()).orElse(100);
+    private static void addSlotIcon(UIElement slot,
+            net.minecraft.core.HolderLookup.RegistryLookup<EpiphanyData> lookup, ResourceLocation id) {
+        var key = net.minecraft.resources.ResourceKey.create(
+                ink.myumoon.epiphany.registry.EpiphanyRegistries.EPIPHANY_REGISTRY_KEY, id);
+        var ed = lookup.get(key).map(h -> h.value()).orElse(null);
+        if (ed != null) {
+            var iconOpt = ink.myumoon.epiphany.client.EpiphanyIcons.iconTexture(ed, id);
+            if (iconOpt.isPresent() && resourceExists(iconOpt.get())) {
+                slot.style(s -> s.background(
+                        com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture.of(iconOpt.get())));
+            } else {
+                var icon = new ink.myumoon.epiphany.client.ui.ItemIconElement(
+                        ink.myumoon.epiphany.client.EpiphanyIcons.defaultEpiphany());
+                icon.layout(l -> l.width(16).height(16));
+                slot.addChild(icon);
+            }
+        }
     }
 
-    /** Build one column element. isOther=true → omit title + use transparent bg. */
-    private static UIElement buildPathColumn(UI ui, String columnName, List<Candidate> items, boolean isOther) {
-        UIElement col = new UIElement();
-        col.addClass("path-column");
-        if (isOther) col.addClass("path-column-other");
-        if (!columnName.isEmpty()) {
-            Label title = new Label();
-            title.setText(Component.literal(columnName));
-            title.textStyle(t -> t.fontSize(10).textColor(0xFFFFFFFF).textShadow(true));
-            title.addClass("path-column-title");
-            col.addChild(title);
-        }
-
-        int max4 = Math.min(4, items.size());
-        for (int i = 0; i < max4; i++) {
-            Candidate c = items.get(i);
-            col.addChild(buildEpiphanyCard(ui, c.id, c.data, c.unlocked, i % 2 == 1));
-        }
-        return col;
-    }
-
-    /** Build one epiphany card inside a path column.
-     *  Icon strategy:
-     *  1. If the mod ships a real PNG at the convention path, use SpriteTexture.
-     *  2. Otherwise, fall back to the default GOAT_HORN item icon rendered as an ItemIconElement.
-     */
-    private static UIElement buildEpiphanyCard(UI ui, ResourceLocation id, EpiphanyData data,
-                                                boolean unlocked, boolean offset) {
+    /** Build one popup card — no zigzag, same size as main UI slot. */
+    private static UIElement buildCard(UI ui, ResourceLocation id, EpiphanyData data, boolean unlocked) {
         UIElement card = new UIElement();
-        card.addClass("epiphany-slot");
+        card.addClass("epiphany-popup-card");
         card.addClass(unlocked ? "epiphany-slot-empty" : "epiphany-slot-disabled");
-        card.addClass(offset ? "epiphany-slot-odd" : "epiphany-slot-even");
-        // Try to apply a real PNG icon. If missing, render the default item icon (GOAT_HORN).
-        java.util.Optional<ResourceLocation> iconOpt = ink.myumoon.epiphany.client.EpiphanyIcons.iconTexture(data, id);
-        if (iconOpt.isPresent() && resourceExists(iconOpt.get())) {
-            card.style(s -> s.background(
-                    com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture.of(iconOpt.get())));
-        } else {
-            // Fallback: GOAT_HORN item icon at native 16x16 size — don't scale up
-            // to fill the 22x22 slot, because vanilla item icons look right at 16x16.
-            ink.myumoon.epiphany.client.ui.ItemIconElement icon =
-                    new ink.myumoon.epiphany.client.ui.ItemIconElement(
-                            ink.myumoon.epiphany.client.EpiphanyIcons.defaultEpiphany());
-            icon.layout(l -> l.width(16).height(16));
-            card.addChild(icon);
-        }
+        addSlotIcon(card, ClientData.epiphanyLookup(), id);
         if (unlocked) {
-            // Direct RPC to server (bypass LDLib2 dynamic-element listener issue).
             card.addEventListener(UIEvents.MOUSE_DOWN, e -> {
                 com.lowdragmc.lowdraglib2.gui.util.UISoundUtils.playButtonClickSound();
                 com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor.rpcToServer(
@@ -266,25 +214,30 @@ public final class EpiphanySelectController {
                 Overlay.hide(ui, EPIPHANY_POPUP);
             });
         }
+        card.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
+            var lines = new java.util.ArrayList<net.minecraft.network.chat.Component>();
+            String name = data.name().isPresent() ? data.name().get().getString() : id.toString();
+            lines.add(net.minecraft.network.chat.Component.literal(name).withStyle(net.minecraft.ChatFormatting.WHITE));
+            if (data.description().isPresent()) lines.add(data.description().get().copy().withStyle(net.minecraft.ChatFormatting.GRAY));
+            if (net.minecraft.client.gui.screens.Screen.hasShiftDown() && data.rewardDescription().isPresent())
+                lines.add(net.minecraft.network.chat.Component.translatable("epiphany.tooltip.reward").append(": ").append(data.rewardDescription().get()).withStyle(net.minecraft.ChatFormatting.GOLD));
+            else if (data.rewardDescription().isPresent())
+                lines.add(net.minecraft.network.chat.Component.translatable("epiphany.ui.shift_hint").withStyle(net.minecraft.ChatFormatting.DARK_GRAY, net.minecraft.ChatFormatting.ITALIC));
+            e.hoverTooltips = com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips.empty();
+            for (var ln : lines) e.hoverTooltips = e.hoverTooltips.append(ln);
+        });
         return card;
     }
 
-    /** Check if the given texture resource location exists in the client resource manager. */
-    private static boolean resourceExists(ResourceLocation rl) {
-        try {
-            var mc = net.minecraft.client.Minecraft.getInstance();
-            var rm = mc.getResourceManager();
-            return rm.getResource(rl).isPresent();
-        } catch (Throwable ignored) {
-            return false;
-        }
+    private static int pathWeightVal(HolderLookup.RegistryLookup<PathData> lookup, ResourceLocation key) {
+        if (lookup == null) return 100;
+        var pk = net.minecraft.resources.ResourceKey.create(ink.myumoon.epiphany.registry.EpiphanyRegistries.PATH_REGISTRY_KEY, key);
+        return lookup.get(pk).map(h -> h.value().weight()).orElse(100);
     }
 
-    private static void showError(UI ui, Component msg) {
-        ui.select(ERROR_SELECTOR).findFirst().ifPresent(el -> {
-            el.setDisplay(true);
-            if (el instanceof Label label) label.setText(msg);
-        });
+    private static boolean resourceExists(ResourceLocation rl) {
+        try { return net.minecraft.client.Minecraft.getInstance().getResourceManager().getResource(rl).isPresent(); }
+        catch (Throwable ignored) { return false; }
     }
 
     private static void clearError(UI ui) {
@@ -294,23 +247,17 @@ public final class EpiphanySelectController {
     private static String currentSignature() {
         var data = ClientData.clientData();
         if (data == null) return "";
-        var sb = new StringBuilder();
-        sb.append(showLocked).append('|');
+        var sb = new StringBuilder().append(showLocked).append('|');
         data.epiphanies().entrySet().stream()
                 .filter(e -> e.getValue().selected() || e.getValue().unlocked())
-                .forEach(e -> sb.append(e.getKey()).append(':')
-                        .append(e.getValue().selected() ? 's' : '-')
-                        .append(e.getValue().unlocked() ? 'u' : '-')
-                        .append(','));
-        sb.append("used=").append(data.usedEpiphanySlots());
-        return sb.toString();
+                .forEach(e -> sb.append(e.getKey()).append(':').append(e.getValue().selected() ? 's' : '-').append(e.getValue().unlocked() ? 'u' : '-').append(','));
+        return sb.append("used=").append(data.usedEpiphanySlots()).toString();
     }
 
     private record Candidate(ResourceLocation id, EpiphanyData data, boolean unlocked) {}
 
     private static <T extends UIElement> T selectOne(UI ui, String selector, Class<T> type) {
-        Optional<T> first = ui.select(selector, type).findFirst();
-        return first.orElseThrow(() -> new IllegalStateException(
-                "Epiphany UI missing selector '" + selector + "' of type " + type.getSimpleName()));
+        return ui.select(selector, type).findFirst().orElseThrow(() ->
+                new IllegalStateException("Missing: " + selector));
     }
 }

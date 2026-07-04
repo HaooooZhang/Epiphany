@@ -43,6 +43,7 @@ public final class ModuleSelectController {
 
     /** Attach: close handlers + hardcoded Switch + TICK refresh. */
     public static void attach(UI ui) {
+        showLocked = false;
         Overlay.attachCloseHandlers(ui, MODULE_POPUP);
 
         // Hardcoded toggle row: label + switch with calculated width (Taffy can't auto-size).
@@ -79,7 +80,7 @@ public final class ModuleSelectController {
         var lastSig = new String[]{""};
         var tickCount = new int[]{0};
         popup.ifPresent(overlay -> overlay.addEventListener(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents.TICK, e -> {
-            if (!overlay.isDisplayed()) return;
+            if (!overlay.isDisplayed()) { showLocked = false; return; }
             tickCount[0]++;
             if (tickCount[0] < 5) return;
             tickCount[0] = 0;

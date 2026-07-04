@@ -356,7 +356,7 @@
            eats enough to force a 4th column to wrap. */
         .popup-panel-module {
             width: 301;
-            height: 70%;
+            height: 80%;
         }
 
         .module-select-card {
@@ -434,59 +434,69 @@
         /* ============================================================
            Epiphany select popup specifics.
            ============================================================ */
-        .popup-epiphany { width: 70%; height: 75%; }
-        .epiphany-paths-scroll {
+        .popup-epiphany { width: 75%; height: 75%; }
+        .epiphany-body {
             flex: 1;
-            width: 100%;
-            scroller-view-mode: horizontal;
-            scroller-horizontal-display: auto;
-            scroller-vertical-display: never;
-        }
-        /* Paths row: width auto, each column flex-shrink:0 forces overflow when columns total
-           width exceeds scroll container width → triggers horizontal scroll. */
-        .epiphany-paths-row {
             flex-direction: row;
-            align-items: flex-start;
-            gap-all: 8;
-            padding-all: 4;
-        }
-        .path-column {
-            flex-direction: column;
-            align-items: center;
-            flex-shrink: 0;
-            width: 80;
             gap-all: 4;
-            padding-all: 4;
-            background: built-in(ui-gdp:RECT_DARK);
-        }
-        .path-column-title {
-            text-color: #FFFFFF;
-            text-shadow: true;
-            font-size: 10;
-            align-self: center;
-            margin-bottom: 4;
-        }
-        /* zig-zag: odd-index card shifted right within a column. */
-        .path-column .epiphany-slot-odd {
-            margin-left: 20;
-        }
-        .path-column-other {
-            background: empty;
-        }
-        .path-column-other .path-column-title {
-            display: none;
-        }
-        .epiphany-bottom-scroll {
-            height: 30;
             width: 100%;
-            scroller-view-mode: horizontal;
-            scroller-horizontal-display: auto;
         }
-        .epiphany-bottom-row {
-            flex-direction: row;
-            align-items: center;
+        .epiphany-left-scroll {
+            flex: 3;
+            width: 100%;
+            scroller-view-mode: vertical;
+            scroller-vertical-display: auto;
+        }
+        .epiphany-paths-col {
+            flex-direction: column;
             gap-all: 4;
             padding-all: 2;
+            width: 100%;
+        }
+        .epiphany-path-row {
+            flex-direction: column;
+            background: built-in(ui-gdp:RECT_DARK);
+            width: 100%;
+        }
+        .epiphany-path-title {
+            height: 14;
+            padding-horizontal: 4;
+            background: built-in(ui-gdp:RECT_LIGHT);
+            width: 100%;
+        }
+        .epiphany-path-cards {
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap-all: 4;
+            padding-all: 4;
+        }
+        .epiphany-path-label {
+            width: 100%;
+            text-color: #FFFFFF;
+            text-shadow: true;
+            font-size: 9;
+            padding-horizontal: 4;
+        }
+        .epiphany-right-scroll {
+            flex: 1;
+            scroller-view-mode: vertical;
+            scroller-vertical-display: auto;
+        }
+        .epiphany-right-col {
+            flex-direction: column;
+            align-items: center;
+            gap-all: 4;
+            padding-all: 4;
+            width: 100%;
+        }
+        /* Popup epiphany card: same size as main UI slot, no zigzag. */
+        .epiphany-popup-card {
+            width: 22;
+            min-width: 22;
+            height: 22;
+            flex-shrink: 0;
+            align-items: center;
+            justify-content: center;
         }
     </style>
 
@@ -552,18 +562,18 @@
             <element id="epiphany-popup-panel" class="popup-panel popup-epiphany">
                 <element class="popup-header">
                     <label class="popup-title"><lang key="epiphany.ui.epiphany.select_title"/></label>
-                    <!-- Switch + label — hardcoded by Java. -->
                     <element id="epiphany-toggle-row" class="popup-toggle-row"/>
                 </element>
                 <label id="epiphany-popup-error" class="popup-error"/>
-                <scroller-view class="epiphany-paths-scroll">
-                    <!-- path columns appended here by EpiphanySelectController -->
-                    <element id="epiphany-paths-container" class="epiphany-paths-row"/>
-                </scroller-view>
-                <!-- Bottom horizontal slot strip — replicate main UI selection status. -->
-                <scroller-view class="epiphany-bottom-scroll">
-                    <element id="epiphany-bottom-row" class="epiphany-bottom-row"/>
-                </scroller-view>
+                <!-- Two-column layout: 75% path rows + 25% slot column -->
+                <element class="epiphany-body">
+                    <scroller-view class="epiphany-left-scroll">
+                        <element id="epiphany-paths-container" class="epiphany-paths-col"/>
+                    </scroller-view>
+                    <scroller-view class="epiphany-right-scroll">
+                        <element id="epiphany-right-col" class="epiphany-right-col"/>
+                    </scroller-view>
+                </element>
             </element>
         </element>
     </root>
