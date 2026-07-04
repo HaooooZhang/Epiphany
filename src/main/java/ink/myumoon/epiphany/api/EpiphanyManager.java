@@ -37,12 +37,9 @@ public final class EpiphanyManager {
     public static boolean isUnlocked(ServerPlayer player, ResourceLocation epiphanyId) {
         EpiphanyPlayerState state = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)
                 .epiphanies().get(epiphanyId);
-        if (state != null && state.unlocked()) return true;
+        if (state != null) return state.unlocked();
         EpiphanyData epiphany = epiphanyRegistry(player).get(epiphanyId);
-        if (epiphany == null) return false;
-        if (state == null && epiphany.initialState() == InitialState.SELECTABLE
-                && epiphany.condition().isEmpty()) return true;
-        return epiphany.condition().map(c -> c.test(player)).orElse(false);
+        return epiphany != null && epiphany.initialState() == InitialState.SELECTABLE;
     }
 
     public static boolean isSelected(ServerPlayer player, ResourceLocation epiphanyId) {
@@ -108,9 +105,10 @@ public final class EpiphanyManager {
         PlayerEpiphanyData newData = data.withUsedEpiphanySlots(newUsedSlots)
                 .withEpiphanyState(epiphanyId, newState);
 
+        player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
+
         epiphany.reward().ifPresent(r -> r.apply(player, epiphanyId));
 
-        player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
         NeoForge.EVENT_BUS.post(new EpiphanySelectedEvent(player, epiphanyId));
     }
 
@@ -128,8 +126,9 @@ public final class EpiphanyManager {
         PlayerEpiphanyData newData = data.withEpiphanyState(epiphanyId, newState)
                 .withUsedEpiphanySlots(data.usedEpiphanySlots() + 1);
 
-        epiphany.reward().ifPresent(r -> r.apply(player, epiphanyId));
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
+
+        epiphany.reward().ifPresent(r -> r.apply(player, epiphanyId));
         NeoForge.EVENT_BUS.post(new EpiphanySelectedEvent(player, epiphanyId));
     }
 
@@ -160,6 +159,8 @@ public final class EpiphanyManager {
         for (var entry : registry.entrySet()) {
             ResourceLocation id = entry.getKey().location();
             EpiphanyData epiphany = entry.getValue();
+
+            if (epiphany.initialState() != InitialState.LOCKED) continue;
             if (epiphany.condition().isEmpty()) continue;
 
             EpiphanyPlayerState state = data.epiphanies().get(id);

@@ -55,18 +55,21 @@ public class InsightNodeElement extends UIElement {
             case CAN_UNLOCK -> addClass("insight-node-can-unlock");
         }
 
-        // Add icon (16×16) centered inside the 18×18 node.
-        InsightIcons.iconTexture(insightData, insightId)
-                .ifPresent(rl -> {
-                    if (InsightIcons.resourceExists(rl)) {
-                        addChild(new com.lowdragmc.lowdraglib2.gui.ui.UIElement()
-                                .layout(l -> l.widthPercent(100).heightPercent(100)));
-                    }
-                });
-        // Fallback: default insight item icon.
-        var iconChild = new ItemIconElement(ink.myumoon.epiphany.client.EpiphanyIcons.defaultInsight());
-        iconChild.layout(l -> l.width(16).height(16));
-        addChild(iconChild);
+        // Icon: custom texture if available, otherwise default fallback.
+        boolean hasCustomIcon = InsightIcons.iconTexture(insightData, insightId)
+                .filter(InsightIcons::resourceExists)
+                .map(rl -> {
+                    style(s -> s.background(
+                            com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture.of(rl)));
+                    return true;
+                })
+                .orElse(false);
+
+        if (!hasCustomIcon) {
+            var iconChild = new ItemIconElement(ink.myumoon.epiphany.client.EpiphanyIcons.defaultInsight());
+            iconChild.layout(l -> l.width(16).height(16));
+            addChild(iconChild);
+        }
 
         // Hover tooltip.
         addEventListener(UIEvents.HOVER_TOOLTIPS, this::onHoverTooltips);

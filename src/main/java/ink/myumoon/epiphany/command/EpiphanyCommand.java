@@ -364,6 +364,8 @@ public final class EpiphanyCommand {
                                     removeAllRewards(target);
                                     target.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
                                             PlayerEpiphanyData.createDefault());
+                                    ModuleManager.checkAutoUnlock(target);
+                                    EpiphanyManager.checkAutoUnlock(target);
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.reset.all.success", target.getGameProfile().getName()), true);
                                     return 1;
@@ -384,6 +386,8 @@ public final class EpiphanyCommand {
                                             0, 0
                                     );
                                     target.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, cleaned);
+                                    ModuleManager.checkAutoUnlock(target);
+                                    EpiphanyManager.checkAutoUnlock(target);
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.reset.select.success", target.getGameProfile().getName()), true);
                                     return 1;

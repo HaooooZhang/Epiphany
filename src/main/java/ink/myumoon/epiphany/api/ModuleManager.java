@@ -171,9 +171,9 @@ public final class ModuleManager {
         PlayerEpiphanyData newData = data.withEpiphanySlots(newSlots)
                 .withModuleState(moduleId, newState);
 
-        module.onCompleteReward().ifPresent(r -> r.apply(player, moduleId));
-
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
+
+        module.onCompleteReward().ifPresent(r -> r.apply(player, moduleId));
         NeoForge.EVENT_BUS.post(new ModuleCompletedEvent(player, moduleId));
     }
 
@@ -242,8 +242,9 @@ public final class ModuleManager {
         PlayerEpiphanyData newData = data.withEpiphanySlots(newSlots)
                 .withModuleState(moduleId, newState);
 
-        module.onCompleteReward().ifPresent(r -> r.apply(player, moduleId));
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
+
+        module.onCompleteReward().ifPresent(r -> r.apply(player, moduleId));
         NeoForge.EVENT_BUS.post(new ModuleCompletedEvent(player, moduleId));
     }
 

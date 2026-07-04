@@ -108,8 +108,7 @@ public final class EpiphanySelectController {
             EpiphanyData e = holder.value();
             var state = data.epiphanies().get(id);
             if (state != null && state.selected()) return;
-            boolean unlocked = state != null ? state.unlocked()
-                    : e.initialState() == InitialState.SELECTABLE && e.condition().isEmpty();
+            boolean unlocked = state != null ? state.unlocked() : e.initialState() == InitialState.SELECTABLE;
             if (!unlocked && !showLocked) return;
             ResourceLocation pathKey = e.path().orElse(OTHER);
             grouped.computeIfAbsent(pathKey, k -> new ArrayList<>()).add(new Candidate(id, e, unlocked));

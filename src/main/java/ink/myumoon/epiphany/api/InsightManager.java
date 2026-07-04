@@ -110,13 +110,13 @@ public final class InsightManager {
                 moduleState.unlocked(), moduleState.selected(), moduleState.completed(), newUnlocked
         );
 
-        // Apply reward
-        insight.reward().ifPresent(r -> r.apply(player, insightId));
-
         PlayerEpiphanyData newData = data.withInsightPoints(newPoints)
                 .withTotalInsightPointsSpent(newTotalSpent)
                 .withModuleState(moduleId, newModuleState);
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
+
+        // Apply reward
+        insight.reward().ifPresent(r -> r.apply(player, insightId));
 
         NeoForge.EVENT_BUS.post(new InsightSelectedEvent(player, insightId, moduleId));
 
@@ -143,9 +143,10 @@ public final class InsightManager {
         ModulePlayerState newModuleState = new ModulePlayerState(
                 moduleState.unlocked(), moduleState.selected(), moduleState.completed(), newUnlocked
         );
-        insight.reward().ifPresent(r -> r.apply(player, insightId));
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
                 data.withModuleState(moduleId, newModuleState));
+
+        insight.reward().ifPresent(r -> r.apply(player, insightId));
 
         NeoForge.EVENT_BUS.post(new InsightSelectedEvent(player, insightId, moduleId));
     }
