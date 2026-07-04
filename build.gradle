@@ -40,6 +40,22 @@ repositories {
             includeGroup "curse.maven"
         }
     }
+    repositories {
+        maven {
+            url "https://maven.latvian.dev/releases"
+            content {
+                includeGroup "dev.latvian.mods"
+                includeGroup "dev.latvian.apps"
+            }
+        }
+
+        maven {
+            url 'https://jitpack.io'
+            content {
+                includeGroup "com.github.rtyley"
+            }
+        }
+    }
 }
 
 base {
@@ -133,6 +149,9 @@ dependencies {
     // LDLib2 (UI / sync / configurable framework)
     // See Docs/ldlib2/java_integration.md for the recommended maven layout.
     implementation("com.lowdragmc.ldlib2:ldlib2-neoforge-${minecraft_version}:${ldlib2_version}:all")
+    implementation "curse.maven:ftb-quests-forge-289412:8253474"
+    implementation "dev.latvian.mods:kubejs-neoforge:2101.7.2-build.368"
+    implementation "dev.latvian.mods:kubejs-neoforge:2101.7.2-build.368"
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"

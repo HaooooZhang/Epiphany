@@ -5,7 +5,6 @@ import com.mojang.serialization.MapCodec;
 import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.EpiphanyConstants;
 import ink.myumoon.epiphany.content.*;
-import ink.myumoon.epiphany.content.condition.AlwaysCondition;
 import ink.myumoon.epiphany.content.condition.Condition;
 import ink.myumoon.epiphany.content.reward.EpiphanyReward;
 import ink.myumoon.epiphany.content.reward.InsightReward;

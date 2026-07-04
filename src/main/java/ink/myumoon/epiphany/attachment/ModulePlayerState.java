@@ -21,7 +21,7 @@ public record ModulePlayerState(
         boolean completed,
         Set<ResourceLocation> unlockedInsights
 ) {
-    /** Compact constructor: defensive immutable copy. */
+    // Compact constructor: defensive immutable copy.
     public ModulePlayerState {
         unlockedInsights = Set.copyOf(unlockedInsights);
     }

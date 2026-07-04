@@ -2,6 +2,7 @@ package ink.myumoon.epiphany.content.condition;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
+import ink.myumoon.epiphany.content.condition.logic.AlwaysCondition;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
 import ink.myumoon.epiphany.util.DefaultedCodec;
 import net.minecraft.server.level.ServerPlayer;

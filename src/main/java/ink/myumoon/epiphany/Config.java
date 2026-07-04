@@ -23,11 +23,11 @@ public class Config {
     // 阅历计算公式
     public static final ModConfigSpec.LongValue BASE_APTITUDE_CAP = BUILDER
             .comment("Base aptitude required to earn the first Insight Point")
-            .defineInRange("baseAptitudeCap", 100L, 1L, Long.MAX_VALUE);
+            .defineInRange("baseAptitudeCap", 10L, 1L, Long.MAX_VALUE);
 
     public static final ModConfigSpec.LongValue APTITUDE_CAP_GROWTH = BUILDER
             .comment("Additional aptitude required per Insight Point already spent. Formula: cap = baseCap + totalSpent * growth")
-            .defineInRange("aptitudeCapGrowth", 50L, 0L, Long.MAX_VALUE);
+            .defineInRange("aptitudeCapGrowth", 1L, 0L, Long.MAX_VALUE);
 
     static final ModConfigSpec SPEC = BUILDER.build();
 }

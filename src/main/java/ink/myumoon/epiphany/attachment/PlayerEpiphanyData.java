@@ -11,8 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Full player data for the Epiphany skill-tree system, persisted via
- * NeoForge {@link net.neoforged.neoforge.attachment.AttachmentType Attachment}.
+ * Full player data for the Epiphany build system, persisted via attachment.
  * <p>
  * Contains aptitude, insight points, per-module/insight/epiphany state,
  * and epiphany slot counts.
@@ -29,7 +28,6 @@ public record PlayerEpiphanyData(
 ) {
 
     // default factory
-    /** Creates a fresh default instance with all values at zero and empty maps. */
     public static PlayerEpiphanyData createDefault() {
         return new PlayerEpiphanyData(
                 0, 0, 0,
@@ -58,10 +56,7 @@ public record PlayerEpiphanyData(
     public static final StreamCodec<RegistryFriendlyByteBuf, PlayerEpiphanyData> STREAM_CODEC =
             ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
-    // ============================================================
-    // Immutable "with" helpers — create a new record with one field changed
-    // ============================================================
-
+    // Immutable handle
     public PlayerEpiphanyData withAptitude(long v) {
         return new PlayerEpiphanyData(v, insightPoints, totalInsightPointsSpent,
                 modules, insights, epiphanies, epiphanySlots, usedEpiphanySlots);

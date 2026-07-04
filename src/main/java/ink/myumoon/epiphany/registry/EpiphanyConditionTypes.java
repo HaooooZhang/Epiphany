@@ -4,6 +4,7 @@ import com.mojang.serialization.MapCodec;
 import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.EpiphanyConstants;
 import ink.myumoon.epiphany.content.condition.*;
+import ink.myumoon.epiphany.content.condition.logic.*;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 

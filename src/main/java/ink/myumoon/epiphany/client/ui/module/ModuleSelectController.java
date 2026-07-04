@@ -49,7 +49,9 @@ public final class ModuleSelectController {
         // Hardcoded toggle row: label + switch with calculated width (Taffy can't auto-size).
         ui.select("#module-toggle-row").findFirst().ifPresent(row -> {
             String labelText = Component.translatable("epiphany.ui.module.show_locked").getString();
-            int labelW = labelText.length() * 8;   // ~8px per CJK char at fontSize 8
+            boolean isCJK = labelText.codePoints().anyMatch(c -> c >= 0x2E80);
+            int charW = isCJK ? 9 : 5;
+            int labelW = labelText.length() * charW;   // ~8px per CJK char at fontSize 8
             int switchW = 24;
             int gap = 4;
             int totalW = labelW + gap + switchW;

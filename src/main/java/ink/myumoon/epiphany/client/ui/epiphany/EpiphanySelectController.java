@@ -67,7 +67,9 @@ public final class EpiphanySelectController {
 
         ui.select("#epiphany-toggle-row").findFirst().ifPresent(row -> {
             String labelText = Component.translatable("epiphany.ui.epiphany.show_locked").getString();
-            int labelW = labelText.length() * 8;
+            boolean isCJK = labelText.codePoints().anyMatch(c -> c >= 0x2E80);
+            int charW = isCJK ? 9 : 5;
+            int labelW = labelText.length() * charW;
             int switchW = 24;
             int gap = 6;
             int totalW = labelW + gap + switchW;
@@ -128,7 +130,7 @@ public final class EpiphanySelectController {
                         .map(h -> h.value()).orElse(null) : null;
                 label = (pd != null && pd.name().isPresent()) ? pd.name().get().getString() : entry.getKey().toString();
             } else {
-                label = "全部感悟";
+                label = Component.translatable("epiphany.ui.epiphany.all_epiphany").getString();
             }
             UIElement titleBar = new UIElement();
             titleBar.addClass("epiphany-path-title");
@@ -170,7 +172,25 @@ public final class EpiphanySelectController {
             slot.addClass(off ? "epiphany-slot-odd" : "epiphany-slot-even");
             if (i < selected.size()) {
                 slot.addClass("epiphany-slot-selected");
-                addSlotIcon(slot, lookup, selected.get(i));
+                var sid = selected.get(i);
+                addSlotIcon(slot, lookup, sid);
+                // Tooltip (same as buildCard).
+                var ed = lookup.get(net.minecraft.resources.ResourceKey.create(
+                        ink.myumoon.epiphany.registry.EpiphanyRegistries.EPIPHANY_REGISTRY_KEY, sid))
+                        .map(h -> h.value()).orElse(null);
+                slot.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
+                    var lines = new java.util.ArrayList<net.minecraft.network.chat.Component>();
+                    String nm = ed != null && ed.name().isPresent() ? ed.name().get().getString() : sid.toString();
+                    lines.add(net.minecraft.network.chat.Component.literal(nm).withStyle(net.minecraft.ChatFormatting.WHITE));
+                    if (ed != null && ed.description().isPresent())
+                        lines.add(ed.description().get().copy().withStyle(net.minecraft.ChatFormatting.GRAY));
+                    if (net.minecraft.client.gui.screens.Screen.hasShiftDown() && ed != null && ed.rewardDescription().isPresent())
+                        lines.add(net.minecraft.network.chat.Component.translatable("epiphany.tooltip.reward").append(": ").append(ed.rewardDescription().get()).withStyle(net.minecraft.ChatFormatting.GOLD));
+                    else if (ed != null && ed.rewardDescription().isPresent())
+                        lines.add(net.minecraft.network.chat.Component.translatable("epiphany.ui.shift_hint").withStyle(net.minecraft.ChatFormatting.DARK_GRAY, net.minecraft.ChatFormatting.ITALIC));
+                    e.hoverTooltips = com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips.empty();
+                    for (var ln : lines) e.hoverTooltips = e.hoverTooltips.append(ln);
+                });
             } else if (i - selected.size() < freeSlots) {
                 slot.addClass("epiphany-slot-empty");
             } else {

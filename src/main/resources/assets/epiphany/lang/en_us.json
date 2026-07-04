@@ -9,14 +9,14 @@
 
   "commands.epiphany.aptitude.add.success": "Added %s aptitude to %s",
   "commands.epiphany.aptitude.set.success": "Set aptitude to %s for %s",
-  "commands.epiphany.aptitude.query.success": "%s — Aptitude: %s, Insight Points: %s, Total Spent: %s",
+  "commands.epiphany.aptitude.query.success": "%s [Aptitude: %s, Insight Points: %s, Total Spent: %s]",
   "commands.epiphany.aptitude.fill.success": "Filled aptitude to cap (%s) for %s",
 
   "commands.epiphany.insight.select.success": "Force-selected insight %s for %s",
   "commands.epiphany.insight.try_select.success": "Selected insight %s for %s",
   "commands.epiphany.insight.try_select.fail": "Cannot select insight (check tree prerequisites and points)",
   "commands.epiphany.insight.reset.success": "Reset insight %s for %s",
-  "commands.epiphany.insight.query.success": "Insight %s for %s — unlocked: %s, moduleSelected: %s",
+  "commands.epiphany.insight.query.success": "Insight %s for %s [unlocked: %s, moduleSelected: %s]",
   "commands.epiphany.insight.points.add.success": "Added %s Insight Points to %s",
   "commands.epiphany.insight.points.set.success": "Set Insight Points to %s for %s",
 
@@ -26,18 +26,18 @@
   "commands.epiphany.module.try_select.fail": "Module not unlocked, already selected, or insufficient points/slots",
   "commands.epiphany.module.complete.success": "Force-completed module %s for %s",
   "commands.epiphany.module.reset.success": "Reset module %s for %s",
-  "commands.epiphany.module.query.success": "Module %s for %s — unlocked: %s, selected: %s, completed: %s",
+  "commands.epiphany.module.query.success": "Module %s for %s [unlocked: %s, selected: %s, completed: %s]",
 
   "commands.epiphany.epiphany.unlock.success": "Unlocked epiphany %s for %s",
   "commands.epiphany.epiphany.select.success": "Force-selected epiphany %s for %s",
   "commands.epiphany.epiphany.try_select.success": "Selected epiphany %s for %s",
   "commands.epiphany.epiphany.try_select.fail": "Epiphany not unlocked, already selected, or no slots available",
   "commands.epiphany.epiphany.reset.success": "Reset epiphany %s for %s",
-  "commands.epiphany.epiphany.query.success": "Epiphany %s for %s — unlocked: %s, selected: %s",
+  "commands.epiphany.epiphany.query.success": "Epiphany %s for %s [unlocked: %s, selected: %s]",
 
   "commands.epiphany.path.list.success": "Registered paths: %s",
 
-  "commands.epiphany.reset.all.success": "Fully reset %s — all Epiphany data cleared",
+  "commands.epiphany.reset.all.success": "Fully reset %s, all Epiphany data cleared",
   "commands.epiphany.reset.select.success": "Reset module/epiphany selections for %s (aptitude and insight points preserved)",
 
   "commands.epiphany.open.success": "Opened Epiphany UI for %s",
@@ -51,36 +51,35 @@
   "epiphany.ui.points": "points",
   "epiphany.ui.apt_ratio": "%s / %s",
   "epiphany.ui.select_placeholder": "+ Select",
+  "epiphany.ui.select": "Select",
   "epiphany.ui.insight_cost": "Cost: %s Insight Points",
-  "epiphany.ui.press_esc_to_close": "Press ESC",
-  "epiphany.ui.module.select_title": "Select New Module",
+  "epiphany.ui.shift_hint": "Hold [Shift] for details",
+
+  "epiphany.ui.module.select_title": "Select Module",
   "epiphany.ui.module.show_locked": "Show locked",
   "epiphany.ui.module.locked_hint": "Module is locked",
+  "epiphany.ui.module.empty_slot": "Empty Slot (+)",
+  "epiphany.ui.module.unnamed": "(Unnamed)",
+
   "epiphany.ui.epiphany.select_title": "Choose Your Epiphany",
   "epiphany.ui.epiphany.show_locked": "Show locked",
   "epiphany.ui.epiphany.other": "Other",
   "epiphany.ui.epiphany.none": "No candidates",
   "epiphany.ui.epiphany.kpi": "Used %s / %s",
+  "epiphany.ui.epiphany.empty_slot": "Empty Epiphany Slot",
+  "epiphany.ui.epiphany.all_epiphany":"All Epiphanies",
+  "epiphany.ui.epiphany.no_slots": "No epiphany slots — complete modules to earn them.",
+  "epiphany.ui.epiphany.slots_kpi": "Slots used: %s / %s",
+
   "epiphany.ui.error.no_points": "Not enough Insight Points",
   "epiphany.ui.error.already_selected": "Already selected",
   "epiphany.ui.error.no_slot": "No free Epiphany slots",
   "epiphany.ui.error.not_unlocked": "Not unlocked",
 
-  "epiphany.ui.tab.module": "Modules",
-  "epiphany.ui.tab.epiphany": "Epiphanies",
-  "epiphany.ui.tab.status": "Status",
-  "epiphany.ui.tab.module.placeholder": "[ Phase 3: Module grid will appear here ]",
-  "epiphany.ui.tab.epiphany.placeholder": "[ Phase 4: Epiphany slot column will appear here ]",
+  "epiphany.ui.no_description": "(No description)",
+  "epiphany.ui.no_data": "(Data not synced)",
+  "epiphany.ui.aptitude.remaining": "Aptitude to next point: %s",
 
-  "epiphany.ui.module.empty_slot": "Empty Slot (+)",
-
-  "epiphany.ui.epiphany.empty_slot": "Empty Epiphany Slot",
-  "epiphany.ui.epiphany.no_slots": "No epiphany slots — complete modules to earn them.",
-  "epiphany.ui.epiphany.slots_kpi": "Slots used: %s / %s",
-
-  "epiphany.ui.status.aptitude": "Aptitude",
-  "epiphany.ui.status.spent": "Insight Points Spent",
-  "epiphany.ui.status.points": "Insight Points Available",
-  "epiphany.ui.status.next_level": "Aptitude to Next Point",
-  "epiphany.ui.status.slots": "Epiphany Slots Used"
+  "epiphany.tooltip.reward": "Reward",
+  "epiphany.tooltip.completion_reward": "Completion Reward"
 }

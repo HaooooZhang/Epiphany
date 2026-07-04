@@ -1,6 +1,7 @@
-package ink.myumoon.epiphany.content.condition;
+package ink.myumoon.epiphany.content.condition.logic;
 
 import com.mojang.serialization.MapCodec;
+import ink.myumoon.epiphany.content.condition.Condition;
 import net.minecraft.server.level.ServerPlayer;
 
 /**

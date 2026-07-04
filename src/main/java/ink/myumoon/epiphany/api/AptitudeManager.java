@@ -1,6 +1,5 @@
 package ink.myumoon.epiphany.api;
 
-import ink.myumoon.epiphany.Config;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.event.AptitudeChangedEvent;
 import ink.myumoon.epiphany.event.AptitudeLevelUpEvent;
@@ -8,13 +7,6 @@ import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.common.NeoForge;
 
-/**
- * Controls aptitude (experience-like points) and Insight Point economy.
- * <p>
- * All methods are server-side. Aptitude is clamped to the current cap
- * (calculated via {@link AptitudeFormula}) and overflowing aptitude
- * automatically triggers Insight Point level-ups.
- */
 public final class AptitudeManager {
 
     private AptitudeManager() {
@@ -52,12 +44,10 @@ public final class AptitudeManager {
     }
 
     /**
-     * Adds aptitude. Excess beyond the cap triggers Insight Point level-ups,
-     * consuming the required amount and carrying over the remainder.
+     * Adds aptitude. Excess beyond the cap triggers Insight Point level-ups.
+     * Fires {@link AptitudeChangedEvent} and {@link AptitudeLevelUpEvent}.
      * <p>
      * Multiple {@link AptitudeLevelUpEvent}s may fire in a single call.
-     * {@code totalInsightPointsSpent} is NOT increased — that only happens
-     * when the player spends Insight Points.
      */
     public static void addAptitude(ServerPlayer player, long amount) {
         if (amount <= 0) return;
@@ -67,7 +57,7 @@ public final class AptitudeManager {
         long oldValue = data.aptitude();
         int pointsEarned = 0;
 
-        // Level-up loop: accumulate points without intermediate setData
+        // Level up loop in order to apply all changes in one setData call
         long required;
         while ((required = AptitudeFormula.calcRequiredAptitude(
                 data.totalInsightPointsSpent(), data.insightPoints() + pointsEarned)) <= aptitude) {
@@ -75,7 +65,6 @@ public final class AptitudeManager {
             pointsEarned++;
         }
 
-        // Apply all changes in one setData call — avoids N network packets for large amounts
         if (pointsEarned > 0) {
             data = data.withAptitude(aptitude)
                     .withInsightPoints(data.insightPoints() + pointsEarned);
@@ -84,7 +73,7 @@ public final class AptitudeManager {
         }
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, data);
 
-        // Fire level-up events individually (other mods may listen)
+        // Fire level-up events
         for (int i = 0; i < pointsEarned; i++) {
             NeoForge.EVENT_BUS.post(new AptitudeLevelUpEvent(player,
                     data.insightPoints() - pointsEarned + i + 1));
@@ -93,7 +82,7 @@ public final class AptitudeManager {
         NeoForge.EVENT_BUS.post(new AptitudeChangedEvent(player, oldValue, aptitude));
     }
 
-    /** Admin: directly set Insight Points without firing events. */
+    // set Insight Points without firing events.
     public static void setInsightPoints(ServerPlayer player, int value) {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,

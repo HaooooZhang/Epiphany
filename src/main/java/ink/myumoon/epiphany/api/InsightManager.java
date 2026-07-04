@@ -17,19 +17,12 @@ import net.neoforged.neoforge.common.NeoForge;
 import java.util.HashSet;
 import java.util.Set;
 
-/**
- * Manages Insight unlock logic, including tree prerequisite checks
- * and automatic Module completion detection.
- */
 public final class InsightManager {
 
     private InsightManager() {
     }
 
-    // ============================================================
-    // Registry helpers
-    // ============================================================
-
+    // registry handle
     private static Registry<InsightData> insightRegistry(ServerPlayer player) {
         return player.server.registryAccess()
                 .registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY);
@@ -40,10 +33,7 @@ public final class InsightManager {
                 .registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY);
     }
 
-    // ============================================================
-    // Queries
-    // ============================================================
-
+    // query
     public static boolean isSelected(ServerPlayer player, ResourceLocation insightId) {
         // An Insight is "selected"/unlocked if it appears in some module's unlockedInsights set.
         for (ModulePlayerState ms : player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)
@@ -67,10 +57,6 @@ public final class InsightManager {
         }
         return false;
     }
-
-    // ============================================================
-    // Unlock
-    // ============================================================
 
     /**
      * Unlocks an Insight for a player.
@@ -128,7 +114,7 @@ public final class InsightManager {
         }
     }
 
-    /** Admin: force-unlock an Insight, ignoring cost and tree prerequisites. */
+    // select (force)
     public static void forceSelect(ServerPlayer player, ResourceLocation insightId, ResourceLocation moduleId) {
         InsightData insight = insightRegistry(player).get(insightId);
         if (insight == null) return;
@@ -151,7 +137,7 @@ public final class InsightManager {
         NeoForge.EVENT_BUS.post(new InsightSelectedEvent(player, insightId, moduleId));
     }
 
-    /** Admin: remove an Insight and refund its cost. */
+    // remove
     public static void resetInsight(ServerPlayer player, ResourceLocation insightId) {
         InsightData insight = insightRegistry(player).get(insightId);
         if (insight == null) return;

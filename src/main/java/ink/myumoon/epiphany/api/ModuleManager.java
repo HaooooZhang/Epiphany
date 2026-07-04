@@ -16,18 +16,12 @@ import net.neoforged.neoforge.common.NeoForge;
 
 import java.util.Set;
 
-/**
- * Manages Module lifecycle: unlock, select, complete, and auto-unlock via conditions.
- */
 public final class ModuleManager {
 
     private ModuleManager() {
     }
 
-    // ============================================================
-    // Registry helper
-    // ============================================================
-
+    // registry handle
     private static Registry<ModuleData> moduleRegistry(ServerPlayer player) {
         return player.server.registryAccess()
                 .registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY);
@@ -38,24 +32,12 @@ public final class ModuleManager {
                 .registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY);
     }
 
-    // ============================================================
-    // State queries
-    // ============================================================
-
-    /**
-     * A module is considered "unlocked" if:
-     * <ul>
-     *   <li>Its state record exists and {@code unlocked=true}, OR</li>
-     *   <li>No state record exists yet, but the module is {@code selectable}</li>
-     * </ul>
-     */
+    // query
     public static boolean isUnlocked(ServerPlayer player, ResourceLocation moduleId) {
         ModulePlayerState state = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)
                 .modules().get(moduleId);
-        // State record exists -> respect it (allows dev to re-lock)
-        if (state != null) return state.unlocked();
-        // No state yet -> selectable modules default to unlocked
-        ModuleData module = moduleRegistry(player).get(moduleId);
+        if (state != null) return state.unlocked(); // state record first
+        ModuleData module = moduleRegistry(player).get(moduleId); // initial state
         return module != null && module.initialState() == InitialState.SELECTABLE;
     }
 
@@ -71,18 +53,12 @@ public final class ModuleManager {
         return state != null && state.completed();
     }
 
-    // ============================================================
-    // Mutations
-    // ============================================================
-
-    /**
-     * Manually set the unlocked state, firing Pre/Post events.
-     */
+    // unlock
     public static void setUnlocked(ServerPlayer player, ResourceLocation moduleId, boolean unlocked) {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         ModulePlayerState state = data.modules().getOrDefault(moduleId, ModulePlayerState.createDefault());
 
-        if (state.unlocked() == unlocked) return; // No change
+        if (state.unlocked() == unlocked) return;
 
         if (unlocked) {
             ModuleUnlockEvent pre = new ModuleUnlockEvent(player, moduleId);
@@ -100,9 +76,7 @@ public final class ModuleManager {
         }
     }
 
-    /**
-     * Select a module. Deducts Insight Points and applies {@code on_select_reward}.
-     */
+    // select
     public static void select(ServerPlayer player, ResourceLocation moduleId) {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         ModulePlayerState state = data.modules().getOrDefault(moduleId, ModulePlayerState.createDefault());
@@ -214,7 +188,7 @@ public final class ModuleManager {
         }
     }
 
-    /** Admin: force-select a module, ignoring unlock state and point cost. */
+    // select (force)
     public static void forceSelect(ServerPlayer player, ResourceLocation moduleId) {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         ModulePlayerState state = data.modules().getOrDefault(moduleId, ModulePlayerState.createDefault());
@@ -227,7 +201,7 @@ public final class ModuleManager {
         NeoForge.EVENT_BUS.post(new ModuleSelectedEvent(player, moduleId));
     }
 
-    /** Admin: force-complete a module, unlocking all Insights and granting the slot. */
+    // complete (force)
     public static void forceComplete(ServerPlayer player, ResourceLocation moduleId) {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         ModuleData module = moduleRegistry(player).get(moduleId);
@@ -248,16 +222,12 @@ public final class ModuleManager {
         NeoForge.EVENT_BUS.post(new ModuleCompletedEvent(player, moduleId));
     }
 
-    /**
-     * Resets a module: clears unlocked Insights and refunds points.
-     * Admin use only (via commands in phase 5).
-     */
+    // reset
     public static void resetModule(ServerPlayer player, ResourceLocation moduleId) {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         ModulePlayerState state = data.modules().get(moduleId);
         if (state == null) return;
 
-        // Refund actual Insight Points for each unlocked insight
         Registry<InsightData> iRegistry = insightRegistry(player);
         int refund = 0;
         for (ResourceLocation insightId : state.unlockedInsights()) {
@@ -267,7 +237,6 @@ public final class ModuleManager {
                 insight.reward().ifPresent(r -> r.remove(player, insightId));
             }
         }
-        // Also refund the module selection cost
         if (state.selected()) {
             refund += Config.MODULE_SELECT_COST.get();
         }

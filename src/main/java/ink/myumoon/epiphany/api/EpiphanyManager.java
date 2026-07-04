@@ -13,27 +13,18 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.common.NeoForge;
 
-/**
- * Manages Epiphany lifecycle: unlock, select, and slot management.
- */
 public final class EpiphanyManager {
 
     private EpiphanyManager() {
     }
 
-    // ============================================================
-    // Registry helper
-    // ============================================================
-
+    // registry handle
     private static Registry<EpiphanyData> epiphanyRegistry(ServerPlayer player) {
         return player.server.registryAccess()
                 .registryOrThrow(EpiphanyRegistries.EPIPHANY_REGISTRY_KEY);
     }
 
-    // ============================================================
-    // Queries
-    // ============================================================
-
+    // query
     public static boolean isUnlocked(ServerPlayer player, ResourceLocation epiphanyId) {
         EpiphanyPlayerState state = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)
                 .epiphanies().get(epiphanyId);
@@ -48,13 +39,7 @@ public final class EpiphanyManager {
         return state != null && state.selected();
     }
 
-    // ============================================================
-    // Mutations
-    // ============================================================
-
-    /**
-     * Manually set the unlocked state, firing Pre/Post events.
-     */
+    // unlock
     public static void setUnlocked(ServerPlayer player, ResourceLocation epiphanyId, boolean unlocked) {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         EpiphanyPlayerState state = data.epiphanies()
@@ -77,10 +62,7 @@ public final class EpiphanyManager {
         }
     }
 
-    /**
-     * Selects an Epiphany into a slot. Checks slot availability,
-     * applies the reward, and increments the used slot counter.
-     */
+    // select
     public static void select(ServerPlayer player, ResourceLocation epiphanyId) {
         EpiphanyData epiphany = epiphanyRegistry(player).get(epiphanyId);
         if (epiphany == null) return;
@@ -112,7 +94,7 @@ public final class EpiphanyManager {
         NeoForge.EVENT_BUS.post(new EpiphanySelectedEvent(player, epiphanyId));
     }
 
-    /** Admin: force-select an Epiphany, ignoring slot limits. */
+    // select (force)
     public static void forceSelect(ServerPlayer player, ResourceLocation epiphanyId) {
         EpiphanyData epiphany = epiphanyRegistry(player).get(epiphanyId);
         if (epiphany == null) return;
@@ -132,7 +114,7 @@ public final class EpiphanyManager {
         NeoForge.EVENT_BUS.post(new EpiphanySelectedEvent(player, epiphanyId));
     }
 
-    /** Admin: reset a single Epiphany, removing it from the slot and stopping its reward. */
+    // reset
     public static void resetEpiphany(ServerPlayer player, ResourceLocation epiphanyId) {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         EpiphanyPlayerState state = data.epiphanies().get(epiphanyId);

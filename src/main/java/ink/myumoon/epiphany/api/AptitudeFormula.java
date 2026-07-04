@@ -8,11 +8,11 @@ import ink.myumoon.epiphany.Config;
  * Current formula: {@code baseAptitudeCap + totalEarned × aptitudeCapGrowth}
  * where {@code totalEarned = totalSpent + insightPoints}.
  * <p>
- * Example (default: base=100, growth=50):
+ * Example (default: base=10, growth=1):
  * <ul>
- *   <li>1st (0 earned): 100</li>
- *   <li>2nd (1 earned): 150</li>
- *   <li>3rd (2 earned): 200</li>
+ *   <li>1st (0 earned): 10</li>
+ *   <li>2nd (1 earned): 11</li>
+ *   <li>3rd (2 earned): 12</li>
  * </ul>
  */
 public final class AptitudeFormula {

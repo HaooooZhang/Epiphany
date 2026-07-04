@@ -8,14 +8,6 @@ import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.function.Supplier;
 
-/**
- * Player-data attachment types for the Epiphany system.
- * <p>
- * {@code EPIPHANY_DATA} is configured with {@code .serialize() + .copyOnDeath() + .sync()}
- * — the standard NeoForge combo. {@code .sync(STREAM_CODEC)} is fully supported
- * (verified on LDLib2 2.2.26): it makes {@code player.getData(EPIPHANY_DATA)} return
- * the authoritative server snapshot on the client as well.
- */
 public final class EpiphanyAttachmentTypes {
 
     public static final DeferredRegister<AttachmentType<?>> REGISTRY =
