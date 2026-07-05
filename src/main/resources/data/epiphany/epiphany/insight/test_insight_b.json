@@ -1,6 +1,0 @@
-{
-  "name": "测试心得B",
-  "description": "depth=1，依赖所有depth=0的心得",
-  "cost": 2,
-  "weight": 200
-}

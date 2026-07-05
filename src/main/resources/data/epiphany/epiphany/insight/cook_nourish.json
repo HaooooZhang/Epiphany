@@ -1,1 +1,0 @@
-{"name": "滋养", "description": "食物回复饱食度 +50%", "cost": 2, "weight": 100, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.max_health", "amount": 2.0, "operation": "ADD_VALUE"}, "reward_description": "+2 最大生命"}

@@ -1,1 +1,0 @@
-{"name": "万花筒", "description": "【平级测试】5 个心得全部 depth=0，AND 关系需全部解锁", "initial_state": "selectable", "insights": [{"id": "epiphany:parallel_a", "depth": 0}, {"id": "epiphany:parallel_b", "depth": 0}, {"id": "epiphany:parallel_c", "depth": 0}, {"id": "epiphany:parallel_d", "depth": 0}, {"id": "epiphany:parallel_e", "depth": 0}], "weight": 110}

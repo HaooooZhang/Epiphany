@@ -1,1 +1,0 @@
-{"name": "末影亲和", "description": "末影人不会因对视而攻击你", "condition": {"type": "epiphany:advancement", "advancement": "minecraft:end/root"}, "weight": 65}

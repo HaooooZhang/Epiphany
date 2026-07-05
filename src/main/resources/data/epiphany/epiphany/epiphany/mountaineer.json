@@ -1,1 +1,0 @@
-{"name": "登山者", "description": "台阶高度提升，爬梯加速", "condition": {"type": "epiphany:none"}, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.step_height", "amount": 0.5, "operation": "ADD_VALUE"}, "reward_description": "+0.5 台阶高度", "weight": 75}

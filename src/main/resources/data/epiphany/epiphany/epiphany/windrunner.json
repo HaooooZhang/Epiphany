@@ -1,1 +1,0 @@
-{"name": "风行者", "description": "疾跑时移动速度额外增加", "condition": {"type": "epiphany:advancement", "advancement": "minecraft:adventure/adventuring_time"}, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.movement_speed", "amount": 0.1, "operation": "ADD_MULTIPLIED_TOTAL"}, "reward_description": "+10% 移速", "path": "epiphany:ranger", "weight": 70}

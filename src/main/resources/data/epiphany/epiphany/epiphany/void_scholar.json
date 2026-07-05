@@ -1,1 +1,0 @@
-{"name": "虚空学者", "description": "掉落虚空时传送回最近地面", "condition": {"type": "epiphany:advancement", "advancement": "minecraft:end/enter_end_gateway"}, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.max_health", "amount": 2.0, "operation": "ADD_VALUE"}, "reward_description": "+2 最大生命", "path": "epiphany:mage", "weight": 40}

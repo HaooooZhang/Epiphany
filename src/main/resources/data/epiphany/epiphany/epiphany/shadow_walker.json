@@ -1,1 +1,0 @@
-{"name": "暗影行者", "description": "【无 path 测试】不归属任何路径", "condition": {"type": "epiphany:none"}, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.movement_speed", "amount": 0.15, "operation": "ADD_MULTIPLIED_TOTAL"}, "reward_description": "+15% 移速", "weight": 90}

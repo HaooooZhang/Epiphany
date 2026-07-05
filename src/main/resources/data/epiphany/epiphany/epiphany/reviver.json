@@ -1,1 +1,0 @@
-{"name": "复苏者", "description": "死亡时保留经验值", "condition": {"type": "epiphany:none"}, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.max_health", "amount": 2.0, "operation": "ADD_VALUE"}, "reward_description": "+2 最大生命", "weight": 55}

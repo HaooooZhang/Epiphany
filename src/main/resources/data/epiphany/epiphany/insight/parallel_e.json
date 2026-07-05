@@ -1,1 +1,0 @@
-{"name": "蓝", "description": "【平行 E】5 个同级心得之一，完成后模块自动完成", "cost": 3, "weight": 80, "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.movement_speed", "amount": 0.05, "operation": "ADD_MULTIPLIED_TOTAL"}, "reward_description": "+5% 移速"}
