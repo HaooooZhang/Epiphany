@@ -4,6 +4,7 @@
   "epiphany.configuration.section.epiphany.common.toml.title": "Epiphany 配置",
   "epiphany.configuration.maxEpiphanySlots": "顿悟槽上限",
   "epiphany.configuration.moduleSelectCost": "选择模块消耗",
+  "epiphany.configuration.maxSelectedModules": "最大选择模块数",
   "epiphany.configuration.baseAptitudeCap": "基础阅历上限",
   "epiphany.configuration.aptitudeCapGrowth": "阅历上限增长率",
 

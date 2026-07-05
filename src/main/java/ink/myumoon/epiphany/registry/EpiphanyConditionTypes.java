@@ -8,11 +8,6 @@ import ink.myumoon.epiphany.content.condition.logic.*;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-/**
- * Registers Epiphany's built-in Condition types into the
- * {@link EpiphanyRegistries#CONDITION_SERIALIZERS} registry.
- */
-@SuppressWarnings("unused")
 public final class EpiphanyConditionTypes {
 
     public static final DeferredRegister<MapCodec<? extends Condition>> REGISTRY =

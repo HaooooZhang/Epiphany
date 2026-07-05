@@ -35,8 +35,6 @@ public class Epiphany {
         EpiphanyInsightRewardTypes.REGISTRY.register(modEventBus);
         EpiphanyEpiphanyRewardTypes.REGISTRY.register(modEventBus);
 
-        // Register the main UI on both sides. PlayerUIMenuType.register must
-        // happen after registries, so defer to common setup via enqueueWork.
         modEventBus.addListener(FMLCommonSetupEvent.class, event ->
                 event.enqueueWork(EpiphanyUIFactory::register));
 
@@ -59,7 +57,6 @@ public class Epiphany {
         NeoForge.EVENT_BUS.addListener(PlayerEvent.PlayerRespawnEvent.class, event -> {
             var sp = (net.minecraft.server.level.ServerPlayer) event.getEntity();
             PersistentReward.reapplyAll(sp);
-            // Entity rebuilt → max health may have increased from modifiers → pull current health up
             sp.setHealth(sp.getMaxHealth());
         });
 

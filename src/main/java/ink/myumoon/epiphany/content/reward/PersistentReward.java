@@ -52,14 +52,13 @@ public interface PersistentReward {
 
         int count = 0;
 
-        // --- Module-level rewards ---
         for (var entry : data.modules().entrySet()) {
             var moduleId = entry.getKey();
             var state = entry.getValue();
             ModuleData module = moduleReg.get(moduleId);
             if (module == null) continue;
 
-            // on_select_reward (applied when module was selected)
+            // on_select_reward
             if (state.selected()) {
                 if (module.onSelectReward().isPresent()
                         && module.onSelectReward().get() instanceof PersistentReward) {
@@ -68,7 +67,7 @@ public interface PersistentReward {
                 }
             }
 
-            // on_complete_reward (applied when module was completed)
+            // on_complete_reward
             if (state.completed()) {
                 if (module.onCompleteReward().isPresent()
                         && module.onCompleteReward().get() instanceof PersistentReward) {
@@ -77,7 +76,7 @@ public interface PersistentReward {
                 }
             }
 
-            // Insight rewards (applied when each Insight was unlocked)
+            // Insight rewards
             if (state.selected()) {
                 for (var insightId : state.unlockedInsights()) {
                     InsightData insight = insightReg.get(insightId);
@@ -90,7 +89,7 @@ public interface PersistentReward {
             }
         }
 
-        // --- Epiphany rewards ---
+        // Epiphany rewards
         for (var entry : data.epiphanies().entrySet()) {
             var epiphanyId = entry.getKey();
             var state = entry.getValue();

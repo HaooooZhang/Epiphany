@@ -7,14 +7,6 @@ import ink.myumoon.epiphany.content.reward.EpiphanyReward;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-/**
- * Registers Epiphany's built-in EpiphanyReward types into the
- * {@link EpiphanyRegistries#EPIPHANY_REWARD_SERIALIZERS} registry.
- * <p>
- * Initially uses {@link AttributeReward} for testing;
- * dedicated qualitative reward types will be added later.
- */
-@SuppressWarnings("unused")
 public final class EpiphanyEpiphanyRewardTypes {
 
     public static final DeferredRegister<MapCodec<? extends EpiphanyReward>> REGISTRY =

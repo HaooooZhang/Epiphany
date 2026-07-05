@@ -6,7 +6,7 @@ import net.neoforged.bus.api.ICancellableEvent;
 
 /**
  * Fired before an Epiphany transitions from locked to unlocked.
- * Cancelling prevents the unlock.
+ * Cancelling prevents to unlock.
  */
 public class EpiphanyUnlockEvent extends EpiphanyEvent implements ICancellableEvent {
 

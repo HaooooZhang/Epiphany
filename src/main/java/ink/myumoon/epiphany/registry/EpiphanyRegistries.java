@@ -19,20 +19,20 @@ import net.neoforged.neoforge.registries.DataPackRegistryEvent;
 import net.neoforged.neoforge.registries.NewRegistryEvent;
 
 /**
- * Central registry definitions for Epiphany.
+ * Epiphany registry definitions.
  * <p>
- * Three builtin registries (storing MapCodecs) enable polymorphic dispatch
- * for Conditions, InsightRewards, and EpiphanyRewards.
- * <p>
- * Four datapack registries (JSON-driven) define Modules, Insights, Epiphanies, and Paths.
+ * Two categories:
+ * <ul>
+ *   <li><b>Builtin registries</b> — store {@code MapCodec}s for polymorphic dispatch
+ *       of Conditions, InsightRewards, and EpiphanyRewards.</li>
+ *   <li><b>Datapack registries</b> — JSON-driven content definitions for Modules,
+ *       Insights, Epiphanies, and Paths.</li>
+ * </ul>
  */
 @EventBusSubscriber(modid = Epiphany.MODID)
 public final class EpiphanyRegistries {
 
-    // ============================================================
-    // Builtin Registries — store MapCodec<? extends T> for dispatch
-    // ============================================================
-
+    // Builtin registries — serializers for polymorphic types
     public static final ResourceKey<Registry<MapCodec<? extends Condition>>> CONDITION_SERIALIZERS_KEY =
             ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(Epiphany.MODID, "condition_type"));
 
@@ -66,10 +66,7 @@ public final class EpiphanyRegistries {
                     false
             );
 
-    // ============================================================
-    // Datapack Registry Keys — JSON-driven, loaded from data/epiphany/
-    // ============================================================
-
+    // Datapack registry keys — content loaded from data/epiphany/*.json
     public static final ResourceKey<Registry<ModuleData>> MODULE_REGISTRY_KEY =
             ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(Epiphany.MODID, "module"));
 
@@ -81,10 +78,6 @@ public final class EpiphanyRegistries {
 
     public static final ResourceKey<Registry<PathData>> PATH_REGISTRY_KEY =
             ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(Epiphany.MODID, "path"));
-
-    // ============================================================
-    // Events
-    // ============================================================
 
     @SubscribeEvent
     static void registerBuiltinRegistries(NewRegistryEvent event) {

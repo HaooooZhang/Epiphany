@@ -7,11 +7,6 @@ import ink.myumoon.epiphany.content.reward.InsightReward;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
-/**
- * Registers Epiphany's built-in InsightReward types into the
- * {@link EpiphanyRegistries#INSIGHT_REWARD_SERIALIZERS} registry.
- */
-@SuppressWarnings("unused")
 public final class EpiphanyInsightRewardTypes {
 
     public static final DeferredRegister<MapCodec<? extends InsightReward>> REGISTRY =

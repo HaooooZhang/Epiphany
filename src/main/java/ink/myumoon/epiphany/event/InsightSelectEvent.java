@@ -6,7 +6,7 @@ import net.neoforged.bus.api.ICancellableEvent;
 
 /**
  * Fired before an Insight is unlocked (Insight Points are about to be deducted).
- * Cancelling prevents the unlock.
+ * Cancelling prevents to unlock.
  */
 public class InsightSelectEvent extends EpiphanyEvent implements ICancellableEvent {
 

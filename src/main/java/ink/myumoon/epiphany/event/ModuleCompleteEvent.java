@@ -7,7 +7,7 @@ import net.neoforged.bus.api.ICancellableEvent;
 /**
  * Fired before a Module is completed (all Insights unlocked).
  * Cancelling prevents the Epiphany slot grant, reward, and the Post event.
- * The Module stays in a "all Insights unlocked, not completed" state
+ * The Module stays in an "all Insights unlocked, not completed" state
  * and can be re-triggered later.
  */
 public class ModuleCompleteEvent extends EpiphanyEvent implements ICancellableEvent {
