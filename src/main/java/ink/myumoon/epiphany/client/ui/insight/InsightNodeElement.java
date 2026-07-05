@@ -1,31 +1,23 @@
 package ink.myumoon.epiphany.client.ui.insight;
 
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
-import ink.myumoon.epiphany.client.ui.ClientData;
+import com.lowdragmc.lowdraglib2.gui.util.UISoundUtils;
+import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
+import ink.myumoon.epiphany.client.EpiphanyIcons;
 import ink.myumoon.epiphany.client.ui.ItemIconElement;
 import ink.myumoon.epiphany.content.InsightData;
+import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A single Insight node in the tree. 18×18 px square.
- * <p>
- * Visual states (via CSS classes):
- * - unlocked: BORDER1_RT0 + icon
- * - locked: BORDER1_RT0_DARK + icon
- * - can-unlock: border highlight
- * <p>
- * Click → server-side InsightManager.select via InsightClickHandler.
- * Hover → Tooltip with name + description + optional reward (Shift).
- */
 public class InsightNodeElement extends UIElement {
 
     public enum State { UNLOCKED, LOCKED, CAN_UNLOCK }
@@ -60,25 +52,25 @@ public class InsightNodeElement extends UIElement {
                 .filter(InsightIcons::resourceExists)
                 .map(rl -> {
                     style(s -> s.background(
-                            com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture.of(rl)));
+                            SpriteTexture.of(rl)));
                     return true;
                 })
                 .orElse(false);
 
         if (!hasCustomIcon) {
-            var iconChild = new ItemIconElement(ink.myumoon.epiphany.client.EpiphanyIcons.defaultInsight());
+            var iconChild = new ItemIconElement(EpiphanyIcons.defaultInsight());
             iconChild.layout(l -> l.width(16).height(16));
             addChild(iconChild);
         }
 
-        // Hover tooltip.
+        // tooltip
         addEventListener(UIEvents.HOVER_TOOLTIPS, this::onHoverTooltips);
 
-        // Click: client-side sound + direct RPC to server (bypass LDLib2 dynamic-element issue).
+        // Click: client-side sound + direct RPC to server.
         if (interactive && clickHandler != null && state == State.CAN_UNLOCK) {
             addEventListener(UIEvents.MOUSE_DOWN, e -> {
-                com.lowdragmc.lowdraglib2.gui.util.UISoundUtils.playButtonClickSound();
-                com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor.rpcToServer(
+                UISoundUtils.playButtonClickSound();
+                RPCPacketDistributor.rpcToServer(
                         "epiphany.select_insight", insightId.toString(), moduleId.toString());
             });
         }
@@ -90,29 +82,28 @@ public class InsightNodeElement extends UIElement {
         String name = insightData.name().isPresent()
                 ? insightData.name().get().getString()
                 : insightId.toString();
-        lines.add(Component.literal(name).withStyle(net.minecraft.ChatFormatting.WHITE));
+        lines.add(Component.literal(name).withStyle(ChatFormatting.WHITE));
         // Description.
         if (insightData.description().isPresent()) {
             lines.add(insightData.description().get().copy()
-                    .withStyle(net.minecraft.ChatFormatting.GRAY));
+                    .withStyle(ChatFormatting.GRAY));
         }
-        // Shift → reward description.
         if (Screen.hasShiftDown()) {
             if (insightData.rewardDescription().isPresent()) {
                 lines.add(Component.translatable("epiphany.tooltip.reward")
                         .append(": ")
                         .append(insightData.rewardDescription().get())
-                        .withStyle(net.minecraft.ChatFormatting.GOLD));
+                        .withStyle(ChatFormatting.GOLD));
             }
         } else {
             if (insightData.rewardDescription().isPresent()) {
                 lines.add(Component.translatable("epiphany.ui.shift_hint")
-                        .withStyle(net.minecraft.ChatFormatting.DARK_GRAY, net.minecraft.ChatFormatting.ITALIC));
+                        .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
             }
         }
         // Cost.
         lines.add(Component.translatable("epiphany.ui.insight_cost", insightData.cost())
-                .withStyle(net.minecraft.ChatFormatting.AQUA));
+                .withStyle(ChatFormatting.AQUA));
         event.hoverTooltips = HoverTooltips.empty();
         for (var line : lines) {
             event.hoverTooltips = event.hoverTooltips.append(line);

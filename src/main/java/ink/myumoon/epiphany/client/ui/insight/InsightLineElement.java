@@ -3,6 +3,7 @@ package ink.myumoon.epiphany.client.ui.insight;
 import com.lowdragmc.lowdraglib2.gui.texture.ColorRectTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.rendering.GUIContext;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Renders a thin line segment (horizontal or vertical) for connecting Insight nodes.
@@ -17,7 +18,7 @@ public class InsightLineElement extends UIElement {
     }
 
     @Override
-    public void drawBackgroundAdditional(GUIContext guiContext) {
+    public void drawBackgroundAdditional(@NotNull GUIContext guiContext) {
         float x = getPositionX();
         float y = getPositionY();
         float w = getSizeWidth();

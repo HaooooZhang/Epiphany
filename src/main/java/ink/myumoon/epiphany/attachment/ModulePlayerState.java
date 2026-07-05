@@ -9,11 +9,6 @@ import java.util.Set;
 
 /**
  * Per-module player state stored in the Epiphany attachment.
- * <p>
- * The {@code unlockedInsights} set is <b>immutable</b> via {@link Set#copyOf}
- * in the compact constructor — any mutation attempt throws
- * {@link UnsupportedOperationException}.
- * Managers must create a new {@code ModulePlayerState} record to change state.
  */
 public record ModulePlayerState(
         boolean unlocked,

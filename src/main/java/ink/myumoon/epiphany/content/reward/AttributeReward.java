@@ -50,7 +50,6 @@ public record AttributeReward(
         var attr = player.getAttribute(attribute);
         if (attr == null) return;
         var id = modifierId(player, sourceId);
-        // 1.21.1: addModifier throws if same ID already present, so check first.
         if (attr.getModifier(id) != null) return;
         attr.addPermanentModifier(new AttributeModifier(id, amount, operation));
     }

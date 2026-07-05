@@ -1,37 +1,37 @@
 package ink.myumoon.epiphany.client.ui.epiphany;
 
+import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Switch;
+import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.gui.util.UISoundUtils;
+import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
+import dev.vfyjxf.taffy.style.FlexDirection;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import ink.myumoon.epiphany.Config;
-import ink.myumoon.epiphany.api.EpiphanyManager;
+import ink.myumoon.epiphany.client.EpiphanyIcons;
 import ink.myumoon.epiphany.client.ui.ClientData;
+import ink.myumoon.epiphany.client.ui.ItemIconElement;
 import ink.myumoon.epiphany.client.ui.overlay.Overlay;
 import ink.myumoon.epiphany.content.EpiphanyData;
 import ink.myumoon.epiphany.content.InitialState;
 import ink.myumoon.epiphany.content.PathData;
+import ink.myumoon.epiphany.registry.EpiphanyRegistries;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.TreeMap;
+import java.util.*;
 
-/**
- * Phase B controller for the Epiphany selection popup.
- * <p>
- * Populates {@code #epiphany-paths-container} with one column per Path (sorted
- * by weight asc), + one transparent "Other" column for pathless epiphanies.
- * Each column shows up to 4 epiphanies (zig-zag), rendered as icon sprites.
- * Bottom strip replicates the player's selected epiphanies horizontally.
- * Switch toggles visibility of locked epiphanies.
- */
 public final class EpiphanySelectController {
 
     private static final String EPIPHANY_POPUP = "#epiphany-popup";
@@ -39,7 +39,6 @@ public final class EpiphanySelectController {
     private static final String RIGHT_SELECTOR = "#epiphany-right-col";
     private static final String ERROR_SELECTOR = "#epiphany-popup-error";
 
-    /** Filter state. */
     private static boolean showLocked = false;
 
     private EpiphanySelectController() {
@@ -67,22 +66,20 @@ public final class EpiphanySelectController {
 
         ui.select("#epiphany-toggle-row").findFirst().ifPresent(row -> {
             String labelText = Component.translatable("epiphany.ui.epiphany.show_locked").getString();
-            boolean isCJK = labelText.codePoints().anyMatch(c -> c >= 0x2E80);
-            int charW = isCJK ? 9 : 5;
-            int labelW = labelText.length() * charW;
+            int labelW = Minecraft.getInstance().font.width(labelText);
             int switchW = 24;
-            int gap = 6;
+            int gap = 0;
             int totalW = labelW + gap + switchW;
-            row.layout(l -> l.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
+            row.layout(l -> l.positionType(TaffyPosition.ABSOLUTE)
                     .right(4).top(0).width(totalW).height(14)
-                    .flexDirection(dev.vfyjxf.taffy.style.FlexDirection.ROW));
+                    .flexDirection(FlexDirection.ROW));
             Label lbl = new Label();
             lbl.setText(Component.literal(labelText));
             lbl.textStyle(t -> t.fontSize(9).textColor(0xFFFFFFFF).textShadow(true)
-                    .textAlignVertical(com.lowdragmc.lowdraglib2.gui.ui.data.Vertical.CENTER));
+                    .textAlignVertical(Vertical.CENTER));
             lbl.layout(l -> l.width(labelW).height(14).flexShrink(0));
             row.addChild(lbl);
-            var sw = new com.lowdragmc.lowdraglib2.gui.ui.elements.Switch();
+            var sw = new Switch();
             sw.layout(l -> l.width(switchW).height(14).flexShrink(0).marginLeft(gap));
             sw.setOnSwitchChanged(on -> { showLocked = on; refresh(ui); });
             row.addChild(sw);
@@ -126,8 +123,8 @@ public final class EpiphanySelectController {
             String label;
             if (!entry.getKey().equals(OTHER)) {
                 PathData pd = pathLookup != null ? pathLookup.get(
-                        net.minecraft.resources.ResourceKey.create(ink.myumoon.epiphany.registry.EpiphanyRegistries.PATH_REGISTRY_KEY, entry.getKey()))
-                        .map(h -> h.value()).orElse(null) : null;
+                        ResourceKey.create(EpiphanyRegistries.PATH_REGISTRY_KEY, entry.getKey()))
+                        .map(Holder.Reference::value).orElse(null) : null;
                 label = (pd != null && pd.name().isPresent()) ? pd.name().get().getString() : entry.getKey().toString();
             } else {
                 label = Component.translatable("epiphany.ui.epiphany.all_epiphany").getString();
@@ -137,7 +134,7 @@ public final class EpiphanySelectController {
             Label lbl = new Label();
             lbl.setText(Component.literal(label));
             lbl.textStyle(t -> t.fontSize(9).textColor(0xFFFFFFFF).textShadow(true)
-                    .textAlignVertical(com.lowdragmc.lowdraglib2.gui.ui.data.Vertical.CENTER));
+                    .textAlignVertical(Vertical.CENTER));
             lbl.layout(l -> l.height(14));
             titleBar.addChild(lbl);
             row.addChild(titleBar);
@@ -174,21 +171,21 @@ public final class EpiphanySelectController {
                 slot.addClass("epiphany-slot-selected");
                 var sid = selected.get(i);
                 addSlotIcon(slot, lookup, sid);
-                // Tooltip (same as buildCard).
-                var ed = lookup.get(net.minecraft.resources.ResourceKey.create(
-                        ink.myumoon.epiphany.registry.EpiphanyRegistries.EPIPHANY_REGISTRY_KEY, sid))
-                        .map(h -> h.value()).orElse(null);
+                // Tooltip
+                var ed = lookup.get(ResourceKey.create(
+                        EpiphanyRegistries.EPIPHANY_REGISTRY_KEY, sid))
+                        .map(Holder.Reference::value).orElse(null);
                 slot.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
-                    var lines = new java.util.ArrayList<net.minecraft.network.chat.Component>();
+                    var lines = new java.util.ArrayList<Component>();
                     String nm = ed != null && ed.name().isPresent() ? ed.name().get().getString() : sid.toString();
-                    lines.add(net.minecraft.network.chat.Component.literal(nm).withStyle(net.minecraft.ChatFormatting.WHITE));
+                    lines.add(Component.literal(nm).withStyle(ChatFormatting.WHITE));
                     if (ed != null && ed.description().isPresent())
-                        lines.add(ed.description().get().copy().withStyle(net.minecraft.ChatFormatting.GRAY));
-                    if (net.minecraft.client.gui.screens.Screen.hasShiftDown() && ed != null && ed.rewardDescription().isPresent())
-                        lines.add(net.minecraft.network.chat.Component.translatable("epiphany.tooltip.reward").append(": ").append(ed.rewardDescription().get()).withStyle(net.minecraft.ChatFormatting.GOLD));
+                        lines.add(ed.description().get().copy().withStyle(ChatFormatting.GRAY));
+                    if (Screen.hasShiftDown() && ed != null && ed.rewardDescription().isPresent())
+                        lines.add(Component.translatable("epiphany.tooltip.reward").append(": ").append(ed.rewardDescription().get()).withStyle(ChatFormatting.GOLD));
                     else if (ed != null && ed.rewardDescription().isPresent())
-                        lines.add(net.minecraft.network.chat.Component.translatable("epiphany.ui.shift_hint").withStyle(net.minecraft.ChatFormatting.DARK_GRAY, net.minecraft.ChatFormatting.ITALIC));
-                    e.hoverTooltips = com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips.empty();
+                        lines.add(Component.translatable("epiphany.ui.shift_hint").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
+                    e.hoverTooltips = HoverTooltips.empty();
                     for (var ln : lines) e.hoverTooltips = e.hoverTooltips.append(ln);
                 });
             } else if (i - selected.size() < freeSlots) {
@@ -201,50 +198,50 @@ public final class EpiphanySelectController {
     }
 
     private static void addSlotIcon(UIElement slot,
-            net.minecraft.core.HolderLookup.RegistryLookup<EpiphanyData> lookup, ResourceLocation id) {
-        var key = net.minecraft.resources.ResourceKey.create(
-                ink.myumoon.epiphany.registry.EpiphanyRegistries.EPIPHANY_REGISTRY_KEY, id);
-        var ed = lookup.get(key).map(h -> h.value()).orElse(null);
+                                    HolderLookup.RegistryLookup<EpiphanyData> lookup, ResourceLocation id) {
+        var key = ResourceKey.create(
+                EpiphanyRegistries.EPIPHANY_REGISTRY_KEY, id);
+        var ed = lookup.get(key).map(Holder.Reference::value).orElse(null);
         if (ed != null) {
-            var iconOpt = ink.myumoon.epiphany.client.EpiphanyIcons.iconTexture(ed, id);
+            var iconOpt = EpiphanyIcons.iconTexture(ed, id);
             if (iconOpt.isPresent() && resourceExists(iconOpt.get())) {
                 slot.style(s -> s.background(
-                        com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture.of(iconOpt.get())));
+                        SpriteTexture.of(iconOpt.get())));
             } else {
-                var icon = new ink.myumoon.epiphany.client.ui.ItemIconElement(
-                        ink.myumoon.epiphany.client.EpiphanyIcons.defaultEpiphany());
+                var icon = new ItemIconElement(
+                        EpiphanyIcons.defaultEpiphany());
                 icon.layout(l -> l.width(16).height(16));
                 slot.addChild(icon);
             }
         }
     }
 
-    /** Build one popup card — no zigzag, same size as main UI slot. */
+    // pop-up card
     private static UIElement buildCard(UI ui, ResourceLocation id, EpiphanyData data, boolean unlocked) {
         UIElement card = new UIElement();
         card.addClass("epiphany-popup-card");
         card.addClass(unlocked ? "epiphany-slot-empty" : "epiphany-slot-disabled");
-        addSlotIcon(card, ClientData.epiphanyLookup(), id);
+        addSlotIcon(card, Objects.requireNonNull(ClientData.epiphanyLookup()), id);
         if (unlocked) {
             card.addEventListener(UIEvents.MOUSE_DOWN, e -> {
-                com.lowdragmc.lowdraglib2.gui.util.UISoundUtils.playButtonClickSound();
-                com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor.rpcToServer(
+                UISoundUtils.playButtonClickSound();
+                RPCPacketDistributor.rpcToServer(
                         "epiphany.select_epiphany", id.toString());
                 Overlay.hide(ui, EPIPHANY_POPUP);
             });
         }
         card.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
-            var lines = new java.util.ArrayList<net.minecraft.network.chat.Component>();
+            var lines = new java.util.ArrayList<Component>();
             String name = data.name().isPresent() ? data.name().get().getString() : id.toString();
-            lines.add(net.minecraft.network.chat.Component.literal(name).withStyle(net.minecraft.ChatFormatting.WHITE));
-            if (data.description().isPresent()) lines.add(data.description().get().copy().withStyle(net.minecraft.ChatFormatting.GRAY));
-            if (net.minecraft.client.gui.screens.Screen.hasShiftDown() && data.rewardDescription().isPresent())
-                lines.add(net.minecraft.network.chat.Component.translatable("epiphany.tooltip.reward").append(": ").append(data.rewardDescription().get()).withStyle(net.minecraft.ChatFormatting.GOLD));
+            lines.add(Component.literal(name).withStyle(ChatFormatting.WHITE));
+            if (data.description().isPresent()) lines.add(data.description().get().copy().withStyle(ChatFormatting.GRAY));
+            if (Screen.hasShiftDown() && data.rewardDescription().isPresent())
+                lines.add(Component.translatable("epiphany.tooltip.reward").append(": ").append(data.rewardDescription().get()).withStyle(ChatFormatting.GOLD));
             else if (data.rewardDescription().isPresent())
-                lines.add(net.minecraft.network.chat.Component.translatable("epiphany.ui.shift_hint").withStyle(net.minecraft.ChatFormatting.DARK_GRAY, net.minecraft.ChatFormatting.ITALIC));
+                lines.add(Component.translatable("epiphany.ui.shift_hint").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
             if (!unlocked && data.conditionDescription().isPresent())
-                lines.add(data.conditionDescription().get().copy().withStyle(net.minecraft.ChatFormatting.DARK_RED));
-            e.hoverTooltips = com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips.empty();
+                lines.add(data.conditionDescription().get().copy().withStyle(ChatFormatting.DARK_RED));
+            e.hoverTooltips = HoverTooltips.empty();
             for (var ln : lines) e.hoverTooltips = e.hoverTooltips.append(ln);
         });
         return card;
@@ -252,12 +249,12 @@ public final class EpiphanySelectController {
 
     private static int pathWeightVal(HolderLookup.RegistryLookup<PathData> lookup, ResourceLocation key) {
         if (lookup == null) return 100;
-        var pk = net.minecraft.resources.ResourceKey.create(ink.myumoon.epiphany.registry.EpiphanyRegistries.PATH_REGISTRY_KEY, key);
+        var pk = ResourceKey.create(EpiphanyRegistries.PATH_REGISTRY_KEY, key);
         return lookup.get(pk).map(h -> h.value().weight()).orElse(100);
     }
 
     private static boolean resourceExists(ResourceLocation rl) {
-        try { return net.minecraft.client.Minecraft.getInstance().getResourceManager().getResource(rl).isPresent(); }
+        try { return Minecraft.getInstance().getResourceManager().getResource(rl).isPresent(); }
         catch (Throwable ignored) { return false; }
     }
 

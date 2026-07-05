@@ -20,37 +20,28 @@ import javax.annotation.Nullable;
 /**
  * Client-side read helpers for the Epiphany UI.
  * <p>
- * Centralizes two patterns used across all UI widgets:
+ * Two common patterns:
  * <ul>
- *   <li>{@link #clientData()} — read the synced {@link PlayerEpiphanyData} mirror
- *       (kept up to date automatically by NeoForge Attachment sync)</li>
- *   <li>{@link #clientLookup(ResourceKey)} — fetch a datapack registry view from the
- *       client's connection-level {@link net.minecraft.core.RegistryAccess}</li>
+ *   <li>{@link #clientData()} — read the synced {@link PlayerEpiphanyData} attachment</li>
+ *   <li>{@link #clientLookup(ResourceKey)} — fetch a datapack registry view from the client's registry access</li>
  * </ul>
  * <p>
- * <b>Important — S→C vs C-side usage:</b>
- * <ul>
- *   <li>These helpers touch {@code Minecraft.getInstance().player} (a {@link LocalPlayer}).
- *     They are safe to call <b>from client-only contexts</b> (e.g. tooltip building, Shift
- *     detection inside hover events).</li>
- *   <li>They MUST NOT be used inside {@link com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder}
- *     S→C getters — those lambdas run on the server thread. For server-side reads, fetch
- *     the ServerPlayer via {@code element.getModularUI().player} and call
- *     {@code player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)} directly.</li>
- * </ul>
+ * <b>Thread safety:</b> These helpers access {@code Minecraft.getInstance().player} (a {@link LocalPlayer})
+ * and are safe only in <b>client-only contexts</b> (e.g., tooltips, hover events).
+ * They must NOT be used inside {@link com.lowdragmc.lowdraglib2.gui.sync.bindings.impl.DataBindingBuilder}
+ * S→C getters — those lambdas execute on the server thread. For server-side reads, fetch the
+ * {@code ServerPlayer} directly and use {@code player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)}.
  * <p>
- * <b>Why {@link HolderLookup.RegistryLookup} and not {@code Registry}?</b><br>
- * In 1.21.1, {@code RegistryAccess.lookup(key)} returns
- * {@code Optional<HolderLookup.RegistryLookup<T>>}. The returned object implements
- * {@code HolderLookup.RegistryLookup<T>} but <b>not</b> {@code Registry<T>}.
- * Casting to {@code Registry<T>} compiles but throws {@link ClassCastException} at runtime.
+ * <b>Why {@link HolderLookup.RegistryLookup} instead of {@link Registry}?</b>
+ * In 1.21.1, {@code RegistryAccess.lookup(key)} returns {@code HolderLookup.RegistryLookup<T>},
+ * not {@code Registry<T>}. Casting to {@code Registry} compiles but throws {@link ClassCastException}
+ * at runtime.
  */
 public final class ClientData {
 
     private ClientData() {
     }
 
-    /** The synced player Epiphany data, or null if the local player isn't ready. */
     @Nullable
     public static PlayerEpiphanyData clientData() {
         LocalPlayer player = Minecraft.getInstance().player;
@@ -59,10 +50,7 @@ public final class ClientData {
     }
 
     /**
-     * Lookup a datapack registry view on the client. Returns the vanilla
-     * {@link HolderLookup.RegistryLookup} (read view), never the full
-     * {@code Registry}. Strongly-typed {@code ResourceKey<Registry<T>>} is
-     * required so the generic T is preserved across the lookup boundary.
+     * Returns the client-side datapack registry view for the given key, or null if not available.
      */
     @Nullable
     public static <T> HolderLookup.RegistryLookup<T> clientLookup(
@@ -73,9 +61,7 @@ public final class ClientData {
     }
 
     /**
-     * Convenience: fetch a single value by id from the mirrored datapack
-     * registry on the client. Returns null if the client level isn't ready
-     * OR the entry doesn't exist.
+     * Fetches a single value by ID from a client registry view. Returns null if the lookup fails.
      */
     @Nullable
     public static <T> T getValue(ResourceKey<Registry<T>> registryKey, ResourceLocation id) {
@@ -86,53 +72,42 @@ public final class ClientData {
                 .orElse(null);
     }
 
-    // ============================================================
-    // Typed fast paths for the four Epiphany registries
-    // ============================================================
-
-    /** Convenience: get a single module definition by id on the client. */
+    // Typed convenience methods for the four Epiphany registries
     @Nullable
     public static ModuleData module(ResourceLocation id) {
         return getValue(EpiphanyRegistries.MODULE_REGISTRY_KEY, id);
     }
 
-    /** Convenience: get a single insight definition by id on the client. */
     @Nullable
     public static InsightData insight(ResourceLocation id) {
         return getValue(EpiphanyRegistries.INSIGHT_REGISTRY_KEY, id);
     }
 
-    /** Convenience: get a single epiphany definition by id on the client. */
     @Nullable
     public static EpiphanyData epiphany(ResourceLocation id) {
         return getValue(EpiphanyRegistries.EPIPHANY_REGISTRY_KEY, id);
     }
 
-    /** Convenience: get a single path definition by id on the client. */
     @Nullable
     public static PathData path(ResourceLocation id) {
         return getValue(EpiphanyRegistries.PATH_REGISTRY_KEY, id);
     }
 
-    /** Module registry lookup view. Useful for iterating. */
     @Nullable
     public static HolderLookup.RegistryLookup<ModuleData> moduleLookup() {
         return clientLookup(EpiphanyRegistries.MODULE_REGISTRY_KEY);
     }
 
-    /** Insight registry lookup view. Useful for iterating. */
     @Nullable
     public static HolderLookup.RegistryLookup<InsightData> insightLookup() {
         return clientLookup(EpiphanyRegistries.INSIGHT_REGISTRY_KEY);
     }
 
-    /** Epiphany registry lookup view. Useful for iterating. */
     @Nullable
     public static HolderLookup.RegistryLookup<EpiphanyData> epiphanyLookup() {
         return clientLookup(EpiphanyRegistries.EPIPHANY_REGISTRY_KEY);
     }
 
-    /** Path registry lookup view. Useful for iterating. */
     @Nullable
     public static HolderLookup.RegistryLookup<PathData> pathLookup() {
         return clientLookup(EpiphanyRegistries.PATH_REGISTRY_KEY);

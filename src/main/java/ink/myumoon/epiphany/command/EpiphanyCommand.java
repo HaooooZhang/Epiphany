@@ -396,8 +396,6 @@ public final class EpiphanyCommand {
 
     // ============================================================
     // open — opens the main Epiphany UI for the target player.
-    // This requires permission 2 (admin), as it bypasses the normal
-    // client key-binding trigger (which any player can use).
     // ============================================================
 
     private static LiteralArgumentBuilder<CommandSourceStack> openGroup() {
@@ -412,7 +410,7 @@ public final class EpiphanyCommand {
                         }));
     }
 
-    /** Removes all rewards from a player before resetting their data. */
+    // Removes all rewards from a player before resetting their data.
     private static void removeAllRewards(ServerPlayer player) {
         var access = player.server.registryAccess();
         var iReg = access.registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY);
@@ -464,7 +462,7 @@ public final class EpiphanyCommand {
                 if (ie.id().equals(insightId)) return entry.getKey().location();
             }
         }
-        // fallback — the insight will fail to find its module but at least won't NPE
+        // fallback
         return insightId;
     }
 }

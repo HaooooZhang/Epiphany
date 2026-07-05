@@ -13,11 +13,7 @@ import net.minecraft.resources.ResourceLocation;
 
 import java.util.*;
 
-/**
- * Renders an Insight tree using absolute positioning.
- * Layout: nodes grouped by depth (row per depth); lines drawn parent→child.
- * Content is centered in the container after layout.
- */
+// Insight Tree Renderer
 public class InsightTreeView {
 
     private static final int NODE_SIZE = 18;
@@ -54,7 +50,7 @@ public class InsightTreeView {
             l.width(contentWidth).height(contentHeight);
         });
 
-        // Pass 1: compute node positions (needed for both lines and nodes).
+        // compute node positions.
         Map<ResourceLocation, int[]> nodePositions = new HashMap<>();
 
         for (var depthEntry : byDepth.entrySet()) {
@@ -68,7 +64,7 @@ public class InsightTreeView {
             }
         }
 
-        // Pass 2: draw lines FIRST (renders behind nodes).
+        // draw lines
         for (var ie : insights) {
             var ancestors = InsightTreeResolver.findAncestors(module, ie.id());
             var childPos = nodePositions.get(ie.id());
@@ -89,7 +85,7 @@ public class InsightTreeView {
             }
         }
 
-        // Pass 3: draw nodes on TOP of lines.
+        // draw nodes
         for (var depthEntry : byDepth.entrySet()) {
             int depth = depthEntry.getKey();
             var entries = depthEntry.getValue();
@@ -104,7 +100,7 @@ public class InsightTreeView {
                 if (unlocked) {
                     ns = InsightNodeElement.State.UNLOCKED;
                 } else if (interactive && InsightTreeResolver.canUnlock(
-                        ClientData.clientData(), moduleId, module, ie.id())) {
+                        Objects.requireNonNull(ClientData.clientData()), moduleId, module, ie.id())) {
                     ns = InsightNodeElement.State.CAN_UNLOCK;
                 } else {
                     ns = InsightNodeElement.State.LOCKED;
@@ -121,7 +117,7 @@ public class InsightTreeView {
             }
         }
 
-        // Center or enable drag-to-pan for large trees (depth>3 or >3 per depth).
+        // Large Tree Handle
         boolean largeTree = maxDepth > 3 || maxPerDepth > 3;
         container.addChild(content);
         if (largeTree) {
@@ -139,7 +135,7 @@ public class InsightTreeView {
         }
     }
 
-    /** Add mouse-drag pan for large trees. Initial center, then drag to scroll. */
+    // mouse control
     private static void addDragPan(UIElement container, UIElement content,
                                     int cw, int ch) {
         final float[] ox = {0}, oy = {0};        // current content offset
@@ -148,7 +144,7 @@ public class InsightTreeView {
         final float[] dragStartCX = {0}, dragStartCY = {0};  // content pos at drag start
         final double[] dragStartMX = {0}, dragStartMY = {0}; // mouse pos at drag start
 
-        // Initial centering once layout is ready. Content starts at 0 if overflow, else centered.
+        // Initial centering once layout is ready. Content starts at 0 if overflowed, else centered.
         container.addEventListener(UIEvents.LAYOUT_CHANGED, e -> {
             if (centered[0]) return;
             float ccw = container.getSizeWidth();
@@ -198,7 +194,7 @@ public class InsightTreeView {
     }
 
     private static InsightData defaultInsight(ResourceLocation id) {
-        // Fallback when insight data is null (registry not synced to client yet).
+        // Fallback when insight data is null
         return new InsightData(
                 java.util.Optional.of(net.minecraft.network.chat.Component.literal(id.toString())),
                 java.util.Optional.empty(), java.util.Optional.empty(),

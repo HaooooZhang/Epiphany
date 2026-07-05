@@ -2,33 +2,36 @@ package ink.myumoon.epiphany.client.ui.module;
 
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
+import com.lowdragmc.lowdraglib2.gui.ui.elements.Switch;
+import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
+import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
+import dev.vfyjxf.taffy.style.AlignContent;
+import dev.vfyjxf.taffy.style.AlignItems;
+import dev.vfyjxf.taffy.style.FlexDirection;
+import dev.vfyjxf.taffy.style.TaffyPosition;
 import ink.myumoon.epiphany.Config;
-import ink.myumoon.epiphany.api.ModuleManager;
 import ink.myumoon.epiphany.attachment.ModulePlayerState;
 import ink.myumoon.epiphany.client.ui.ClientData;
+import ink.myumoon.epiphany.client.ui.insight.InsightTreeView;
 import ink.myumoon.epiphany.client.ui.overlay.Overlay;
 import ink.myumoon.epiphany.content.InitialState;
 import ink.myumoon.epiphany.content.ModuleData;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
-/**
- * Phase B controller for the Module selection popup.
- * <p>
- * Populates {@code #module-popup-list} with one card per unlocked && unselected
- * Module, sorted by weight. Each card has a name label + "选择" button; clicking
- * the button calls {@link ModuleManager#select(ServerPlayer, ResourceLocation)}
- * on the server, then success-closes the popup.
- * <p>
- * Simplified per Phase B plan: no hover-preview, no Insight tree thumbnail, no
- * Switch filter, no description body. Those land in Phase C.
- */
 public final class ModuleSelectController {
 
     private static final String MODULE_POPUP = "#module-popup";
@@ -38,35 +41,33 @@ public final class ModuleSelectController {
     private ModuleSelectController() {
     }
 
-    /** Filter toggle — show locked modules when true. */
+    // Filter toggle
     private static boolean showLocked = false;
 
-    /** Attach: close handlers + hardcoded Switch + TICK refresh. */
+    // Attach
     public static void attach(UI ui) {
         showLocked = false;
         Overlay.attachCloseHandlers(ui, MODULE_POPUP);
 
-        // Hardcoded toggle row: label + switch with calculated width (Taffy can't auto-size).
+        // Hardcoded toggle row
         ui.select("#module-toggle-row").findFirst().ifPresent(row -> {
             String labelText = Component.translatable("epiphany.ui.module.show_locked").getString();
-            boolean isCJK = labelText.codePoints().anyMatch(c -> c >= 0x2E80);
-            int charW = isCJK ? 9 : 5;
-            int labelW = labelText.length() * charW;   // ~8px per CJK char at fontSize 8
+            int labelW = Minecraft.getInstance().font.width(labelText);
             int switchW = 24;
-            int gap = 4;
+            int gap = 0;
             int totalW = labelW + gap + switchW;
-            row.layout(l -> l.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
+            row.layout(l -> l.positionType(TaffyPosition.ABSOLUTE)
                     .right(4).top(0).width(totalW).height(14)
-                    .flexDirection(dev.vfyjxf.taffy.style.FlexDirection.ROW));
+                    .flexDirection(FlexDirection.ROW));
 
             Label lbl = new Label();
             lbl.setText(Component.literal(labelText));
             lbl.textStyle(t -> t.fontSize(9).textColor(0xFFFFFFFF).textShadow(true)
-                    .textAlignVertical(com.lowdragmc.lowdraglib2.gui.ui.data.Vertical.CENTER));
+                    .textAlignVertical(Vertical.CENTER));
             lbl.layout(l -> l.width(labelW).height(14).flexShrink(0));
             row.addChild(lbl);
 
-            var sw = new com.lowdragmc.lowdraglib2.gui.ui.elements.Switch();
+            var sw = new Switch();
             sw.layout(l -> l.width(switchW).height(14).flexShrink(0).marginLeft(gap));
             sw.setOnSwitchChanged(on -> {
                 showLocked = on;
@@ -77,11 +78,11 @@ public final class ModuleSelectController {
 
         refreshList(ui);
 
-        // TICK: refresh list when popup is visible + data changes.
+        // refresh list
         var popup = ui.select(MODULE_POPUP).findFirst();
         var lastSig = new String[]{""};
         var tickCount = new int[]{0};
-        popup.ifPresent(overlay -> overlay.addEventListener(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents.TICK, e -> {
+        popup.ifPresent(overlay -> overlay.addEventListener(UIEvents.TICK, e -> {
             if (!overlay.isDisplayed()) { showLocked = false; return; }
             tickCount[0]++;
             if (tickCount[0] < 5) return;
@@ -94,7 +95,7 @@ public final class ModuleSelectController {
         }));
     }
 
-    /** Rebuild the list from the latest client-side attachment snapshot. */
+    // Rebuild the list from the latest client-side attachment snapshot.
     private static void refreshList(UI ui) {
         UIElement list = selectOne(ui, LIST_SELECTOR, UIElement.class);
         list.clearAllChildren();
@@ -106,9 +107,9 @@ public final class ModuleSelectController {
         int moduleSelectCost = Config.MODULE_SELECT_COST.get();
         int playerPoints = data.insightPoints();
 
-        // Collect candidate modules first, sort by weight asc + id alphabetical.
+        // Collect candidate modules
         record Candidate(ResourceLocation id, ModuleData module, boolean unlocked) {}
-        var candidates = new java.util.ArrayList<Candidate>();
+        var candidates = new ArrayList<Candidate>();
         lookup.listElements().forEach(holder -> {
             ResourceLocation id = holder.key().location();
             ModuleData module = holder.value();
@@ -131,52 +132,51 @@ public final class ModuleSelectController {
         }
     }
 
-    /** Build a single Module selection card matching main UI card structure.
-     *  Layout: title bar (RECT_LIGHT + name + select button) + body (desc/tree swap). */
+    // Module Card
     private static UIElement buildCard(UI ui, ResourceLocation moduleId, ModuleData module, boolean affordable) {
         UIElement card = new UIElement();
-        card.addClass("module-card");   // same class as main UI for identical sizing
+        card.addClass("module-card");
 
-        // --- Title bar: matches .module-card-title (RECT_LIGHT bg, 14px height) ---
+        // Title Bar
         UIElement titleBar = new UIElement();
         titleBar.addClass("module-card-title");
         String name = module.name().isPresent() ? module.name().get().getString() : moduleId.toString();
         Label nameLabel = new Label();
         nameLabel.setText(Component.literal(name));
         nameLabel.textStyle(t -> t.fontSize(8).textColor(0xFFFFFFFF).textShadow(true)
-                .textAlignHorizontal(com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal.LEFT));
-        nameLabel.layout(l -> l.maxWidth(68));  // 90 - 16(btn) - 4(pad) - 2(gap)
+                .textAlignHorizontal(Horizontal.LEFT));
+        nameLabel.layout(l -> l.maxWidth(68));  // 90 - 16 - 4 - 2 = 68
         titleBar.addChild(nameLabel);
 
-        // Select button — client-side RPC + close popup + module tooltip.
+        // Select button
         Button btn = new Button();
         btn.setText(Component.translatable("epiphany.ui.select"));
         if (!affordable) {
             btn.disabled();
         }
         // Module tooltip on button (most reliable hover target).
-        btn.addEventListener(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents.HOVER_TOOLTIPS, e -> {
-            var lines = new java.util.ArrayList<net.minecraft.network.chat.Component>();
-            lines.add(Component.literal(name).withStyle(net.minecraft.ChatFormatting.WHITE));
+        btn.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
+            var lines = new ArrayList<Component>();
+            lines.add(Component.literal(name).withStyle(ChatFormatting.WHITE));
             if (module.description().isPresent()) {
                 lines.add(module.description().get().copy()
-                        .withStyle(net.minecraft.ChatFormatting.GRAY));
+                        .withStyle(ChatFormatting.GRAY));
             }
-            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+            if (Screen.hasShiftDown()) {
                 if (module.onSelectRewardDescription().isPresent()) {
                     lines.add(Component.translatable("epiphany.tooltip.reward")
                             .append(": ").append(module.onSelectRewardDescription().get())
-                            .withStyle(net.minecraft.ChatFormatting.GOLD));
+                            .withStyle(ChatFormatting.GOLD));
                 }
                 if (module.onCompleteRewardDescription().isPresent()) {
                     lines.add(Component.translatable("epiphany.tooltip.completion_reward")
                             .append(": ").append(module.onCompleteRewardDescription().get())
-                            .withStyle(net.minecraft.ChatFormatting.GOLD));
+                            .withStyle(ChatFormatting.GOLD));
                 }
             } else if (module.onSelectRewardDescription().isPresent()
                     || module.onCompleteRewardDescription().isPresent()) {
                 lines.add(Component.translatable("epiphany.ui.shift_hint")
-                        .withStyle(net.minecraft.ChatFormatting.DARK_GRAY, net.minecraft.ChatFormatting.ITALIC));
+                        .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
             }
             if (!affordable) {
                 var cd = ClientData.clientData();
@@ -184,19 +184,19 @@ public final class ModuleSelectController {
                 boolean isUnlocked = st != null ? st.unlocked() : module.initialState() == InitialState.SELECTABLE;
                 if (!isUnlocked && module.conditionDescription().isPresent()) {
                     lines.add(module.conditionDescription().get().copy()
-                            .withStyle(net.minecraft.ChatFormatting.DARK_RED));
+                            .withStyle(ChatFormatting.DARK_RED));
                 }
                 lines.add(Component.translatable(isUnlocked ? "epiphany.ui.error.no_points" : "epiphany.ui.module.locked_hint")
-                        .withStyle(net.minecraft.ChatFormatting.RED));
+                        .withStyle(ChatFormatting.RED));
             }
-            e.hoverTooltips = com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips.empty();
+            e.hoverTooltips = HoverTooltips.empty();
             for (var ln : lines) e.hoverTooltips = e.hoverTooltips.append(ln);
         });
-        btn.layout(l -> l.positionType(dev.vfyjxf.taffy.style.TaffyPosition.ABSOLUTE)
+        btn.layout(l -> l.positionType(TaffyPosition.ABSOLUTE)
                 .right(2).top(0).flexShrink(0));
         if (affordable) {
-            btn.addEventListener(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents.MOUSE_DOWN, e -> {
-                com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor.rpcToServer(
+            btn.addEventListener(UIEvents.MOUSE_DOWN, e -> {
+                RPCPacketDistributor.rpcToServer(
                         "epiphany.select_module", moduleId.toString());
                 Overlay.hide(ui, MODULE_POPUP);
             });
@@ -205,15 +205,15 @@ public final class ModuleSelectController {
         titleBar.addChild(btn);
         card.addChild(titleBar);
 
-        // --- Body: description (default) / insight tree (hover), in single slot ---
+        // description / insight preview
         UIElement bodySlot = new UIElement();
         bodySlot.layout(l -> l.flex(1).widthPercent(100)
-                .flexDirection(dev.vfyjxf.taffy.style.FlexDirection.COLUMN)
-                .justifyContent(dev.vfyjxf.taffy.style.AlignContent.CENTER)
-                .alignItems(dev.vfyjxf.taffy.style.AlignItems.CENTER));
+                .flexDirection(FlexDirection.COLUMN)
+                .justifyContent(AlignContent.CENTER)
+                .alignItems(AlignItems.CENTER));
         card.addChild(bodySlot);
 
-        // Description — multiple Labels (Taffy Label doesn't render \n).
+        // Description
         if (module.description().isPresent()) {
             String raw = module.description().get().getString();
             int maxPerLine = 10;
@@ -223,7 +223,7 @@ public final class ModuleSelectController {
                 Label lineLbl = new Label();
                 lineLbl.setText(Component.literal(raw.substring(start, end)));
                 lineLbl.textStyle(t -> t.fontSize(8).textColor(0xFFAAAAAA).textShadow(true)
-                        .textAlignHorizontal(com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal.CENTER));
+                        .textAlignHorizontal(Horizontal.CENTER));
                 lineLbl.layout(l -> l.widthPercent(100).flexShrink(0));
                 bodySlot.addChild(lineLbl);
                 start = end;
@@ -233,25 +233,25 @@ public final class ModuleSelectController {
             Label placeholder = new Label();
             placeholder.setText(Component.literal("???"));
             placeholder.textStyle(t -> t.fontSize(8).textColor(0xFF666666).textShadow(false)
-                    .textAlignHorizontal(com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal.CENTER));
+                    .textAlignHorizontal(Horizontal.CENTER));
             bodySlot.addChild(placeholder);
         }
 
-        // Insight preview element (hidden by default, replaces desc on hover).
+        // Insight preview element
         UIElement previewArea = new UIElement();
         previewArea.addClass("insight-tree-area");
         previewArea.setDisplay(false);
         var clientData = ClientData.clientData();
         var moduleState = clientData != null ? clientData.modules().get(moduleId) : null;
         if (moduleState == null) {
-            moduleState = ink.myumoon.epiphany.attachment.ModulePlayerState.createDefault();
+            moduleState = ModulePlayerState.createDefault();
         }
-        ink.myumoon.epiphany.client.ui.insight.InsightTreeView.buildInto(
+        InsightTreeView.buildInto(
                 previewArea, ui, moduleId, module, moduleState, false, null);
         bodySlot.addChild(previewArea);
 
-        // Hover: swap description ↔ insight preview. Capture phase so children don't block.
-        card.addEventListener(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents.MOUSE_ENTER, e -> {
+        // Hover
+        card.addEventListener(UIEvents.MOUSE_ENTER, e -> {
             // Hide all description labels, show tree.
             for (int i = 0; i < bodySlot.getChildren().size(); i++) {
                 var child = bodySlot.getChildren().get(i);
@@ -259,7 +259,7 @@ public final class ModuleSelectController {
             }
             previewArea.setDisplay(true);
         }, true);
-        card.addEventListener(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents.MOUSE_LEAVE, e -> {
+        card.addEventListener(UIEvents.MOUSE_LEAVE, e -> {
             // Show all description labels, hide tree.
             for (int i = 0; i < bodySlot.getChildren().size(); i++) {
                 var child = bodySlot.getChildren().get(i);
@@ -271,7 +271,7 @@ public final class ModuleSelectController {
         return card;
     }
 
-    /** Display an error message in the popup's error label (and un-hide it). */
+    // Error Message
     private static void showClientError(UI ui, Component message) {
         Optional<UIElement> errEl = ui.select(ERROR_LABEL).findFirst();
         errEl.ifPresent(el -> {
@@ -280,7 +280,7 @@ public final class ModuleSelectController {
         });
     }
 
-    /** Clear any previous error message (hide the label). */
+    // clear message
     private static void clearClientError(UI ui) {
         ui.select(ERROR_LABEL).findFirst().ifPresent(el -> el.setDisplay(false));
     }
@@ -292,7 +292,7 @@ public final class ModuleSelectController {
                 + data.modules().entrySet().stream()
                 .map(e -> e.getKey() + ":" + (e.getValue().selected() ? "s" : "-"))
                 .sorted()
-                .collect(java.util.stream.Collectors.joining(","));
+                .collect(Collectors.joining(","));
     }
 
     private static <T extends UIElement> T selectOne(UI ui, String selector, Class<T> type) {

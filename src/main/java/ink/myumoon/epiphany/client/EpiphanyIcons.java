@@ -9,14 +9,7 @@ import net.minecraft.world.item.Items;
 
 import java.util.Optional;
 
-/**
- * Three-level icon resolution for Epiphany UI.
- * <ol>
- *   <li>{@code data.icon()} — direct texture path</li>
- *   <li>Convention-based texture from the entry's registry ID</li>
- *   <li>Default vanilla item icon per entry type</li>
- * </ol>
- */
+// Icon Handle
 public final class EpiphanyIcons {
 
     // Default items per type
@@ -27,34 +20,31 @@ public final class EpiphanyIcons {
     private EpiphanyIcons() {
     }
 
-    /** Resolve the icon texture for a Module. */
+    // Module
     public static Optional<ResourceLocation> iconTexture(ModuleData data, ResourceLocation registryId) {
         return resolve(data.icon(), registryId, "module");
     }
 
-    /** Resolve the icon texture for an Insight. */
+    // Insight
     public static Optional<ResourceLocation> iconTexture(InsightData data, ResourceLocation registryId) {
         return resolve(data.icon(), registryId, "insight");
     }
 
-    /** Resolve the icon texture for an Epiphany. */
+    // Epiphany
     public static Optional<ResourceLocation> iconTexture(EpiphanyData data, ResourceLocation registryId) {
         return resolve(data.icon(), registryId, "epiphany");
     }
 
-    /** Default item icon for a Module. */
+    // Module Default
     public static ItemStack defaultModule() { return DEFAULT_MODULE.copy(); }
 
-    /** Default item icon for an Insight. */
+    // Insight Default
     public static ItemStack defaultInsight() { return DEFAULT_INSIGHT.copy(); }
 
-    /** Default item icon for an Epiphany. */
+    // Epiphany Default
     public static ItemStack defaultEpiphany() { return DEFAULT_EPIPHANY.copy(); }
 
-    // ============================================================
-    // internal
-    // ============================================================
-
+    // Internal Handle
     private static Optional<ResourceLocation> resolve(Optional<ResourceLocation> explicit,
                                                        ResourceLocation registryId,
                                                        String typeDir) {

@@ -37,10 +37,10 @@ public final class EpiphanyDebugHud {
         y += 14;
 
         // Player state
-        g.drawString(mc.font, String.format("\u00a7eAptitude: \u00a7f%d  \u00a7ePoints: \u00a7f%d  \u00a7eSpent: \u00a7f%d",
+        g.drawString(mc.font, String.format("§eAptitude: \u00a7f%d  \u00a7ePoints: \u00a7f%d  \u00a7eSpent: \u00a7f%d",
                 data.aptitude(), data.insightPoints(), data.totalInsightPointsSpent()), x, y, 0xFFFFFF);
         y += 12;
-        g.drawString(mc.font, String.format("\u00a7eSlots: \u00a7f%d/%d (used)  \u00a7eMax: \u00a7f%d",
+        g.drawString(mc.font, String.format("§eSlots: \u00a7f%d/%d (used)  \u00a7eMax: \u00a7f%d",
                 data.usedEpiphanySlots(), data.epiphanySlots(),
                 ink.myumoon.epiphany.Config.MAX_EPIPHANY_SLOTS.get()), x, y, 0xFFFFFF);
         y += 14;

@@ -2,7 +2,6 @@ package ink.myumoon.epiphany.client.ui.overlay;
 
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
-import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 
 import java.util.Optional;
@@ -22,31 +21,22 @@ import java.util.Optional;
  */
 public final class Overlay {
 
-    /** GLFW_KEY_ESCAPE constant. Match LWJGL's GLFW_KEY_ESCAPE = 256. */
     private static final int KEY_ESCAPE = 256;
 
     private Overlay() {
     }
 
-    /** Show the overlay identified by selector (e.g. {@code "#module-popup"}). */
+    // Show the overlay identified by selector
     public static void show(UI ui, String overlaySelector) {
         findOverlay(ui, overlaySelector).ifPresent(el -> el.setDisplay(true));
     }
 
-    /** Hide the overlay identified by selector. */
+    // Hide the overlay identified by selector.
     public static void hide(UI ui, String overlaySelector) {
         findOverlay(ui, overlaySelector).ifPresent(el -> el.setDisplay(false));
     }
 
-    /**
-     * Attach close handlers for the given overlay.
-     * <ul>
-     *   <li>Click on the overlay backdrop (target == overlay itself) → close</li>
-     *   <li>ESC key on the overlay → close</li>
-     * </ul>
-     * Call once during attach(); the listeners stay registered for the overlay's
-     * lifetime. Safe even when the overlay is hidden — events just don't fire.
-     */
+    // Attach close handlers for the given overlay.
     public static void attachCloseHandlers(UI ui, String overlaySelector) {
         Optional<UIElement> overlayOpt = findOverlay(ui, overlaySelector);
         if (overlayOpt.isEmpty()) return;

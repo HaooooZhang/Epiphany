@@ -2,9 +2,11 @@ package ink.myumoon.epiphany.client.ui.module;
 
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
+import com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Button;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
-import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
+import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
+import com.lowdragmc.lowdraglib2.gui.ui.event.UIEventListener;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import ink.myumoon.epiphany.Config;
 import ink.myumoon.epiphany.Epiphany;
@@ -14,54 +16,38 @@ import ink.myumoon.epiphany.client.ui.ClientData;
 import ink.myumoon.epiphany.client.ui.insight.InsightClickHandler;
 import ink.myumoon.epiphany.client.ui.insight.InsightTreeView;
 import ink.myumoon.epiphany.client.ui.overlay.Overlay;
-import ink.myumoon.epiphany.content.ModuleData;
+import net.minecraft.ChatFormatting;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-/**
- * Controller for the main UI's Module grid.
- * <p>
- * Fills {@code #module-grid} with the player's selected Modules (one card each)
- * plus empty "+select" slot buttons until {@link Config#MAX_SELECTED_MODULES}
- * is reached. Empty slot clicks open the Module selection popup.
- * <p>
- * Card sizing comes from the {@code .module-card / .empty-slot} LSS classes;
- * Phase A's last-row-equal-width logic is preserved.
- * <p>
- * B4: Re-renders the grid whenever the player's selected Module set changes
- * (detected by comparing attachment state every N ticks).
- */
 public final class ModuleGridController {
 
-    /** CSS class added to cards on the last (incomplete) row to disable stretching. */
     private static final String LAST_ROW_CLASS = "last-row";
-    /** Popup overlay selector opened when an empty slot is clicked. */
     private static final String MODULE_POPUP = "#module-popup";
-    /** Re-render check interval (in ticks). Check every tick for instant Insight feedback. */
     private static final int REFRESH_INTERVAL = 1;
 
     private ModuleGridController() {
     }
 
-    /** Attach to the UI tree, called from {@link ink.myumoon.epiphany.client.ui.EpiphanyUIFactory#register()}. */
+    // attach
     public static void attach(UI ui) {
-        cachedCardWidth = -1;  // reset each UI open (GUI scale may have changed)
+        cachedCardWidth = -1;  // reset cache
         UIElement grid = selectOne(ui, "#module-grid", UIElement.class);
         Epiphany.LOGGER.info("ModuleGrid attached: grid identity = {}", System.identityHashCode(grid));
 
         // Initial render.
         refreshGrid(ui, grid);
 
-        // Re-render every REFRESH_INTERVAL ticks to pick up attachment changes
-        // (e.g. after a popup-driven Module.select). The check is cheap (compares
-        // a cached signature with the current attachment snapshot).
         final String[] lastSignature = {currentSignature()};
         final int[] tickCount = {0};
-        grid.addEventListener(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents.TICK, e -> {
+        grid.addEventListener(UIEvents.TICK, e -> {
             tickCount[0]++;
             if (tickCount[0] < REFRESH_INTERVAL) return;
             tickCount[0] = 0;
@@ -73,17 +59,13 @@ public final class ModuleGridController {
         });
     }
 
-    /**
-     * Rebuild the grid: clear children, add one card per selected Module,
-     * then fill the rest up to {@link Config#MAX_SELECTED_MODULES} with empty slots.
-     * Also re-runs the last-row equal-width adjustment.
-     */
+    // Rebuild the grid
     private static void refreshGrid(UI ui, UIElement grid) {
         grid.clearAllChildren();
         int slotCount = Math.max(1, Config.MAX_SELECTED_MODULES.get());
 
         // Collect selected Module IDs from the client-side attachment mirror.
-        List<java.util.Map.Entry<net.minecraft.resources.ResourceLocation, ink.myumoon.epiphany.attachment.ModulePlayerState>> selected =
+        List<Map.Entry<ResourceLocation, ModulePlayerState>> selected =
                 new ArrayList<>();
         var data = ClientData.clientData();
         if (data != null) {
@@ -93,28 +75,27 @@ public final class ModuleGridController {
         }
 
         List<UIElement> slots = new ArrayList<>();
-        // Render a "module-card" for each selected module.
+        // Render Module Card
         for (var entry : selected) {
             UIElement card = buildSelectedCard(ui, entry.getKey());
             slots.add(card);
             grid.addChild(card);
         }
-        // Fill the remaining slots with empty "+select" buttons.
+        // Fill the remaining slots
         for (int i = slots.size(); i < slotCount; i++) {
             UIElement slot = buildEmptySlot(ui, i);
             slots.add(slot);
             grid.addChild(slot);
         }
 
-        // Make ALL cards equal-width: measure parent, compute stretched card width,
-        // then apply that width to every card. This ensures cards align across rows.
+        // equal width
         scheduleEqualWidth(grid, slots);
     }
 
-    /** Cached equalized card width — measured once, reused across refreshes. */
+    // cache width revise
     private static float cachedCardWidth = -1;
 
-    /** Measure the grid's actual width once, then force every card to the same width. */
+    // measure width
     private static void scheduleEqualWidth(UIElement grid, List<UIElement> slots) {
         // If already cached, apply immediately and skip measurement.
         if (cachedCardWidth > 0 && !slots.isEmpty()) {
@@ -124,13 +105,13 @@ public final class ModuleGridController {
             }
             return;
         }
-        java.util.concurrent.atomic.AtomicBoolean adjusted = new java.util.concurrent.atomic.AtomicBoolean(false);
+        AtomicBoolean adjusted = new AtomicBoolean(false);
         Runnable adjust = () -> {
             if (adjusted.get()) return;
             if (grid.getModularUI() == null || grid.getContentWidth() <= 0) return;
             float parentWidth = grid.getContentWidth();
             if (parentWidth <= 0 || slots.isEmpty()) return;
-            float actualCardWidth = slots.get(0).getSizeWidth();
+            float actualCardWidth = slots.getFirst().getSizeWidth();
             if (actualCardWidth <= 0) return;
             cachedCardWidth = actualCardWidth;
             for (UIElement card : slots) {
@@ -139,21 +120,21 @@ public final class ModuleGridController {
             }
             adjusted.set(true);
         };
-        grid.addEventListener(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents.LAYOUT_CHANGED, e -> adjust.run());
-        final com.lowdragmc.lowdraglib2.gui.ui.event.UIEventListener[] tickHolder = new com.lowdragmc.lowdraglib2.gui.ui.event.UIEventListener[1];
+        grid.addEventListener(UIEvents.LAYOUT_CHANGED, e -> adjust.run());
+        final UIEventListener[] tickHolder = new UIEventListener[1];
         final int[] tickCount = {0};
         tickHolder[0] = event -> {
             if (adjusted.get() || tickCount[0] > 20) {
-                grid.removeEventListener(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents.TICK, tickHolder[0]);
+                grid.removeEventListener(UIEvents.TICK, tickHolder[0]);
                 return;
             }
             tickCount[0]++;
             adjust.run();
         };
-        grid.addEventListener(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents.TICK, tickHolder[0]);
+        grid.addEventListener(UIEvents.TICK, tickHolder[0]);
     }
 
-    /** Build a card for an already-selected Module with Insight tree. */
+    // module card with insights
     private static UIElement buildSelectedCard(UI ui, ResourceLocation moduleId) {
         UIElement card = new UIElement();
         card.addClass("module-card");
@@ -162,7 +143,7 @@ public final class ModuleGridController {
         var data = ClientData.clientData();
         var state = data != null ? data.modules().get(moduleId) : null;
 
-        // --- Title bar: RECT_LIGHT background + module name (left-aligned) ---
+        // title bar
         UIElement titleBar = new UIElement();
         titleBar.addClass("module-card-title");
         String name = (moduleData != null && moduleData.name().isPresent())
@@ -170,58 +151,54 @@ public final class ModuleGridController {
                 : moduleId.toString();
         Label nameLabel = new Label();
         nameLabel.setText(Component.literal(name));
-        nameLabel.textStyle(t -> t.textAlignHorizontal(com.lowdragmc.lowdraglib2.gui.ui.data.Horizontal.LEFT));
+        nameLabel.textStyle(t -> t.textAlignHorizontal(Horizontal.LEFT));
         titleBar.addChild(nameLabel);
         card.addChild(titleBar);
 
-        // Hover on card (capture) → Module tooltip. Capture beats any child handler.
-        card.addEventListener(com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents.HOVER_TOOLTIPS, e -> {
-            var lines = new java.util.ArrayList<net.minecraft.network.chat.Component>();
-            lines.add(Component.literal(name).withStyle(net.minecraft.ChatFormatting.WHITE));
+        // Tooltip
+        card.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
+            var lines = new ArrayList<Component>();
+            lines.add(Component.literal(name).withStyle(ChatFormatting.WHITE));
             if (moduleData != null && moduleData.description().isPresent()) {
                 lines.add(moduleData.description().get().copy()
-                        .withStyle(net.minecraft.ChatFormatting.GRAY));
+                        .withStyle(ChatFormatting.GRAY));
             }
-            if (net.minecraft.client.gui.screens.Screen.hasShiftDown()) {
+            if (Screen.hasShiftDown()) {
                 if (moduleData != null && moduleData.onSelectRewardDescription().isPresent()) {
                     lines.add(Component.translatable("epiphany.tooltip.reward")
                             .append(": ")
                             .append(moduleData.onSelectRewardDescription().get())
-                            .withStyle(net.minecraft.ChatFormatting.GOLD));
+                            .withStyle(ChatFormatting.GOLD));
                 }
                 if (moduleData != null && moduleData.onCompleteRewardDescription().isPresent()) {
                     lines.add(Component.translatable("epiphany.tooltip.completion_reward")
                             .append(": ")
                             .append(moduleData.onCompleteRewardDescription().get())
-                            .withStyle(net.minecraft.ChatFormatting.GOLD));
+                            .withStyle(ChatFormatting.GOLD));
                 }
             } else {
                 if (moduleData != null && (moduleData.onSelectRewardDescription().isPresent()
                         || moduleData.onCompleteRewardDescription().isPresent())) {
                     lines.add(Component.translatable("epiphany.ui.shift_hint")
-                            .withStyle(net.minecraft.ChatFormatting.DARK_GRAY, net.minecraft.ChatFormatting.ITALIC));
+                            .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
                 }
             }
-            e.hoverTooltips = com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips.empty();
+            e.hoverTooltips = HoverTooltips.empty();
             for (var ln : lines) e.hoverTooltips = e.hoverTooltips.append(ln);
         }, true);
 
-        // --- Insight tree area ---
+        // Insight Tree
         UIElement treeArea = new UIElement();
         treeArea.addClass("insight-tree-area");
         if (moduleData != null && state != null) {
-            InsightClickHandler handler = (sp, insightId, modId) ->
-                    InsightManager.select(sp, insightId, modId);
+            InsightClickHandler handler = InsightManager::select;
             InsightTreeView.buildInto(treeArea, ui, moduleId, moduleData, state, true, handler);
         }
         card.addChild(treeArea);
         return card;
     }
 
-    /**
-     * Build an empty "+select" slot. Click opens the Module popup — but only
-     * if the player has enough Insight Points; otherwise button is disabled.
-     */
+    // Empty Slot
     private static UIElement buildEmptySlot(UI ui, int slotIndex) {
         UIElement slot = new UIElement();
         slot.addClass("empty-slot");
@@ -243,7 +220,7 @@ public final class ModuleGridController {
         return slot;
     }
 
-    /** Snapshot signature: selected modules + state flags + unlocked insights. */
+    // Snapshot signature: selected modules + state flags + unlocked insights.
     private static String currentSignature() {
         var data = ClientData.clientData();
         if (data == null) return "";
@@ -262,7 +239,7 @@ public final class ModuleGridController {
         return sb.toString();
     }
 
-    /** Convenience: select exactly one element by CSS selector or throw. */
+    // select exactly one element by CSS selector or throw.
     private static <T extends UIElement> T selectOne(UI ui, String selector, Class<T> type) {
         Optional<T> first = ui.select(selector)
                 .findFirst()

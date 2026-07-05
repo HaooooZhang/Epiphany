@@ -51,7 +51,7 @@
   "epiphany.ui.points": "points",
   "epiphany.ui.apt_ratio": "%s / %s",
   "epiphany.ui.select_placeholder": "+ Select",
-  "epiphany.ui.select": "Select",
+  "epiphany.ui.select": "+",
   "epiphany.ui.insight_cost": "Cost: %s Insight Points",
   "epiphany.ui.shift_hint": "Hold [Shift] for details",
 
