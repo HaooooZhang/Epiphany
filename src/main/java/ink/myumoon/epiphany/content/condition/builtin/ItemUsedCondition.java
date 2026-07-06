@@ -1,5 +1,6 @@
 package ink.myumoon.epiphany.content.condition.builtin;
 
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import ink.myumoon.epiphany.content.condition.Condition;
@@ -19,7 +20,7 @@ public record ItemUsedCondition(Item item, int count) implements Condition {
     public static final MapCodec<ItemUsedCondition> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             BuiltInRegistries.ITEM.byNameCodec()
                     .fieldOf("item").forGetter(ItemUsedCondition::item),
-            com.mojang.serialization.Codec.INT.optionalFieldOf("count", 1)
+            Codec.INT.optionalFieldOf("count", 1)
                     .forGetter(ItemUsedCondition::count)
     ).apply(instance, ItemUsedCondition::new));
 

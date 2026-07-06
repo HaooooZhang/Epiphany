@@ -3,6 +3,7 @@ package ink.myumoon.epiphany.content.condition.builtin;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import ink.myumoon.epiphany.content.condition.Condition;
+import ink.myumoon.epiphany.Epiphany;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,9 +27,14 @@ public record StructureCondition(ResourceLocation structure) implements Conditio
     @Override
     public boolean test(ServerPlayer player) {
         var level = player.serverLevel();
-        var pos = player.blockPosition();
+        var registry = level.registryAccess().registryOrThrow(Registries.STRUCTURE);
+        if (!registry.containsKey(structure)) {
+            Epiphany.LOGGER.warn("Structure \"{}\" does not exist, referenced in epiphany:structure condition",
+                    this.structure);
+            return false;
+        }
         return level.structureManager().getStructureWithPieceAt(
-                pos, level.registryAccess().registryOrThrow(Registries.STRUCTURE).get(structure)
+                player.blockPosition(), registry.get(structure)
         ).isValid();
     }
 }

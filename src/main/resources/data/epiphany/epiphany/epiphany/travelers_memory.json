@@ -1,12 +1,12 @@
 {
     "name": "旅者之忆",
-    "description": "与信标交互一次",
+    "description": "行走超过1000格距离",
     "path": "epiphany:shadow",
     "condition": {
         "type": "epiphany:statistic",
-        "stat": "minecraft:interact_with_beacon",
+        "stat": "minecraft:walk_one_cm",
         "comparison": ">=",
-        "value": 1
+        "value": 100000
     },
     "initial_state": "locked",
     "reward": {

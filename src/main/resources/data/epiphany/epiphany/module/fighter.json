@@ -1,19 +1,19 @@
 {
     "name": "战士",
-    "description": "战场的老兵。需要击杀僵尸或挖掘100个石头。",
+    "description": "战场的老兵。需要击杀3只亡灵怪物或挖掘100个石头类方块。",
     "icon": "minecraft:textures/item/diamond_sword.png",
     "condition": {
         "type": "epiphany:or",
         "conditions": [
             {
                 "type": "epiphany:kill_entity",
-                "entity": "minecraft:zombie",
+                "entity": "#minecraft:zombies",
                 "count": 3
             },
             {
                 "type": "epiphany:block_broken",
-                "block": "minecraft:stone",
-                "count": 100
+                "block": "#minecraft:base_stone_overworld",
+                "count": 1
             }
         ]
     },

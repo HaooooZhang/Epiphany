@@ -4,7 +4,7 @@
     "icon": "minecraft:textures/item/nether_star.png",
     "condition": {
         "type": "epiphany:item_used",
-        "item": "minecraft:neitherite_sword",
+        "item": "minecraft:netherite_sword",
         "count": 1
     },
     "initial_state": "locked",

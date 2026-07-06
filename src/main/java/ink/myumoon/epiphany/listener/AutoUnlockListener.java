@@ -28,7 +28,7 @@ public final class AutoUnlockListener {
 
     @SubscribeEvent
     static void onServerTick(ServerTickEvent.Post event) {
-        if (++tickCounter % 20 != 0) return; // once per second
+        if (++tickCounter % 10 != 0) return; // twice per second
         for (var player : event.getServer().getPlayerList().getPlayers()) {
             auto(player);
         }
