@@ -44,6 +44,10 @@ public final class EpiphanyEpiphanyRewardTypes {
     public static final DeferredHolder<MapCodec<? extends EpiphanyReward>, MapCodec<InsightPointsReward>> INSIGHT_POINTS =
             REGISTRY.register("insight_points", () -> InsightPointsReward.CODEC);
 
+    // --- Phase 7: KubeJS compatibility ---
+    public static final DeferredHolder<MapCodec<? extends EpiphanyReward>, MapCodec<KubeJSStageReward>> KUBEJS_STAGE =
+            REGISTRY.register("kubejs_stage", () -> KubeJSStageReward.CODEC);
+
     private EpiphanyEpiphanyRewardTypes() {
     }
 }

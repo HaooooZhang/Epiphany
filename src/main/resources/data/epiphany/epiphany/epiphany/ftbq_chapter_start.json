@@ -1,0 +1,1 @@
+{"name": "FTBQ 章节已开始", "description": "测试 ftbq_chapter_started 条件：指定章节开始后解锁", "path": "epiphany:ftbq_test", "condition": {"type": "epiphany:ftbq_chapter_started", "chapter": "51AE1B0A0CF7A142"}, "initial_state": "locked", "reward": {"type": "epiphany:insight_points", "amount": 1}, "reward_description": "+1 心得点"}

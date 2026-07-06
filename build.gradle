@@ -151,7 +151,8 @@ dependencies {
     implementation("com.lowdragmc.ldlib2:ldlib2-neoforge-${minecraft_version}:${ldlib2_version}:all")
     implementation "curse.maven:ftb-quests-forge-289412:8253474"
     implementation "dev.latvian.mods:kubejs-neoforge:2101.7.2-build.368"
-    implementation "dev.latvian.mods:kubejs-neoforge:2101.7.2-build.368"
+    // Architectury — needed for FTBQ event listener (transitive but not resolved via curse.maven)
+    compileOnly files("run/mods/architectury-13.0.8-neoforge.jar")
     // Example optional mod dependency with JEI
     // The JEI API is declared for compile time use, while the full JEI artifact is used at runtime
     // compileOnly "mezz.jei:jei-${mc_version}-common-api:${jei_version}"

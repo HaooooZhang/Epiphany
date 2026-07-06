@@ -5,6 +5,8 @@ import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.EpiphanyConstants;
 import ink.myumoon.epiphany.content.condition.*;
 import ink.myumoon.epiphany.content.condition.builtin.*;
+import ink.myumoon.epiphany.content.condition.builtin.ftbq.*;
+import ink.myumoon.epiphany.content.condition.builtin.kubejs.*;
 import ink.myumoon.epiphany.content.condition.logic.*;
 import net.neoforged.neoforge.registries.DeferredHolder;
 import net.neoforged.neoforge.registries.DeferredRegister;
@@ -83,6 +85,23 @@ public final class EpiphanyConditionTypes {
 
     public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<InsightPointsCondition>> INSIGHT_POINTS =
             REGISTRY.register("insight_points", () -> InsightPointsCondition.CODEC);
+
+    // --- Phase 7: FTB Quests compatibility (soft-dependency, isolated inner class) ---
+    public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<FTBQQuestCondition>> FTBQ_QUEST =
+            REGISTRY.register("ftbq_quest", () -> FTBQQuestCondition.CODEC);
+
+    public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<FTBQChapterStartedCondition>> FTBQ_CHAPTER_STARTED =
+            REGISTRY.register("ftbq_chapter_started", () -> FTBQChapterStartedCondition.CODEC);
+
+    public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<FTBQChapterCompletedCondition>> FTBQ_CHAPTER_COMPLETED =
+            REGISTRY.register("ftbq_chapter_completed", () -> FTBQChapterCompletedCondition.CODEC);
+
+    public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<FTBQTagCondition>> FTBQ_TAG =
+            REGISTRY.register("ftbq_tag", () -> FTBQTagCondition.CODEC);
+
+    // --- Phase 7: KubeJS compatibility (soft-dependency, isolated inner class) ---
+    public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<KubeJSStageCondition>> KUBEJS_STAGE =
+            REGISTRY.register("kubejs_stage", () -> KubeJSStageCondition.CODEC);
 
     private EpiphanyConditionTypes() {
     }

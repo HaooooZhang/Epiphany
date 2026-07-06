@@ -1,0 +1,15 @@
+{
+    "name": "FTBQ 任务已完成",
+    "description": "测试 ftbq_quest 条件：指定任务完成后解锁",
+    "path": "epiphany:ftbq_test",
+    "condition": {
+        "type": "epiphany:ftbq_quest",
+        "quest": "6D031F64B5DEFA7C"
+    },
+    "initial_state": "locked",
+    "reward": {
+        "type": "epiphany:insight_points",
+        "amount": 2
+    },
+    "reward_description": "+2 心得点"
+}

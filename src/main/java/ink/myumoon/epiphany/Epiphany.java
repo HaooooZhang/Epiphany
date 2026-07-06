@@ -6,6 +6,7 @@ import com.mojang.logging.LogUtils;
 
 import ink.myumoon.epiphany.client.ui.EpiphanyUIFactory;
 import ink.myumoon.epiphany.command.EpiphanyCommand;
+import ink.myumoon.epiphany.content.condition.builtin.ftbq.FTBQHelper;
 import ink.myumoon.epiphany.content.reward.PersistentReward;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyConditionTypes;
@@ -45,6 +46,9 @@ public class Epiphany {
             PersistentReward.reapplyAll(sp);
             sp.setHealth(sp.getMaxHealth());
         });
+
+        // FTB Quests Architectury event listeners (soft dependency)
+        FTBQHelper.init();
 
         LOGGER.info("Epiphany initialized");
     }

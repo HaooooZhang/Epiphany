@@ -30,7 +30,7 @@ public final class AutoUnlockListener {
     static void onServerTick(ServerTickEvent.Post event) {
         if (++tickCounter % 10 != 0) return; // twice per second
         for (var player : event.getServer().getPlayerList().getPlayers()) {
-            auto(player);
+            auto(player, true); // skip event-driven conditions
         }
     }
 
@@ -84,7 +84,11 @@ public final class AutoUnlockListener {
     }
 
     private static void auto(ServerPlayer player) {
-        ModuleManager.checkAutoUnlock(player);
-        EpiphanyManager.checkAutoUnlock(player);
+        auto(player, false);
+    }
+
+    private static void auto(ServerPlayer player, boolean skipEventDriven) {
+        ModuleManager.checkAutoUnlock(player, skipEventDriven);
+        EpiphanyManager.checkAutoUnlock(player, skipEventDriven);
     }
 }

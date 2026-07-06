@@ -5,6 +5,7 @@ import ink.myumoon.epiphany.attachment.EpiphanyPlayerState;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.content.EpiphanyData;
 import ink.myumoon.epiphany.content.InitialState;
+import ink.myumoon.epiphany.content.condition.Condition;
 import ink.myumoon.epiphany.event.*;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
@@ -132,8 +133,16 @@ public final class EpiphanyManager {
                         .withUsedEpiphanySlots(Math.max(0, data.usedEpiphanySlots() - refund)));
     }
 
-    /** Periodically evaluate conditions and auto-unlock matching epiphanies. */
+    /** Evaluate conditions and auto-unlock matching epiphanies. */
     public static void checkAutoUnlock(ServerPlayer player) {
+        checkAutoUnlock(player, false);
+    }
+
+    /**
+     * @param skipEventDriven if true, skip conditions marked {@link Condition#isEventDriven()}
+     *                        (used by polling to avoid redundant checks)
+     */
+    public static void checkAutoUnlock(ServerPlayer player, boolean skipEventDriven) {
         Registry<EpiphanyData> registry = epiphanyRegistry(player);
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         boolean changed = false;
@@ -148,7 +157,9 @@ public final class EpiphanyManager {
             EpiphanyPlayerState state = data.epiphanies().get(id);
             if (state != null && state.unlocked()) continue;
 
-            if (epiphany.condition().get().test(player)) {
+            Condition cond = epiphany.condition().get();
+            if (skipEventDriven && cond.isEventDriven()) continue;
+            if (cond.test(player)) {
                 state = state != null ? state : EpiphanyPlayerState.createDefault();
                 EpiphanyPlayerState newState = new EpiphanyPlayerState(state.selected(), true);
                 data = data.withEpiphanyState(id, newState);

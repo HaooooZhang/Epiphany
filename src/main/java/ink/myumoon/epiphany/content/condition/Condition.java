@@ -40,4 +40,13 @@ public interface Condition {
      * @return true if the condition is satisfied
      */
     boolean test(ServerPlayer player);
+
+    /**
+     * Whether this condition is driven by external events rather than polling.
+     * Event-driven conditions may be skipped by periodic auto-unlock checks
+     * to avoid expensive queries. FTBQ conditions use Architectury event listeners.
+     */
+    default boolean isEventDriven() {
+        return false;
+    }
 }

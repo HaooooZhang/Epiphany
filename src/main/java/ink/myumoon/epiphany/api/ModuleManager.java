@@ -5,6 +5,7 @@ import ink.myumoon.epiphany.attachment.ModulePlayerState;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.content.InitialState;
 import ink.myumoon.epiphany.content.InsightData;
+import ink.myumoon.epiphany.content.condition.Condition;
 import ink.myumoon.epiphany.content.ModuleData;
 import ink.myumoon.epiphany.event.*;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
@@ -157,7 +158,16 @@ public final class ModuleManager {
      * <p>
      * Only fires {@link ModuleUnlockedEvent} (Post); no Pre event for auto-unlocks.
      */
+    /** Evaluate conditions and auto-unlock matching modules. */
     public static void checkAutoUnlock(ServerPlayer player) {
+        checkAutoUnlock(player, false);
+    }
+
+    /**
+     * @param skipEventDriven if true, skip conditions marked {@link Condition#isEventDriven()}
+     *                        (used by polling to avoid redundant checks)
+     */
+    public static void checkAutoUnlock(ServerPlayer player, boolean skipEventDriven) {
         Registry<ModuleData> registry = moduleRegistry(player);
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         boolean changed = false;
@@ -172,7 +182,9 @@ public final class ModuleManager {
             ModulePlayerState state = data.modules().get(id);
             if (state != null && state.unlocked()) continue;
 
-            if (module.condition().get().test(player)) {
+            Condition cond = module.condition().get();
+            if (skipEventDriven && cond.isEventDriven()) continue;
+            if (cond.test(player)) {
                 state = state != null ? state : ModulePlayerState.createDefault();
                 ModulePlayerState newState = new ModulePlayerState(
                         true, state.selected(), state.completed(), state.unlockedInsights()
