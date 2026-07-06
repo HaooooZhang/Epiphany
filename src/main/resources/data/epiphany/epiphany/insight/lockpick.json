@@ -1,0 +1,1 @@
+{"name": "开锁", "description": "获得5个铁锭", "cost": 2, "icon": "minecraft:textures/item/iron_ingot.png", "reward": {"type": "epiphany:item", "item": "minecraft:iron_ingot", "count": 5}, "reward_description": "+5 铁锭"}

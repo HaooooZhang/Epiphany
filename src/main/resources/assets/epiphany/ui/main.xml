@@ -388,8 +388,8 @@
 
         /* ======== Insight tree nodes (18×18) ======== */
         .insight-node {
-            width: 18;
-            height: 18;
+            width: 20;
+            height: 20;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;

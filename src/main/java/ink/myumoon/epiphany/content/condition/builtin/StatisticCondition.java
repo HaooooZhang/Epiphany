@@ -1,5 +1,6 @@
 package ink.myumoon.epiphany.content.condition.builtin;
 
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import ink.myumoon.epiphany.content.condition.Comparison;
@@ -25,7 +26,7 @@ public record StatisticCondition(
             ResourceLocation.CODEC.fieldOf("stat").forGetter(StatisticCondition::statId),
             Comparison.CODEC.optionalFieldOf("comparison", Comparison.GREATER_OR_EQUAL)
                     .forGetter(StatisticCondition::comparison),
-            com.mojang.serialization.Codec.INT.fieldOf("value").forGetter(StatisticCondition::value)
+            Codec.INT.fieldOf("value").forGetter(StatisticCondition::value)
     ).apply(instance, StatisticCondition::new));
 
     @Override
@@ -35,8 +36,8 @@ public record StatisticCondition(
 
     @Override
     public boolean test(ServerPlayer player) {
+        if (!Stats.CUSTOM.contains(statId)) return false;
         Stat<?> stat = Stats.CUSTOM.get(statId);
-        if (stat == null) return false;
         return comparison.test(player.getStats().getValue(stat), value);
     }
 }

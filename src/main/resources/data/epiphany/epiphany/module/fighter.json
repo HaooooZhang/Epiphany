@@ -1,0 +1,46 @@
+{
+    "name": "战士",
+    "description": "战场的老兵。需要击杀僵尸或挖掘100个石头。",
+    "icon": "minecraft:textures/item/diamond_sword.png",
+    "condition": {
+        "type": "epiphany:or",
+        "conditions": [
+            {
+                "type": "epiphany:kill_entity",
+                "entity": "minecraft:zombie",
+                "count": 3
+            },
+            {
+                "type": "epiphany:block_broken",
+                "block": "minecraft:stone",
+                "count": 100
+            }
+        ]
+    },
+    "initial_state": "locked",
+    "on_select_reward": {
+        "type": "epiphany:item",
+        "item": "minecraft:shield",
+        "count": 1
+    },
+    "on_select_reward_description": "获得一面盾牌",
+    "insights": [
+        {
+            "id": "epiphany:weapon_mastery",
+            "depth": 0
+        },
+        {
+            "id": "epiphany:shield_wall",
+            "depth": 0
+        },
+        {
+            "id": "epiphany:battle_cry",
+            "depth": 0
+        },
+        {
+            "id": "epiphany:whirlwind",
+            "depth": 0
+        }
+    ],
+    "weight": 75
+}

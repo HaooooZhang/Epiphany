@@ -1,0 +1,29 @@
+{
+    "name": "潜行者",
+    "description": "暗影中的利刃。精通隐匿、诡计与致命一击。",
+    "icon": "minecraft:textures/item/iron_sword.png",
+    "initial_state": "selectable",
+    "insights": [
+        {
+            "id": "epiphany:stealth",
+            "depth": 0
+        },
+        {
+            "id": "epiphany:lockpick",
+            "depth": 1
+        },
+        {
+            "id": "epiphany:backstab",
+            "depth": 1
+        },
+        {
+            "id": "epiphany:shadow_step",
+            "depth": 1
+        },
+        {
+            "id": "epiphany:assassinate",
+            "depth": 2
+        }
+    ],
+    "weight": 90
+}

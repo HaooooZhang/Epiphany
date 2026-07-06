@@ -1,0 +1,1 @@
+{"name": "暗黑契约", "description": "+300 阅历", "cost": 2, "icon": "minecraft:textures/item/wither_rose.png", "reward": {"type": "epiphany:aptitude", "amount": 300}, "reward_description": "+300 阅历"}

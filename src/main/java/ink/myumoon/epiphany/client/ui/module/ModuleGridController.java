@@ -155,8 +155,8 @@ public final class ModuleGridController {
         titleBar.addChild(nameLabel);
         card.addChild(titleBar);
 
-        // Tooltip
-        card.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
+        // Tooltip on title bar only
+        titleBar.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
             var lines = new ArrayList<Component>();
             lines.add(Component.literal(name).withStyle(ChatFormatting.WHITE));
             if (moduleData != null && moduleData.description().isPresent()) {
@@ -185,7 +185,7 @@ public final class ModuleGridController {
             }
             e.hoverTooltips = HoverTooltips.empty();
             for (var ln : lines) e.hoverTooltips = e.hoverTooltips.append(ln);
-        }, true);
+        });
 
         // Insight Tree
         UIElement treeArea = new UIElement();

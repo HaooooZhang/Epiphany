@@ -1,0 +1,1 @@
+{"name": "圣殿守护者", "description": "身处村庄结构时解锁：获得永久抗性提升效果", "path": "epiphany:faith", "condition": {"type": "epiphany:structure", "structure": "minecraft:village_plains"}, "initial_state": "locked", "reward": {"type": "epiphany:effect", "effect": "minecraft:resistance", "duration": -1, "amplifier": 0}, "reward_description": "永久抗性提升 I"}

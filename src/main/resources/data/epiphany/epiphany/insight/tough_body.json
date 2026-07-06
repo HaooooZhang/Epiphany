@@ -1,0 +1,1 @@
+{"name": "坚韧体魄", "description": "最大生命 +6", "cost": 1, "icon": "minecraft:textures/item/golden_chestplate.png", "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.max_health", "amount": 6.0, "operation": "ADD_VALUE"}, "reward_description": "+6 最大生命"}

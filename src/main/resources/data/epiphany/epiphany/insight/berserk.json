@@ -1,0 +1,13 @@
+{
+    "name": "狂暴",
+    "description": "获得永久力量效果",
+    "cost": 3,
+    "icon": "minecraft:textures/mob_effect/strength.png",
+    "reward": {
+        "type": "epiphany:effect",
+        "effect": "minecraft:strength",
+        "duration": -1,
+        "amplifier": 0
+    },
+    "reward_description": "永久力量 I"
+}

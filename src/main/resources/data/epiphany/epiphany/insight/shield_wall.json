@@ -1,0 +1,1 @@
+{"name": "盾墙", "description": "护甲 +6", "cost": 2, "icon": "minecraft:textures/item/shield.png", "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.armor", "amount": 6.0, "operation": "ADD_VALUE"}, "reward_description": "+6 护甲"}

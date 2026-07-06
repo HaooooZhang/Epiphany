@@ -1,0 +1,11 @@
+{
+    "name": "法术学习",
+    "description": "+50 经验",
+    "cost": 1,
+    "icon": "minecraft:textures/item/book.png",
+    "reward": {
+        "type": "epiphany:experience",
+        "amount": 50
+    },
+    "reward_description": "+50 经验"
+}

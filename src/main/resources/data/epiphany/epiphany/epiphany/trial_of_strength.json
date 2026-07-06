@@ -1,0 +1,28 @@
+{
+    "name": "力量试炼",
+    "description": "拥有力量效果且攻击伤害 ≥ 8 时解锁：获得 1 颗钻石",
+    "path": "epiphany:war",
+    "condition": {
+        "type": "epiphany:and",
+        "conditions": [
+            {
+                "type": "epiphany:effect",
+                "effect": "minecraft:strength",
+                "min_amplifier": 0
+            },
+            {
+                "type": "epiphany:attribute",
+                "attribute": "minecraft:generic.attack_damage",
+                "comparison": ">=",
+                "value": 8.0
+            }
+        ]
+    },
+    "initial_state": "locked",
+    "reward": {
+        "type": "epiphany:item",
+        "item": "minecraft:diamond",
+        "count": 1
+    },
+    "reward_description": "获得 1 颗钻石"
+}

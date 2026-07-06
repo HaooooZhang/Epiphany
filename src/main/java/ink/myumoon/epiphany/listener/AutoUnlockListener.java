@@ -12,12 +12,31 @@ import net.neoforged.neoforge.event.entity.player.AdvancementEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 @EventBusSubscriber(modid = Epiphany.MODID)
 public final class AutoUnlockListener {
 
+    private static int tickCounter;
+
     private AutoUnlockListener() {
     }
+
+    // ============================================================
+    // Periodic fallback — covers all query-type Conditions
+    // ============================================================
+
+    @SubscribeEvent
+    static void onServerTick(ServerTickEvent.Post event) {
+        if (++tickCounter % 20 != 0) return; // once per second
+        for (var player : event.getServer().getPlayerList().getPlayers()) {
+            auto(player);
+        }
+    }
+
+    // ============================================================
+    // Event-driven triggers — immediate feedback
+    // ============================================================
 
     @SubscribeEvent
     static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {

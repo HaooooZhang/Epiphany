@@ -1,0 +1,1 @@
+{"name": "战吼", "description": "获得时：执行命令给予附近生物缓慢效果", "path": "epiphany:war", "initial_state": "selectable", "reward": {"type": "epiphany:command", "command": "effect give @a[distance=..10] minecraft:slowness 5 2"}, "reward_description": "10格内生物缓慢 III，5秒"}

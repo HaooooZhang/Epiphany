@@ -1,0 +1,1 @@
+{"name": "旋风斩", "description": "获得时：释放大量扫掠粒子", "cost": 3, "icon": "minecraft:textures/item/iron_sword.png", "reward": {"type": "epiphany:particle", "particle": "minecraft:sweep_attack", "count": 30}, "reward_description": "旋风粒子"}

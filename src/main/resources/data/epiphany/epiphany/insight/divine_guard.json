@@ -1,0 +1,1 @@
+{"name": "神圣守卫", "description": "获得永久伤害吸收效果", "cost": 3, "icon": "minecraft:textures/mob_effect/absorption.png", "reward": {"type": "epiphany:effect", "effect": "minecraft:absorption", "duration": -1, "amplifier": 0}, "reward_description": "永久伤害吸收 I"}

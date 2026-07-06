@@ -47,12 +47,14 @@ public class InsightNodeElement extends UIElement {
             case CAN_UNLOCK -> addClass("insight-node-can-unlock");
         }
 
-        // Icon: custom texture if available, otherwise default fallback.
+        // Icon: custom texture as child (preserves border from LSS).
         boolean hasCustomIcon = InsightIcons.iconTexture(insightData, insightId)
                 .filter(InsightIcons::resourceExists)
                 .map(rl -> {
-                    style(s -> s.background(
-                            SpriteTexture.of(rl)));
+                    var icon = new UIElement();
+                    icon.layout(l -> l.width(16).height(16));
+                    icon.style(s -> s.background(SpriteTexture.of(rl)));
+                    addChild(icon);
                     return true;
                 })
                 .orElse(false);

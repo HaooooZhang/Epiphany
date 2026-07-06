@@ -205,8 +205,10 @@ public final class EpiphanySelectController {
         if (ed != null) {
             var iconOpt = EpiphanyIcons.iconTexture(ed, id);
             if (iconOpt.isPresent() && resourceExists(iconOpt.get())) {
-                slot.style(s -> s.background(
-                        SpriteTexture.of(iconOpt.get())));
+                var icon = new UIElement();
+                icon.layout(l -> l.width(16).height(16));
+                icon.style(s -> s.background(SpriteTexture.of(iconOpt.get())));
+                slot.addChild(icon);
             } else {
                 var icon = new ItemIconElement(
                         EpiphanyIcons.defaultEpiphany());

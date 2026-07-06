@@ -1,0 +1,12 @@
+{
+    "name": "奥术亲和",
+    "description": "获得时：给予经验等级 10 级",
+    "icon": "minecraft:textures/item/glowstone_dust.png",
+    "path": "epiphany:arcane",
+    "initial_state": "selectable",
+    "reward": {
+        "type": "epiphany:experience_level",
+        "levels": 10
+    },
+    "reward_description": "+10 经验等级"
+}

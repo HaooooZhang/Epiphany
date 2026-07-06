@@ -1,0 +1,51 @@
+{
+    "name": "奥术师",
+    "description": "禁忌知识的掌控者。需要经验等级 5 且在非地狱维度。",
+    "icon": "minecraft:textures/item/enchanted_book.png",
+    "condition": {
+        "type": "epiphany:and",
+        "conditions": [
+            {
+                "type": "epiphany:experience_level",
+                "comparison": ">=",
+                "value": 5
+            },
+            {
+                "type": "epiphany:not",
+                "condition": {
+                    "type": "epiphany:dimension",
+                    "dimension": "minecraft:the_nether"
+                }
+            }
+        ]
+    },
+    "initial_state": "locked",
+    "on_select_reward": {
+        "type": "epiphany:experience",
+        "amount": 50
+    },
+    "on_select_reward_description": "+50 经验",
+    "insights": [
+        {
+            "id": "epiphany:arcane_study",
+            "depth": 0
+        },
+        {
+            "id": "epiphany:mana_shield",
+            "depth": 1
+        },
+        {
+            "id": "epiphany:fireball",
+            "depth": 2
+        },
+        {
+            "id": "epiphany:lightning_bolt",
+            "depth": 2
+        },
+        {
+            "id": "epiphany:arcane_missile",
+            "depth": 3
+        }
+    ],
+    "weight": 80
+}

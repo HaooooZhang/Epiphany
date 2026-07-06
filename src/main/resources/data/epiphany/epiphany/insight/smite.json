@@ -1,0 +1,1 @@
+{"name": "惩击", "description": "+3 经验等级", "cost": 2, "icon": "minecraft:textures/item/diamond_sword.png", "reward": {"type": "epiphany:experience_level", "levels": 3}, "reward_description": "+3 经验等级"}

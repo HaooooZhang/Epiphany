@@ -1,0 +1,11 @@
+{
+    "name": "血怒",
+    "description": "获得时：执行命令设置重生点",
+    "cost": 1,
+    "icon": "minecraft:textures/item/redstone.png",
+    "reward": {
+        "type": "epiphany:command",
+        "command": "spawnpoint @p ~ ~ ~"
+    },
+    "reward_description": "重设重生点"
+}

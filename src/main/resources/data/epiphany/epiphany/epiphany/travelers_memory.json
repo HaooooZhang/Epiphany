@@ -1,0 +1,17 @@
+{
+    "name": "旅者之忆",
+    "description": "与信标交互一次",
+    "path": "epiphany:shadow",
+    "condition": {
+        "type": "epiphany:statistic",
+        "stat": "minecraft:interact_with_beacon",
+        "comparison": ">=",
+        "value": 1
+    },
+    "initial_state": "locked",
+    "reward": {
+        "type": "epiphany:aptitude",
+        "amount": 500
+    },
+    "reward_description": "+500 阅历"
+}

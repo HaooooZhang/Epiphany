@@ -1,0 +1,34 @@
+{
+    "name": "牧师",
+    "description": "神圣力量的仆从，治愈与庇佑的化身。",
+    "icon": "minecraft:textures/item/golden_apple.png",
+    "initial_state": "selectable",
+    "on_complete_reward": {
+        "type": "epiphany:experience_level",
+        "levels": 5
+    },
+    "on_complete_reward_description": "+5 经验等级",
+    "insights": [
+        {
+            "id": "epiphany:healing_touch",
+            "depth": 0
+        },
+        {
+            "id": "epiphany:blessing",
+            "depth": 0
+        },
+        {
+            "id": "epiphany:holy_light",
+            "depth": 1
+        },
+        {
+            "id": "epiphany:divine_guard",
+            "depth": 2
+        },
+        {
+            "id": "epiphany:smite",
+            "depth": 2
+        }
+    ],
+    "weight": 85
+}

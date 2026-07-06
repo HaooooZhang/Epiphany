@@ -1,0 +1,1 @@
+{"name": "治愈之手", "description": "获得永久生命恢复效果", "cost": 2, "icon": "minecraft:textures/mob_effect/regeneration.png", "reward": {"type": "epiphany:effect", "effect": "minecraft:regeneration", "duration": -1, "amplifier": 0}, "reward_description": "永久生命恢复 I"}

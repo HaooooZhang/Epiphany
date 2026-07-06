@@ -1,0 +1,1 @@
+{"name": "武器精通", "description": "近战伤害 +4", "cost": 2, "icon": "minecraft:textures/item/netherite_sword.png", "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.attack_damage", "amount": 4.0, "operation": "ADD_VALUE"}, "reward_description": "+4 近战伤害"}

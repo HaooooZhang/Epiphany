@@ -1,0 +1,13 @@
+{
+    "name": "背刺",
+    "description": "近战伤害 +2",
+    "cost": 2,
+    "icon": "minecraft:textures/item/iron_sword.png",
+    "reward": {
+        "type": "epiphany:attribute",
+        "attribute": "minecraft:generic.attack_damage",
+        "amount": 2.0,
+        "operation": "ADD_VALUE"
+    },
+    "reward_description": "+2 近战伤害"
+}
