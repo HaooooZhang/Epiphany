@@ -7,6 +7,9 @@
   "epiphany.configuration.maxSelectedModules": "Max Selected Modules",
   "epiphany.configuration.baseAptitudeCap": "Base Aptitude Cap",
   "epiphany.configuration.aptitudeCapGrowth": "Aptitude Cap Growth",
+  "epiphany.configuration.notifyInsightPoints": "Insight Point Gain Notification",
+  "epiphany.configuration.notifyModuleUnlock": "Module Unlock Notification",
+  "epiphany.configuration.notifyEpiphanyUnlock": "Epiphany Unlock Notification",
 
   "commands.epiphany.aptitude.add.success": "Added %s aptitude to %s",
   "commands.epiphany.aptitude.set.success": "Set aptitude to %s for %s",
@@ -82,5 +85,9 @@
   "epiphany.ui.aptitude.remaining": "Aptitude to next point: %s",
 
   "epiphany.tooltip.reward": "Reward",
-  "epiphany.tooltip.completion_reward": "Completion Reward"
+  "epiphany.tooltip.completion_reward": "Completion Reward",
+
+  "epiphany.notify.insight_points.gained": "Gained %1$s Insight Point(s), there are %2$s unused point(s) remaining",
+  "epiphany.notify.module.unlocked": "Module unlocked: %s",
+  "epiphany.notify.epiphany.unlocked": "Epiphany unlocked: %s"
 }

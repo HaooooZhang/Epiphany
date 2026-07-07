@@ -29,5 +29,28 @@ public class Config {
             .comment("Additional aptitude required per Insight Point already spent. Formula: cap = baseCap + totalSpent * growth")
             .defineInRange("aptitudeCapGrowth", 1L, 0L, Long.MAX_VALUE);
 
+    // Global multiplier applied to all aptitude rewards from aptitude_source datapack entries.
+    // 1.0 = use JSON values as-is. 0.0 effectively disables datapack-driven gains.
+    public static final ModConfigSpec.DoubleValue APTITUDE_GAIN_MULTIPLIER = BUILDER
+            .comment("Global multiplier for aptitude rewards from datapack sources. 1.0 = use JSON values as-is")
+            .defineInRange("aptitudeGainMultiplier", 1.0, 0.0, 100.0);
+
+    // ============================================================
+    // Notifications
+    // Current implementation sends a chat message + advancement sound.
+    // Planned: replace chat with Toast popup in a future client-side phase.
+    // ============================================================
+    public static final ModConfigSpec.BooleanValue NOTIFY_INSIGHT_POINTS = BUILDER
+            .comment("Notify the player when they gain Insight Points (level-up, command, reward)")
+            .define("notifyInsightPoints", true);
+
+    public static final ModConfigSpec.BooleanValue NOTIFY_MODULE_UNLOCK = BUILDER
+            .comment("Notify the player when a Module is unlocked via condition or command. Selectable modules are NOT notified.")
+            .define("notifyModuleUnlock", true);
+
+    public static final ModConfigSpec.BooleanValue NOTIFY_EPIPHANY_UNLOCK = BUILDER
+            .comment("Notify the player when an Epiphany is unlocked via condition or command. Selectable epiphanies are NOT notified.")
+            .define("notifyEpiphanyUnlock", true);
+
     static final ModConfigSpec SPEC = BUILDER.build();
 }

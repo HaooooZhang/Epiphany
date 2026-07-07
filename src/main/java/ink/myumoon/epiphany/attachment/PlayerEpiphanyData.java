@@ -24,7 +24,8 @@ public record PlayerEpiphanyData(
         Map<ResourceLocation, InsightPlayerState> insights,
         Map<ResourceLocation, EpiphanyPlayerState> epiphanies,
         int epiphanySlots,
-        int usedEpiphanySlots
+        int usedEpiphanySlots,
+        Map<ResourceLocation, Long> claimedFirsts
 ) {
 
     // default factory
@@ -32,7 +33,8 @@ public record PlayerEpiphanyData(
         return new PlayerEpiphanyData(
                 0, 0, 0,
                 new HashMap<>(), new HashMap<>(), new HashMap<>(),
-                0, 0
+                0, 0,
+                new HashMap<>()
         );
     }
 
@@ -49,7 +51,10 @@ public record PlayerEpiphanyData(
             Codec.unboundedMap(ResourceLocation.CODEC, EpiphanyPlayerState.CODEC)
                     .fieldOf("epiphanies").forGetter(PlayerEpiphanyData::epiphanies),
             Codec.INT.fieldOf("epiphanySlots").forGetter(PlayerEpiphanyData::epiphanySlots),
-            Codec.INT.fieldOf("usedEpiphanySlots").forGetter(PlayerEpiphanyData::usedEpiphanySlots)
+            Codec.INT.fieldOf("usedEpiphanySlots").forGetter(PlayerEpiphanyData::usedEpiphanySlots),
+            Codec.unboundedMap(ResourceLocation.CODEC, Codec.LONG)
+                    .optionalFieldOf("claimedFirsts", new HashMap<>())
+                    .forGetter(PlayerEpiphanyData::claimedFirsts)
     ).apply(instance, PlayerEpiphanyData::new));
 
     // network sync
@@ -59,47 +64,55 @@ public record PlayerEpiphanyData(
     // Immutable handle
     public PlayerEpiphanyData withAptitude(long v) {
         return new PlayerEpiphanyData(v, insightPoints, totalInsightPointsSpent,
-                modules, insights, epiphanies, epiphanySlots, usedEpiphanySlots);
+                modules, insights, epiphanies, epiphanySlots, usedEpiphanySlots, claimedFirsts);
     }
 
     public PlayerEpiphanyData withInsightPoints(int v) {
         return new PlayerEpiphanyData(aptitude, v, totalInsightPointsSpent,
-                modules, insights, epiphanies, epiphanySlots, usedEpiphanySlots);
+                modules, insights, epiphanies, epiphanySlots, usedEpiphanySlots, claimedFirsts);
     }
 
     public PlayerEpiphanyData withTotalInsightPointsSpent(int v) {
         return new PlayerEpiphanyData(aptitude, insightPoints, v,
-                modules, insights, epiphanies, epiphanySlots, usedEpiphanySlots);
+                modules, insights, epiphanies, epiphanySlots, usedEpiphanySlots, claimedFirsts);
     }
 
     public PlayerEpiphanyData withEpiphanySlots(int v) {
         return new PlayerEpiphanyData(aptitude, insightPoints, totalInsightPointsSpent,
-                modules, insights, epiphanies, v, usedEpiphanySlots);
+                modules, insights, epiphanies, v, usedEpiphanySlots, claimedFirsts);
     }
 
     public PlayerEpiphanyData withUsedEpiphanySlots(int v) {
         return new PlayerEpiphanyData(aptitude, insightPoints, totalInsightPointsSpent,
-                modules, insights, epiphanies, epiphanySlots, v);
+                modules, insights, epiphanies, epiphanySlots, v, claimedFirsts);
     }
 
     public PlayerEpiphanyData withModuleState(ResourceLocation id, ModulePlayerState state) {
         var copy = new HashMap<>(modules);
         copy.put(id, state);
         return new PlayerEpiphanyData(aptitude, insightPoints, totalInsightPointsSpent,
-                copy, insights, epiphanies, epiphanySlots, usedEpiphanySlots);
+                copy, insights, epiphanies, epiphanySlots, usedEpiphanySlots, claimedFirsts);
     }
 
     public PlayerEpiphanyData withInsightState(ResourceLocation id, InsightPlayerState state) {
         var copy = new HashMap<>(insights);
         copy.put(id, state);
         return new PlayerEpiphanyData(aptitude, insightPoints, totalInsightPointsSpent,
-                modules, copy, epiphanies, epiphanySlots, usedEpiphanySlots);
+                modules, copy, epiphanies, epiphanySlots, usedEpiphanySlots, claimedFirsts);
     }
 
     public PlayerEpiphanyData withEpiphanyState(ResourceLocation id, EpiphanyPlayerState state) {
         var copy = new HashMap<>(epiphanies);
         copy.put(id, state);
         return new PlayerEpiphanyData(aptitude, insightPoints, totalInsightPointsSpent,
-                modules, insights, copy, epiphanySlots, usedEpiphanySlots);
+                modules, insights, copy, epiphanySlots, usedEpiphanySlots, claimedFirsts);
+    }
+
+    /** Mark a behavior/target pair as having claimed its {@code first_reward}. */
+    public PlayerEpiphanyData withClaimedFirst(ResourceLocation claimKey) {
+        var copy = new HashMap<>(claimedFirsts);
+        copy.put(claimKey, System.currentTimeMillis());
+        return new PlayerEpiphanyData(aptitude, insightPoints, totalInsightPointsSpent,
+                modules, insights, epiphanies, epiphanySlots, usedEpiphanySlots, copy);
     }
 }

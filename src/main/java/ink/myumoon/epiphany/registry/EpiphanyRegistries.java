@@ -79,6 +79,11 @@ public final class EpiphanyRegistries {
     public static final ResourceKey<Registry<PathData>> PATH_REGISTRY_KEY =
             ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(Epiphany.MODID, "path"));
 
+    // Datapack registry for aptitude sources — each entry is a behavior's reward mapping
+    // (looked up by listener via the entry id, e.g. 'epiphany:kill_entity').
+    public static final ResourceKey<Registry<AptitudeSourceConfig>> APTITUDE_SOURCE_REGISTRY_KEY =
+            ResourceKey.createRegistryKey(ResourceLocation.fromNamespaceAndPath(Epiphany.MODID, "aptitude"));
+
     @SubscribeEvent
     static void registerBuiltinRegistries(NewRegistryEvent event) {
         event.register(CONDITION_SERIALIZERS);
@@ -92,6 +97,8 @@ public final class EpiphanyRegistries {
         event.dataPackRegistry(INSIGHT_REGISTRY_KEY, InsightData.CODEC, InsightData.CODEC);
         event.dataPackRegistry(EPIPHANY_REGISTRY_KEY, EpiphanyData.CODEC, EpiphanyData.CODEC);
         event.dataPackRegistry(PATH_REGISTRY_KEY, PathData.CODEC, PathData.CODEC);
+        event.dataPackRegistry(APTITUDE_SOURCE_REGISTRY_KEY,
+                AptitudeSourceConfig.CODEC, AptitudeSourceConfig.CODEC);
     }
 
     private EpiphanyRegistries() {

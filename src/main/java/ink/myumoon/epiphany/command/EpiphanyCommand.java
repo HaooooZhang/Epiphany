@@ -383,7 +383,8 @@ public final class EpiphanyCommand {
                                             java.util.Collections.emptyMap(),
                                             java.util.Collections.emptyMap(),
                                             java.util.Collections.emptyMap(),
-                                            0, 0
+                                            0, 0,
+                                            java.util.Collections.emptyMap()
                                     );
                                     target.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, cleaned);
                                     ModuleManager.checkAutoUnlock(target);

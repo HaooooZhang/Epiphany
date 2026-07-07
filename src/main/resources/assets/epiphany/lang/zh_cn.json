@@ -7,6 +7,9 @@
   "epiphany.configuration.maxSelectedModules": "最大选择模块数",
   "epiphany.configuration.baseAptitudeCap": "基础阅历上限",
   "epiphany.configuration.aptitudeCapGrowth": "阅历上限增长率",
+  "epiphany.configuration.notifyInsightPoints": "心得点获得通知",
+  "epiphany.configuration.notifyModuleUnlock": "模块解锁通知",
+  "epiphany.configuration.notifyEpiphanyUnlock": "顿悟解锁通知",
 
   "commands.epiphany.aptitude.add.success": "已为 %2$s 增加 %1$s 阅历",
   "commands.epiphany.aptitude.set.success": "已将 %2$s 的阅历设置为 %1$s",
@@ -82,5 +85,9 @@
   "epiphany.ui.aptitude.remaining": "距下个心得点：%s",
 
   "epiphany.tooltip.reward": "奖励",
-  "epiphany.tooltip.completion_reward": "完成奖励"
+  "epiphany.tooltip.completion_reward": "完成奖励",
+
+  "epiphany.notify.insight_points.gained": "获得 %1$s 心得点，当前有 %2$s 点心得点待使用",
+  "epiphany.notify.module.unlocked": "模块已解锁：%s",
+  "epiphany.notify.epiphany.unlocked": "顿悟已解锁：%s"
 }
