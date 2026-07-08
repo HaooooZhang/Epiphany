@@ -7,21 +7,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
- * Force-locks an Epiphany. The mirror of {@link UnlockEpiphanyReward}: useful
- * as a "curse-style" reward that takes options off the table.
+ * Force-locks an Epiphany. The inverse of {@link UnlockEpiphanyReward}.
+ * Useful for branching storylines where picking one path locks another.
  * <p>
  * JSON: {@code {"type": "epiphany:lock_epiphany", "epiphany": "epiphany:phoenix"}}
- * <p>
- * Semantics:
- * <ul>
- *   <li>{@code apply} → {@code EpiphanyManager.setUnlocked(player, id, false)}</li>
- *   <li>{@code remove} → {@code EpiphanyManager.setUnlocked(player, id, true)}
- *       (restores unlock so the reward can be re-issued / reset cleanly)</li>
- * </ul>
- * <p>
- * Note: This reward is unusual — typically you'd use the {@code epiphany:condition}
- * on the target Epiphany to gate visibility. Use this only when one player's choice
- * must dynamically remove another option from the same player.
  */
 public record LockEpiphanyReward(ResourceLocation epiphany) implements InsightReward, EpiphanyReward {
 

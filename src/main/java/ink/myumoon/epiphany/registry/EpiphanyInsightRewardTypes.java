@@ -38,6 +38,12 @@ public final class EpiphanyInsightRewardTypes {
     public static final DeferredHolder<MapCodec<? extends InsightReward>, MapCodec<UnlockEpiphanyReward>> UNLOCK_EPIPHANY =
             REGISTRY.register("unlock_epiphany", () -> UnlockEpiphanyReward.CODEC);
 
+    public static final DeferredHolder<MapCodec<? extends InsightReward>, MapCodec<LockModuleReward>> LOCK_MODULE =
+            REGISTRY.register("lock_module", () -> LockModuleReward.CODEC);
+
+    public static final DeferredHolder<MapCodec<? extends InsightReward>, MapCodec<LockEpiphanyReward>> LOCK_EPIPHANY =
+            REGISTRY.register("lock_epiphany", () -> LockEpiphanyReward.CODEC);
+
     public static final DeferredHolder<MapCodec<? extends InsightReward>, MapCodec<AptitudeReward>> APTITUDE =
             REGISTRY.register("aptitude", () -> AptitudeReward.CODEC);
 

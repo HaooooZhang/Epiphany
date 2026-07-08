@@ -7,22 +7,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 /**
- * Force-locks a Module. The mirror of {@link UnlockModuleReward}: useful as a
- * "curse-style" reward that removes module availability from the player.
+ * Force-locks a Module. The inverse of {@link UnlockModuleReward}.
+ * Useful for branching storylines where picking one path locks another.
  * <p>
  * JSON: {@code {"type": "epiphany:lock_module", "module": "epiphany:combat"}}
- * <p>
- * Semantics:
- * <ul>
- *   <li>{@code apply} → {@code ModuleManager.setUnlocked(player, id, false)}</li>
- *   <li>{@code remove} → {@code ModuleManager.setUnlocked(player, id, true)}
- *       (restores unlock so the reward can be re-issued / reset cleanly)</li>
- * </ul>
- * <p>
- * Note: this only clears the player-side {@code unlocked} flag. It does <b>not</b>
- * unselect the module if the player had already chosen it, nor reset insights.
- * Combine with a crafted condition chain (or admin {@code /epiphany reset}) for
- * full rollback.
  */
 public record LockModuleReward(ResourceLocation module) implements InsightReward, EpiphanyReward {
 

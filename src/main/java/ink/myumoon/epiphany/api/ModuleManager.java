@@ -1,6 +1,7 @@
 package ink.myumoon.epiphany.api;
 
 import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.attachment.InsightPlayerState;
 import ink.myumoon.epiphany.attachment.ModulePlayerState;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.content.InitialState;
@@ -271,5 +272,71 @@ public final class ModuleManager {
                 .withInsightPoints(data.insightPoints() + refund)
                 .withTotalInsightPointsSpent(Math.max(0, data.totalInsightPointsSpent() - refund));
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
+    }
+
+    /**
+     * Removes module states whose registry entries no longer exist (e.g. after a
+     * datapack update removed a Module definition). Refunds spent insight points
+     * where possible and best-effort removes applied rewards.
+     */
+    public static void cleanupOrphanedData(ServerPlayer player) {
+        Registry<ModuleData> mRegistry = moduleRegistry(player);
+        Registry<InsightData> iRegistry = insightRegistry(player);
+        PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+        PlayerEpiphanyData newData = data;
+        boolean changed = false;
+        // Tracks insight ids already refunded as part of orphaned modules,
+        // to avoid double-refunding them again in the top-level insight sweep.
+        java.util.Set<ResourceLocation> alreadyRefundedInsights = new java.util.HashSet<>();
+
+        // (1) Sweep modules: any id no longer in the registry → drop + refund.
+        for (var entry : data.modules().entrySet()) {
+            ResourceLocation moduleId = entry.getKey();
+            if (mRegistry.containsKey(moduleId)) continue;
+
+            ModulePlayerState state = entry.getValue();
+            int refund = 0;
+
+            // Best-effort insight refund: known insights use their actual cost,
+            // missing insights fall back to the default of 1 point each.
+            for (ResourceLocation insightId : state.unlockedInsights()) {
+                InsightData insight = iRegistry.get(insightId);
+                if (insight != null) {
+                    refund += insight.cost();
+                    insight.reward().ifPresent(r -> r.remove(player, insightId));
+                } else {
+                    refund += 1;  // fallback when insight definition itself is gone
+                }
+                alreadyRefundedInsights.add(insightId);
+            }
+            if (state.selected()) {
+                refund += Config.MODULE_SELECT_COST.get();
+            }
+
+            newData = newData.withoutModule(moduleId);
+            newData = newData.withInsightPoints(newData.insightPoints() + refund)
+                    .withTotalInsightPointsSpent(Math.max(0, newData.totalInsightPointsSpent() - refund));
+            changed = true;
+        }
+
+        // (2) Sweep top-level insight states: any id no longer in the registry → drop + refund.
+        //     Skip ids already refunded as part of an orphaned module above.
+        for (var entry : data.insights().entrySet()) {
+            ResourceLocation insightId = entry.getKey();
+            if (iRegistry.containsKey(insightId)) continue;
+            if (alreadyRefundedInsights.contains(insightId)) continue;  // avoid double-refund
+
+            InsightPlayerState iState = entry.getValue();
+            if (iState.selected()) {
+                newData = newData.withInsightPoints(newData.insightPoints() + 1)
+                        .withTotalInsightPointsSpent(Math.max(0, newData.totalInsightPointsSpent() - 1));
+            }
+            newData = newData.withoutInsight(insightId);
+            changed = true;
+        }
+
+        if (changed) {
+            player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
+        }
     }
 }

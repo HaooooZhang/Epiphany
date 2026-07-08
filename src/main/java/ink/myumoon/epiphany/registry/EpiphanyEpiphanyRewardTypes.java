@@ -38,13 +38,18 @@ public final class EpiphanyEpiphanyRewardTypes {
     public static final DeferredHolder<MapCodec<? extends EpiphanyReward>, MapCodec<UnlockEpiphanyReward>> UNLOCK_EPIPHANY =
             REGISTRY.register("unlock_epiphany", () -> UnlockEpiphanyReward.CODEC);
 
+    public static final DeferredHolder<MapCodec<? extends EpiphanyReward>, MapCodec<LockModuleReward>> LOCK_MODULE =
+            REGISTRY.register("lock_module", () -> LockModuleReward.CODEC);
+
+    public static final DeferredHolder<MapCodec<? extends EpiphanyReward>, MapCodec<LockEpiphanyReward>> LOCK_EPIPHANY =
+            REGISTRY.register("lock_epiphany", () -> LockEpiphanyReward.CODEC);
+
     public static final DeferredHolder<MapCodec<? extends EpiphanyReward>, MapCodec<AptitudeReward>> APTITUDE =
             REGISTRY.register("aptitude", () -> AptitudeReward.CODEC);
 
     public static final DeferredHolder<MapCodec<? extends EpiphanyReward>, MapCodec<InsightPointsReward>> INSIGHT_POINTS =
             REGISTRY.register("insight_points", () -> InsightPointsReward.CODEC);
 
-    // --- Phase 7: KubeJS compatibility ---
     public static final DeferredHolder<MapCodec<? extends EpiphanyReward>, MapCodec<KubeJSStageReward>> KUBEJS_STAGE =
             REGISTRY.register("kubejs_stage", () -> KubeJSStageReward.CODEC);
 

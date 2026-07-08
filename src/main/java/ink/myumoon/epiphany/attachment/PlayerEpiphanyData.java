@@ -108,6 +108,30 @@ public record PlayerEpiphanyData(
                 modules, insights, copy, epiphanySlots, usedEpiphanySlots, claimedFirsts);
     }
 
+    /** Fully removes a module entry (used by orphan cleanup; not the same as resetting to default). */
+    public PlayerEpiphanyData withoutModule(ResourceLocation id) {
+        var copy = new HashMap<>(modules);
+        copy.remove(id);
+        return new PlayerEpiphanyData(aptitude, insightPoints, totalInsightPointsSpent,
+                copy, insights, epiphanies, epiphanySlots, usedEpiphanySlots, claimedFirsts);
+    }
+
+    /** Fully removes an insight entry. */
+    public PlayerEpiphanyData withoutInsight(ResourceLocation id) {
+        var copy = new HashMap<>(insights);
+        copy.remove(id);
+        return new PlayerEpiphanyData(aptitude, insightPoints, totalInsightPointsSpent,
+                modules, copy, epiphanies, epiphanySlots, usedEpiphanySlots, claimedFirsts);
+    }
+
+    /** Fully removes an epiphany entry. */
+    public PlayerEpiphanyData withoutEpiphany(ResourceLocation id) {
+        var copy = new HashMap<>(epiphanies);
+        copy.remove(id);
+        return new PlayerEpiphanyData(aptitude, insightPoints, totalInsightPointsSpent,
+                modules, insights, copy, epiphanySlots, usedEpiphanySlots, claimedFirsts);
+    }
+
     /** Mark a behavior/target pair as having claimed its {@code first_reward}. */
     public PlayerEpiphanyData withClaimedFirst(ResourceLocation claimKey) {
         var copy = new HashMap<>(claimedFirsts);

@@ -40,7 +40,11 @@ public final class AutoUnlockListener {
 
     @SubscribeEvent
     static void onPlayerLogin(PlayerEvent.PlayerLoggedInEvent event) {
-        if (event.getEntity() instanceof ServerPlayer sp) auto(sp);
+        if (event.getEntity() instanceof ServerPlayer sp) {
+            ModuleManager.cleanupOrphanedData(sp);
+            EpiphanyManager.cleanupOrphanedData(sp);
+            auto(sp);
+        }
     }
 
     @SubscribeEvent

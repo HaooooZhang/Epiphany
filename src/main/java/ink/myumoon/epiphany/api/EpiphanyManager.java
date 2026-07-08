@@ -133,6 +133,38 @@ public final class EpiphanyManager {
                         .withUsedEpiphanySlots(Math.max(0, data.usedEpiphanySlots() - refund)));
     }
 
+    /**
+     * Removes epiphany states whose registry entries no longer exist (e.g. after a
+     * datapack update removed an Epiphany definition). Frees up used epiphany slots.
+     * <p>
+     * Limitation: rewards applied by the epiphany cannot be removed if the
+     * EpiphanyData is gone; only persistent-wrapped rewards clean
+     * themselves via their own respawn hook. Irreversible rewards are simply
+     * discarded. Call on player login.
+     */
+    public static void cleanupOrphanedData(ServerPlayer player) {
+        Registry<EpiphanyData> registry = epiphanyRegistry(player);
+        PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+        PlayerEpiphanyData newData = data;
+        boolean changed = false;
+
+        for (var entry : data.epiphanies().entrySet()) {
+            ResourceLocation epiphanyId = entry.getKey();
+            if (registry.containsKey(epiphanyId)) continue;
+
+            EpiphanyPlayerState state = entry.getValue();
+            if (state.selected()) {
+                newData = newData.withUsedEpiphanySlots(Math.max(0, newData.usedEpiphanySlots() - 1));
+            }
+            newData = newData.withoutEpiphany(epiphanyId);
+            changed = true;
+        }
+
+        if (changed) {
+            player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
+        }
+    }
+
     /** Evaluate conditions and auto-unlock matching epiphanies. */
     public static void checkAutoUnlock(ServerPlayer player) {
         checkAutoUnlock(player, false);
