@@ -20,8 +20,18 @@ import net.minecraft.server.level.ServerPlayer;
 /**
  * Root command {@code /epiphany} with sub-command groups for
  * aptitude, insight, module, epiphany, path, and reset.
+ * <p>
+ * Every mutation sub-command accepts an optional {@code -silent} flag placed
+ * between the {@code <player>} argument and the trailing ResourceLocation / amount.
+ * When present, the success/failure chat feedback is suppressed. Useful for
+ * reward chains or datapack-triggered commands.
+ * <p>
+ * Example:{@code /epiphany module select Dev -silent epiphany:combat}
  */
 public final class EpiphanyCommand {
+
+    /** Literal flag inserted between {@code <player>} and the trailing argument. */
+    private static final String SILENT_FLAG = "-silent";
 
     private EpiphanyCommand() {
     }
@@ -45,6 +55,7 @@ public final class EpiphanyCommand {
 
     private static LiteralArgumentBuilder<CommandSourceStack> aptitudeGroup() {
         return Commands.literal("aptitude")
+                // add <player> [-silent] <amount>
                 .then(Commands.literal("add")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(Commands.argument("amount", LongArgumentType.longArg(1))
@@ -55,7 +66,15 @@ public final class EpiphanyCommand {
                                             ctx.getSource().sendSuccess(
                                                     () -> t("commands.epiphany.aptitude.add.success", amount, target.getGameProfile().getName()), true);
                                             return 1;
-                                        }))))
+                                        }))
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .then(Commands.argument("amount", LongArgumentType.longArg(1))
+                                                .executes(ctx -> {
+                                                    ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                                    AptitudeManager.addAptitude(target, LongArgumentType.getLong(ctx, "amount"));
+                                                    return 1;
+                                                })))))
+                // set <player> [-silent] <value>
                 .then(Commands.literal("set")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(Commands.argument("value", LongArgumentType.longArg(0))
@@ -66,7 +85,15 @@ public final class EpiphanyCommand {
                                             ctx.getSource().sendSuccess(
                                                     () -> t("commands.epiphany.aptitude.set.success", value, target.getGameProfile().getName()), true);
                                             return 1;
-                                        }))))
+                                        }))
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .then(Commands.argument("value", LongArgumentType.longArg(0))
+                                                .executes(ctx -> {
+                                                    ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                                    AptitudeManager.setAptitude(target, LongArgumentType.getLong(ctx, "value"));
+                                                    return 1;
+                                                })))))
+                // query <player>
                 .then(Commands.literal("query")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> {
@@ -78,6 +105,7 @@ public final class EpiphanyCommand {
                                             () -> t("commands.epiphany.aptitude.query.success", target.getGameProfile().getName(), apt, pts, spent), false);
                                     return 1;
                                 })))
+                // fill <player> [-silent]
                 .then(Commands.literal("fill")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> {
@@ -90,7 +118,17 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.aptitude.fill.success", required, target.getGameProfile().getName()), true);
                                     return 1;
-                                })));
+                                })
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            long required = AptitudeFormula.calcRequiredAptitude(
+                                                    AptitudeManager.getTotalInsightPointsSpent(target),
+                                                    AptitudeManager.getInsightPoints(target));
+                                            long toAdd = required - AptitudeManager.getAptitude(target);
+                                            if (toAdd > 0) AptitudeManager.addAptitude(target, toAdd);
+                                            return 1;
+                                        }))));
     }
 
     // ============================================================
@@ -104,6 +142,7 @@ public final class EpiphanyCommand {
                                 .registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY).keySet(), builder));
 
         return Commands.literal("insight")
+                // select <player> [-silent] <insight>
                 .then(Commands.literal("select")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(insightArg.executes(ctx -> {
@@ -113,7 +152,15 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.insight.select.success", id, target.getGameProfile().getName()), true);
                                     return 1;
-                                }))))
+                                }))
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .then(insightArg.executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            ResourceLocation id = ResourceLocationArgument.getId(ctx, "insight");
+                                            InsightManager.forceSelect(target, id, findModuleForInsight(target, id));
+                                            return 1;
+                                        })))))
+                // try_select <player> [-silent] <insight>
                 .then(Commands.literal("try_select")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(insightArg.executes(ctx -> {
@@ -132,7 +179,16 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.insight.try_select.success", id, target.getGameProfile().getName()), true);
                                     return 1;
-                                }))))
+                                }))
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .then(insightArg.executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            ResourceLocation id = ResourceLocationArgument.getId(ctx, "insight");
+                                            ResourceLocation mid = findModuleForInsight(target, id);
+                                            if (!InsightManager.isSelected(target, id)) InsightManager.select(target, id, mid);
+                                            return 1;
+                                        })))))
+                // reset <player> [-silent] <insight>
                 .then(Commands.literal("reset")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(insightArg.executes(ctx -> {
@@ -142,7 +198,14 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.insight.reset.success", id, target.getGameProfile().getName()), true);
                                     return 1;
-                                }))))
+                                }))
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .then(insightArg.executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            InsightManager.resetInsight(target, ResourceLocationArgument.getId(ctx, "insight"));
+                                            return 1;
+                                        })))))
+                // query <player> <insight> — not a mutation
                 .then(Commands.literal("query")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(insightArg.executes(ctx -> {
@@ -154,6 +217,7 @@ public final class EpiphanyCommand {
                                             () -> t("commands.epiphany.insight.query.success", id, target.getGameProfile().getName(), sel, modSel), false);
                                     return 1;
                                 }))))
+                // points add <player> [-silent] <amount>
                 .then(Commands.literal("points")
                         .then(Commands.literal("add")
                                 .then(Commands.argument("player", EntityArgument.player())
@@ -166,7 +230,15 @@ public final class EpiphanyCommand {
                                                     ctx.getSource().sendSuccess(
                                                             () -> t("commands.epiphany.insight.points.add.success", amt, target.getGameProfile().getName()), true);
                                                     return 1;
-                                                }))))
+                                                }))
+                                        .then(Commands.literal(SILENT_FLAG)
+                                                .then(Commands.argument("amount", IntegerArgumentType.integer(1))
+                                                        .executes(ctx -> {
+                                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                                            int amt = IntegerArgumentType.getInteger(ctx, "amount");
+                                                            AptitudeManager.setInsightPoints(target, AptitudeManager.getInsightPoints(target) + amt);
+                                                            return 1;
+                                                        })))))
                         .then(Commands.literal("set")
                                 .then(Commands.argument("player", EntityArgument.player())
                                         .then(Commands.argument("amount", IntegerArgumentType.integer(0))
@@ -177,7 +249,14 @@ public final class EpiphanyCommand {
                                                     ctx.getSource().sendSuccess(
                                                             () -> t("commands.epiphany.insight.points.set.success", amt, target.getGameProfile().getName()), true);
                                                     return 1;
-                                                })))));
+                                                }))
+                                        .then(Commands.literal(SILENT_FLAG)
+                                                .then(Commands.argument("amount", IntegerArgumentType.integer(0))
+                                                        .executes(ctx -> {
+                                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                                            AptitudeManager.setInsightPoints(target, IntegerArgumentType.getInteger(ctx, "amount"));
+                                                            return 1;
+                                                        }))))));
     }
 
     // ============================================================
@@ -200,7 +279,13 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.module.unlock.success", id, target.getGameProfile().getName()), true);
                                     return 1;
-                                }))))
+                                }))
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .then(moduleArg.executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            ModuleManager.setUnlocked(target, ResourceLocationArgument.getId(ctx, "module"), true);
+                                            return 1;
+                                        })))))
                 .then(Commands.literal("select")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(moduleArg.executes(ctx -> {
@@ -210,7 +295,13 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.module.select.success", id, target.getGameProfile().getName()), true);
                                     return 1;
-                                }))))
+                                }))
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .then(moduleArg.executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            ModuleManager.forceSelect(target, ResourceLocationArgument.getId(ctx, "module"));
+                                            return 1;
+                                        })))))
                 .then(Commands.literal("try_select")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(moduleArg.executes(ctx -> {
@@ -228,7 +319,16 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.module.try_select.success", id, target.getGameProfile().getName()), true);
                                     return 1;
-                                }))))
+                                }))
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .then(moduleArg.executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            ResourceLocation id = ResourceLocationArgument.getId(ctx, "module");
+                                            if (!ModuleManager.isSelected(target, id) && ModuleManager.isUnlocked(target, id)) {
+                                                ModuleManager.select(target, id);
+                                            }
+                                            return 1;
+                                        })))))
                 .then(Commands.literal("complete")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(moduleArg.executes(ctx -> {
@@ -238,7 +338,13 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.module.complete.success", id, target.getGameProfile().getName()), true);
                                     return 1;
-                                }))))
+                                }))
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .then(moduleArg.executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            ModuleManager.forceComplete(target, ResourceLocationArgument.getId(ctx, "module"));
+                                            return 1;
+                                        })))))
                 .then(Commands.literal("reset")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(moduleArg.executes(ctx -> {
@@ -248,7 +354,13 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.module.reset.success", id, target.getGameProfile().getName()), true);
                                     return 1;
-                                }))))
+                                }))
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .then(moduleArg.executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            ModuleManager.resetModule(target, ResourceLocationArgument.getId(ctx, "module"));
+                                            return 1;
+                                        })))))
                 .then(Commands.literal("query")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(moduleArg.executes(ctx -> {
@@ -283,7 +395,13 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.epiphany.unlock.success", id, target.getGameProfile().getName()), true);
                                     return 1;
-                                }))))
+                                }))
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .then(epiphanyArg.executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            EpiphanyManager.setUnlocked(target, ResourceLocationArgument.getId(ctx, "epiphany"), true);
+                                            return 1;
+                                        })))))
                 .then(Commands.literal("select")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(epiphanyArg.executes(ctx -> {
@@ -293,7 +411,13 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.epiphany.select.success", id, target.getGameProfile().getName()), true);
                                     return 1;
-                                }))))
+                                }))
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .then(epiphanyArg.executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            EpiphanyManager.forceSelect(target, ResourceLocationArgument.getId(ctx, "epiphany"));
+                                            return 1;
+                                        })))))
                 .then(Commands.literal("try_select")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(epiphanyArg.executes(ctx -> {
@@ -311,7 +435,16 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.epiphany.try_select.success", id, target.getGameProfile().getName()), true);
                                     return 1;
-                                }))))
+                                }))
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .then(epiphanyArg.executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            ResourceLocation id = ResourceLocationArgument.getId(ctx, "epiphany");
+                                            if (!EpiphanyManager.isSelected(target, id) && EpiphanyManager.isUnlocked(target, id)) {
+                                                EpiphanyManager.select(target, id);
+                                            }
+                                            return 1;
+                                        })))))
                 .then(Commands.literal("reset")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(epiphanyArg.executes(ctx -> {
@@ -321,7 +454,13 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.epiphany.reset.success", id, target.getGameProfile().getName()), true);
                                     return 1;
-                                }))))
+                                }))
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .then(epiphanyArg.executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            EpiphanyManager.resetEpiphany(target, ResourceLocationArgument.getId(ctx, "epiphany"));
+                                            return 1;
+                                        })))))
                 .then(Commands.literal("query")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .then(epiphanyArg.executes(ctx -> {
@@ -369,7 +508,17 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.reset.all.success", target.getGameProfile().getName()), true);
                                     return 1;
-                                })))
+                                })
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            removeAllRewards(target);
+                                            target.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
+                                                    PlayerEpiphanyData.createDefault());
+                                            ModuleManager.checkAutoUnlock(target);
+                                            EpiphanyManager.checkAutoUnlock(target);
+                                            return 1;
+                                        }))))
                 .then(Commands.literal("select")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> {
@@ -392,7 +541,27 @@ public final class EpiphanyCommand {
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.reset.select.success", target.getGameProfile().getName()), true);
                                     return 1;
-                                })));
+                                })
+                                .then(Commands.literal(SILENT_FLAG)
+                                        .executes(ctx -> {
+                                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            removeAllRewards(target);
+                                            PlayerEpiphanyData data = target.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+                                            PlayerEpiphanyData cleaned = new PlayerEpiphanyData(
+                                                    data.aptitude(),
+                                                    data.insightPoints(),
+                                                    data.totalInsightPointsSpent(),
+                                                    java.util.Collections.emptyMap(),
+                                                    java.util.Collections.emptyMap(),
+                                                    java.util.Collections.emptyMap(),
+                                                    0, 0,
+                                                    java.util.Collections.emptyMap()
+                                            );
+                                            target.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, cleaned);
+                                            ModuleManager.checkAutoUnlock(target);
+                                            EpiphanyManager.checkAutoUnlock(target);
+                                            return 1;
+                                        }))));
     }
 
     // ============================================================
