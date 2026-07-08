@@ -7,6 +7,7 @@
   "epiphany.configuration.maxSelectedModules": "最大选择模块数",
   "epiphany.configuration.baseAptitudeCap": "基础阅历上限",
   "epiphany.configuration.aptitudeCapGrowth": "阅历上限增长率",
+  "epiphany.configuration.aptitudeGainMultiplier": "阅历获取倍率",
   "epiphany.configuration.notifyInsightPoints": "心得点获得通知",
   "epiphany.configuration.notifyModuleUnlock": "模块解锁通知",
   "epiphany.configuration.notifyEpiphanyUnlock": "顿悟解锁通知",
