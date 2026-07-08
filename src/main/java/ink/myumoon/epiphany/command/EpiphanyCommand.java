@@ -503,8 +503,8 @@ public final class EpiphanyCommand {
                                     removeAllRewards(target);
                                     target.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
                                             PlayerEpiphanyData.createDefault());
-                                    ModuleManager.checkAutoUnlock(target);
-                                    EpiphanyManager.checkAutoUnlock(target);
+                                    ModuleManager.checkAutoUnlock(target, false, true);
+                                    EpiphanyManager.checkAutoUnlock(target, false, true);
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.reset.all.success", target.getGameProfile().getName()), true);
                                     return 1;
@@ -515,8 +515,8 @@ public final class EpiphanyCommand {
                                             removeAllRewards(target);
                                             target.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
                                                     PlayerEpiphanyData.createDefault());
-                                            ModuleManager.checkAutoUnlock(target);
-                                            EpiphanyManager.checkAutoUnlock(target);
+                                            ModuleManager.checkAutoUnlock(target, false, true);
+                                            EpiphanyManager.checkAutoUnlock(target, false, true);
                                             return 1;
                                         }))))
                 .then(Commands.literal("select")
@@ -536,8 +536,8 @@ public final class EpiphanyCommand {
                                             java.util.Collections.emptyMap()
                                     );
                                     target.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, cleaned);
-                                    ModuleManager.checkAutoUnlock(target);
-                                    EpiphanyManager.checkAutoUnlock(target);
+                                    ModuleManager.checkAutoUnlock(target, false, true);
+                                    EpiphanyManager.checkAutoUnlock(target, false, true);
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.reset.select.success", target.getGameProfile().getName()), true);
                                     return 1;
@@ -558,8 +558,8 @@ public final class EpiphanyCommand {
                                                     java.util.Collections.emptyMap()
                                             );
                                             target.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, cleaned);
-                                            ModuleManager.checkAutoUnlock(target);
-                                            EpiphanyManager.checkAutoUnlock(target);
+                                            ModuleManager.checkAutoUnlock(target, false, true);
+                                            EpiphanyManager.checkAutoUnlock(target, false, true);
                                             return 1;
                                         }))));
     }

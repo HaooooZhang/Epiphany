@@ -51,6 +51,7 @@ public final class NotificationListener {
 
     @SubscribeEvent
     static void onModuleUnlocked(ModuleUnlockedEvent event) {
+        if (event.isSilent()) return;
         if (!Config.NOTIFY_MODULE_UNLOCK.get()) return;
 
         var sp = event.getPlayer();
@@ -62,6 +63,7 @@ public final class NotificationListener {
 
     @SubscribeEvent
     static void onEpiphanyUnlocked(EpiphanyUnlockedEvent event) {
+        if (event.isSilent()) return;
         if (!Config.NOTIFY_EPIPHANY_UNLOCK.get()) return;
 
         var sp = event.getPlayer();

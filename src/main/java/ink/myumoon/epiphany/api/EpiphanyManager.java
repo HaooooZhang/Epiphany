@@ -167,7 +167,7 @@ public final class EpiphanyManager {
 
     /** Evaluate conditions and auto-unlock matching epiphanies. */
     public static void checkAutoUnlock(ServerPlayer player) {
-        checkAutoUnlock(player, false);
+        checkAutoUnlock(player, false, false);
     }
 
     /**
@@ -175,6 +175,16 @@ public final class EpiphanyManager {
      *                        (used by polling to avoid redundant checks)
      */
     public static void checkAutoUnlock(ServerPlayer player, boolean skipEventDriven) {
+        checkAutoUnlock(player, skipEventDriven, false);
+    }
+
+    /**
+     * @param skipEventDriven if true, skip conditions marked {@link Condition#isEventDriven()}
+     *                        (used by polling to avoid redundant checks)
+     * @param silent          if true, the resulting {@link EpiphanyUnlockedEvent} will have
+     *                        {@code isSilent() == true} so notification listeners can skip it
+     */
+    public static void checkAutoUnlock(ServerPlayer player, boolean skipEventDriven, boolean silent) {
         Registry<EpiphanyData> registry = epiphanyRegistry(player);
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         boolean changed = false;
@@ -195,7 +205,7 @@ public final class EpiphanyManager {
                 state = state != null ? state : EpiphanyPlayerState.createDefault();
                 EpiphanyPlayerState newState = new EpiphanyPlayerState(state.selected(), true);
                 data = data.withEpiphanyState(id, newState);
-                NeoForge.EVENT_BUS.post(new EpiphanyUnlockedEvent(player, id));
+                NeoForge.EVENT_BUS.post(new EpiphanyUnlockedEvent(player, id, silent));
                 changed = true;
             }
         }

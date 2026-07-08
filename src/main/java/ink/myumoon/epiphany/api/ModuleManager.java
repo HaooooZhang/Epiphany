@@ -161,7 +161,7 @@ public final class ModuleManager {
      */
     /** Evaluate conditions and auto-unlock matching modules. */
     public static void checkAutoUnlock(ServerPlayer player) {
-        checkAutoUnlock(player, false);
+        checkAutoUnlock(player, false, false);
     }
 
     /**
@@ -169,6 +169,16 @@ public final class ModuleManager {
      *                        (used by polling to avoid redundant checks)
      */
     public static void checkAutoUnlock(ServerPlayer player, boolean skipEventDriven) {
+        checkAutoUnlock(player, skipEventDriven, false);
+    }
+
+    /**
+     * @param skipEventDriven if true, skip conditions marked {@link Condition#isEventDriven()}
+     *                        (used by polling to avoid redundant checks)
+     * @param silent          if true, the resulting {@link ModuleUnlockedEvent} will have
+     *                        {@code isSilent() == true} so notification listeners can skip it
+     */
+    public static void checkAutoUnlock(ServerPlayer player, boolean skipEventDriven, boolean silent) {
         Registry<ModuleData> registry = moduleRegistry(player);
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         boolean changed = false;
@@ -191,7 +201,7 @@ public final class ModuleManager {
                         true, state.selected(), state.completed(), state.unlockedInsights()
                 );
                 data = data.withModuleState(id, newState);
-                NeoForge.EVENT_BUS.post(new ModuleUnlockedEvent(player, id));
+                NeoForge.EVENT_BUS.post(new ModuleUnlockedEvent(player, id, silent));
                 changed = true;
             }
         }
