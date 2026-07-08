@@ -142,16 +142,19 @@ public final class AptitudeSourceResolver {
      * registry. Callers pass a static {@link BuiltInRegistries} instance for the
      * relevant vanilla registry kind — on NeoForge 1.21.1 those hold the
      * datapack-loaded tag bindings.
+     * <p>
+     * Implementation note: iterates the tag's holder set, extracting each holder's
+     * ResourceKey via {@code Holder#unwrapKey()} (registry-agnostic, avoids raw
+     * {@code Registry#getResourceKey(value)} lookup pitfalls).
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     private static boolean registryContainsTagId(
             Registry<?> registry, ResourceLocation tagLoc, ResourceLocation targetId) {
         TagKey tagKey = TagKey.create(registry.key(), tagLoc);
-        Registry raw = registry;
-        for (Object holder : (Iterable) registry.getTagOrEmpty(tagKey)) {
-            Object value = ((net.minecraft.core.Holder) holder).value();
-            Optional<net.minecraft.resources.ResourceKey> holderKey = raw.getResourceKey(value);
-            if (holderKey.isPresent() && holderKey.get().location().equals(targetId)) return true;
+        for (Object holderObj : (Iterable) registry.getTagOrEmpty(tagKey)) {
+            net.minecraft.core.Holder holder = (net.minecraft.core.Holder) holderObj;
+            Optional<net.minecraft.resources.ResourceKey<?>> keyOpt = holder.unwrapKey();
+            if (keyOpt.isPresent() && keyOpt.get().location().equals(targetId)) return true;
         }
         return false;
     }

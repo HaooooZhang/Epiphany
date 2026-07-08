@@ -96,18 +96,35 @@ final class FTBQInternal {
     // ============================================================
 
     static void registerEvents() {
+        // Behavior ids for aptitude_source datapack entries (looked up by listener side)
+        final var FTBQ_QUEST_COMPLETE =
+                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("epiphany", "ftbq_quest_complete");
+        final var FTBQ_CHAPTER_COMPLETE =
+                net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("epiphany", "ftbq_chapter_complete");
+
         ObjectCompletedEvent.QUEST.register(event -> {
+            String code = event.getObject().getCodeString();
+            // FTBQ code strings are uppercase hex (e.g. "6D031F64B5DEFA7C"); lowercase for ResourceLocation
+            var target = net.minecraft.resources.ResourceLocation.tryParse(code.toLowerCase(java.util.Locale.ROOT));
             for (var player : event.getOnlineMembers()) {
                 ModuleManager.checkAutoUnlock(player);
                 EpiphanyManager.checkAutoUnlock(player);
+                if (target != null) {
+                    ink.myumoon.epiphany.api.AptitudeSourceManager.grant(player, FTBQ_QUEST_COMPLETE, target, null);
+                }
             }
             return EventResult.pass();
         });
 
         ObjectCompletedEvent.CHAPTER.register(event -> {
+            String code = event.getObject().getCodeString();
+            var target = net.minecraft.resources.ResourceLocation.tryParse(code.toLowerCase(java.util.Locale.ROOT));
             for (var player : event.getOnlineMembers()) {
                 ModuleManager.checkAutoUnlock(player);
                 EpiphanyManager.checkAutoUnlock(player);
+                if (target != null) {
+                    ink.myumoon.epiphany.api.AptitudeSourceManager.grant(player, FTBQ_CHAPTER_COMPLETE, target, null);
+                }
             }
             return EventResult.pass();
         });

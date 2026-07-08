@@ -1,0 +1,10 @@
+{
+  "default": 0,
+  "specials": [
+    {
+      "target": "minecraft:the_nether",
+      "first_reward": 200
+    }
+  ],
+  "exclude": ["minecraft:the_end"]
+}

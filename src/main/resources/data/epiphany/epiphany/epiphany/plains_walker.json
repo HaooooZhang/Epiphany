@@ -1,1 +1,17 @@
-{"name": "草原行者", "description": "身处平原群系时解锁：移动速度 +8%", "path": "epiphany:shadow", "condition": {"type": "epiphany:biome", "biome": "minecraft:plains"}, "initial_state": "locked", "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.movement_speed", "amount": 0.008, "operation": "ADD_VALUE"}, "reward_description": "+8% 移动速度"}
+{
+    "name": "草原行者",
+    "description": "身处平原群系时解锁：移动速度 +8%",
+    "path": "epiphany:shadow",
+    "condition": {
+        "type": "epiphany:biome",
+        "biome": "#minecraft:is_ocean"
+    },
+    "initial_state": "locked",
+    "reward": {
+        "type": "epiphany:attribute",
+        "attribute": "minecraft:generic.movement_speed",
+        "amount": 0.008,
+        "operation": "ADD_VALUE"
+    },
+    "reward_description": "+8% 移动速度"
+}

@@ -98,8 +98,11 @@ A modular skill-tree system for Minecraft. Unlock Modules, learn Insights, and g
 [[dependencies.${mod_id}]]
     modId="ftbquests"
     type="optional"
-    ordering="AFTER"
+    versionRange="[2101.1.0,)"
+    ordering="NONE"
     side="BOTH"
+
+
 
 # Features are specific properties of the game environment, that you may want to declare you require. This example declares
 # that your mod requires GL version 3.2 or higher. Other features will be added. They are side aware so declaring this won't

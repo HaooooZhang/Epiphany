@@ -1,0 +1,24 @@
+{
+  "default": 5,
+  "specials": [
+    {
+      "target": "minecraft:cherry_grove",
+      "reward": 20,
+      "first_reward": 100
+    },
+    {
+      "target": "minecraft:deep_dark",
+      "reward": 30,
+      "first_reward": 500
+    },
+    {
+      "target": "minecraft:lush_caves",
+      "reward": 15,
+      "first_reward": 200
+    }
+  ],
+  "exclude": [
+    "#minecraft:is_ocean",
+    "#minecraft:is_river"
+  ]
+}

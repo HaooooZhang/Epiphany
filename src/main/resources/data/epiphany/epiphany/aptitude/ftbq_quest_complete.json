@@ -1,0 +1,10 @@
+{
+  "default": 5,
+  "specials": [
+    {
+      "target": "6d031f64b5defa7c",
+      "reward": 3
+    }
+  ],
+  "exclude": []
+}
