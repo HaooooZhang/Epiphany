@@ -7,11 +7,13 @@ import ink.myumoon.epiphany.event.InsightSelectedEvent;
 import ink.myumoon.epiphany.event.ModuleCompletedEvent;
 import ink.myumoon.epiphany.event.ModuleSelectedEvent;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.AdvancementEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -74,6 +76,7 @@ public final class AptitudeGainListener {
     @SubscribeEvent
     static void onLivingDeath(LivingDeathEvent event) {
         if (!(event.getSource().getEntity() instanceof ServerPlayer sp)) return;
+        if (isFakePlayer(sp)) return;  // ignore automation mods (Create block-breakers, etc.)
 
         EntityType<?> type = event.getEntity().getType();
         ResourceLocation targetId = BuiltInRegistries.ENTITY_TYPE.getKey(type);
@@ -84,9 +87,10 @@ public final class AptitudeGainListener {
     @SubscribeEvent
     static void onBlockBreak(BlockEvent.BreakEvent event) {
         if (!(event.getPlayer() instanceof ServerPlayer sp)) return;
+        if (isFakePlayer(sp)) return;  // ignore automation mods (Create block-breakers, etc.)
 
         ResourceLocation targetId = event.getState().getBlockHolder().unwrapKey()
-                .map(k -> k.location())
+                .map(ResourceKey::location)
                 .orElse(null);
         if (targetId == null) return;
 
@@ -96,6 +100,7 @@ public final class AptitudeGainListener {
     @SubscribeEvent
     static void onAdvancementEarn(AdvancementEvent.AdvancementEarnEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
+        if (isFakePlayer(sp)) return;
 
         ResourceLocation targetId = event.getAdvancement().id();
         AptitudeSourceManager.grant(sp, ADVANCEMENT_EARN, targetId, null);
@@ -104,6 +109,7 @@ public final class AptitudeGainListener {
     @SubscribeEvent
     static void onPlayerChangedDimension(PlayerEvent.PlayerChangedDimensionEvent event) {
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
+        if (isFakePlayer(sp)) return;
 
         ResourceLocation targetId = event.getTo().location();
         AptitudeSourceManager.grant(sp, ENTER_DIMENSION, targetId, null);
@@ -112,6 +118,7 @@ public final class AptitudeGainListener {
     @SubscribeEvent
     static void onXpLevelChange(PlayerXpEvent.LevelChange event) {
         if (!(event.getEntity() instanceof ServerPlayer sp)) return;
+        if (isFakePlayer(sp)) return;
 
         int levels = event.getLevels();
         if (levels <= 0) return;                       // 只发放升级，降级不退阅历
@@ -120,6 +127,19 @@ public final class AptitudeGainListener {
         for (int i = 0; i < levels; i++) {
             AptitudeSourceManager.grant(sp, EXPERIENCE_LEVEL_UP, noTarget, null);
         }
+    }
+
+    /**
+     * Identifies NeoForge {@link net.neoforged.neoforge.common.util.FakePlayer} instances
+     * so they don't trigger aptitude grants from automation mods (Create block-breakers,
+     * Quartz automation, mob grinders driven by FakePlayer, etc.).
+     * <p>
+     * Real players always have a network connection; FakePlayer gets a synthetic
+     * {@link ServerPlayer#getConnection()} that is a {@code FakePlayerNetHandler},
+     * but the simplest cross-version-stable check is the explicit type test.
+     */
+    private static boolean isFakePlayer(ServerPlayer sp) {
+        return sp instanceof FakePlayer;
     }
 
     // ============================================================

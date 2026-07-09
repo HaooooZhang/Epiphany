@@ -79,11 +79,7 @@ public final class NotificationListener {
 
     private static void send(ServerPlayer sp, Component msg) {
         sp.sendSystemMessage(msg);
-        // Server-side broadcast with the player as both emitter and audience so only
-        // the player hears it; MASTER source keeps it distinct from world sounds.
-        sp.serverLevel().playSound(null, sp.getX(), sp.getEyeY(), sp.getZ(),
-                SoundEvents.PLAYER_LEVELUP,
-                SoundSource.MASTER, 0.7F, 1.0F);
+        sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.MASTER, 0.7F, 1.0F);
     }
 
     /**

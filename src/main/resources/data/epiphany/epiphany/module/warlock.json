@@ -9,8 +9,10 @@
     },
     "initial_state": "locked",
     "on_select_reward": {
-        "type": "epiphany:aptitude",
-        "amount": 300
+        "type": "epiphany:attribute",
+        "attribute": "minecraft:generic.max_health",
+        "amount": 2.0,
+        "operation": "add_value"
     },
     "on_select_reward_description": "+300 阅历",
     "insights": [

@@ -1,6 +1,7 @@
 package ink.myumoon.epiphany.content.reward;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.Holder;
@@ -26,10 +27,45 @@ public record AttributeReward(
         AttributeModifier.Operation operation
 ) implements InsightReward, EpiphanyReward, PersistentReward {
 
+    /** Vanilla 1.20.5+ snake_case aliases — preferred form for datapack authors. */
+    private static final java.util.Map<String, AttributeModifier.Operation> ALIASES = java.util.Map.of(
+            "add_value", AttributeModifier.Operation.ADD_VALUE,
+            "add_multiplied_base", AttributeModifier.Operation.ADD_MULTIPLIED_BASE,
+            "add_multiplied_total", AttributeModifier.Operation.ADD_MULTIPLIED_TOTAL
+    );
+
+    private static String snakeCaseName(AttributeModifier.Operation op) {
+        return switch (op) {
+            case ADD_VALUE -> "add_value";
+            case ADD_MULTIPLIED_BASE -> "add_multiplied_base";
+            case ADD_MULTIPLIED_TOTAL -> "add_multiplied_total";
+        };
+    }
+
+    /**
+     * Codec for {@link AttributeModifier.Operation} that accepts both the vanilla
+     * 1.20.5+ snake_case names used in attribute_modifier JSON
+     * ({@code add_value} / {@code add_multiplied_base} / {@code add_multiplied_total})
+     * and the legacy CamelCase enum constant names ({@code ADD_VALUE} / etc).
+     * <p>
+     * Datapack authors should prefer snake_case to match vanilla attribute_modifier
+     * syntax. CamelCase is kept for backwards compatibility with pre-existing
+     * datapacks.
+     */
     private static final Codec<AttributeModifier.Operation> OPERATION_CODEC =
-            Codec.STRING.xmap(
-                    AttributeModifier.Operation::valueOf,
-                    AttributeModifier.Operation::name
+            Codec.STRING.flatXmap(
+                    s -> {
+                        AttributeModifier.Operation direct = ALIASES.get(s);
+                        if (direct != null) return DataResult.success(direct);
+                        try {
+                            return DataResult.success(AttributeModifier.Operation.valueOf(s));
+                        } catch (IllegalArgumentException e) {
+                            return DataResult.error(() ->
+                                    "Unknown attribute_modifier operation: '" + s
+                                            + "'. Expected one of add_value / add_multiplied_base / add_multiplied_total");
+                        }
+                    },
+                    op -> DataResult.success(snakeCaseName(op))
             );
 
     public static final MapCodec<AttributeReward> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(

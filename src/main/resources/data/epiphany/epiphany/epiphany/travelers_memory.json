@@ -4,9 +4,9 @@
     "path": "epiphany:shadow",
     "condition": {
         "type": "epiphany:statistic",
-        "stat": "minecraft:walk_one_cm",
+        "stat": "minecraft:open_chest",
         "comparison": ">=",
-        "value": 100000
+        "value": 1
     },
     "initial_state": "locked",
     "reward": {
