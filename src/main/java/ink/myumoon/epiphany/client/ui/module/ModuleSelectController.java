@@ -216,10 +216,14 @@ public final class ModuleSelectController {
         // Description
         if (module.description().isPresent()) {
             String raw = module.description().get().getString();
-            int maxPerLine = 10;
+            var font = Minecraft.getInstance().font;
+            int maxPixelWidth = 84;
             int start = 0;
             while (start < raw.length()) {
-                int end = Math.min(start + maxPerLine, raw.length());
+                int end = start + 1;
+                while (end < raw.length() && font.width(raw.substring(start, end + 1)) <= maxPixelWidth) {
+                    end++;
+                }
                 Label lineLbl = new Label();
                 lineLbl.setText(Component.literal(raw.substring(start, end)));
                 lineLbl.textStyle(t -> t.fontSize(8).textColor(0xFFAAAAAA).textShadow(true)

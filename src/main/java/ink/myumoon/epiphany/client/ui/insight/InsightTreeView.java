@@ -22,7 +22,6 @@ public class InsightTreeView {
 
     private static final int NODE_SIZE = 20;
     private static final int LINE_COLOR = 0xFF666666;
-    private static final float INITIAL_PAD = 4f;
 
     /** Persists drag-pan offsets across rebuilds so large trees restore their position. */
     private static final Map<ResourceLocation, float[]> PAN_OFFSETS = new HashMap<>();
@@ -182,8 +181,8 @@ public class InsightTreeView {
             float cch = container.getSizeHeight();
             if (ccw > 0 && cch > 0) {
                 // First time: center if it fits, otherwise pad from top-left.
-                ox[0] = cw > ccw ? INITIAL_PAD : Math.max(0, (ccw - cw) / 2f);
-                oy[0] = ch > cch ? INITIAL_PAD : Math.max(2, (cch - ch) / 2f);
+                ox[0] = cw > ccw ? 4 : Math.max(0, (ccw - cw) / 2f);
+                oy[0] = ch > cch ? 4 : Math.max(2, (cch - ch) / 2f);
                 content.layout(l -> l.left(ox[0]).top(oy[0]));
                 initialized[0] = true;
                 PAN_OFFSETS.put(moduleId, new float[]{ox[0], oy[0]});
@@ -226,8 +225,8 @@ public class InsightTreeView {
             moved[0] = true;
             float ccw = container.getSizeWidth();
             float cch = container.getSizeHeight();
-            if (cw > ccw) ox[0] = Math.min(INITIAL_PAD, Math.max(ccw - cw - INITIAL_PAD, dragStartCX[0] + dx));
-            if (ch > cch) oy[0] = Math.min(INITIAL_PAD, Math.max(cch - ch - INITIAL_PAD, dragStartCY[0] + dy));
+            if (cw > ccw) ox[0] = Math.min(4, Math.max(ccw - cw, dragStartCX[0] + dx));
+            if (ch > cch) oy[0] = Math.min(4, Math.max(cch - ch, dragStartCY[0] + dy));
             content.layout(l -> l.left(ox[0]).top(oy[0]));
             PAN_OFFSETS.put(moduleId, new float[]{ox[0], oy[0]});
         });

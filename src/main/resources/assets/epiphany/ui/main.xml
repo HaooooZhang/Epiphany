@@ -405,12 +405,16 @@
         }
 
         /* ======== Insight tree area inside cards (for both main grid + popup preview) ======== */
+        /* Padding insets the scissor clipping region so tree content doesn't
+           bleed into the card's RECT_DARK border (~2px). */
         .insight-tree-area {
             flex: 1;
             width: 100%;
             position: relative;
             overflow: hidden;
-            padding-all: 0;
+            padding-left: 1;
+            padding-right: 2;
+            padding-bottom: 2;
         }
         .module-card-description {
             flex: 1;

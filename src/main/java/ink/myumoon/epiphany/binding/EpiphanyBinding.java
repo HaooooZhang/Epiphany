@@ -14,7 +14,6 @@ import java.util.function.Consumer;
  * Registered via {@code BindingRegistry.add("Epiphany", EpiphanyBinding.class)}.
  * All static methods become callable from JS as {@code Epiphany.methodName(...)}.
  */
-@SuppressWarnings("unused")
 public interface EpiphanyBinding {
 
     // ─── ResourceLocation factory ──────────────────────────────────

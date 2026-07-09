@@ -4,6 +4,7 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
+import ink.myumoon.epiphany.Config;
 import ink.myumoon.epiphany.api.*;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.client.ui.EpiphanyUIFactory;
@@ -525,10 +526,12 @@ public final class EpiphanyCommand {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                     removeAllRewards(target);
                                     PlayerEpiphanyData data = target.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+                                    // Refund insight points from all unlocked insights.
+                                    int refund = refundInsightCosts(target, data);
                                     PlayerEpiphanyData cleaned = new PlayerEpiphanyData(
                                             data.aptitude(),
-                                            data.insightPoints(),
-                                            data.totalInsightPointsSpent(),
+                                            data.insightPoints() + refund,
+                                            Math.max(0, data.totalInsightPointsSpent() - refund),
                                             java.util.Collections.emptyMap(),
                                             java.util.Collections.emptyMap(),
                                             java.util.Collections.emptyMap(),
@@ -547,10 +550,12 @@ public final class EpiphanyCommand {
                                             ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                             removeAllRewards(target);
                                             PlayerEpiphanyData data = target.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+                                            // Refund insight points from all unlocked insights.
+                                            int refund = refundInsightCosts(target, data);
                                             PlayerEpiphanyData cleaned = new PlayerEpiphanyData(
                                                     data.aptitude(),
-                                                    data.insightPoints(),
-                                                    data.totalInsightPointsSpent(),
+                                                    data.insightPoints() + refund,
+                                                    Math.max(0, data.totalInsightPointsSpent() - refund),
                                                     java.util.Collections.emptyMap(),
                                                     java.util.Collections.emptyMap(),
                                                     java.util.Collections.emptyMap(),
@@ -578,6 +583,21 @@ public final class EpiphanyCommand {
                                     () -> t("commands.epiphany.open.success", target.getGameProfile().getName()), true);
                             return 1;
                         }));
+    }
+
+    // Sums the cost of all unlocked insights across all modules (for refunding on reset).
+    private static int refundInsightCosts(ServerPlayer player, PlayerEpiphanyData data) {
+        var iReg = player.server.registryAccess()
+                .registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY);
+        int total = 0;
+        for (var moduleState : data.modules().values()) {
+            if (moduleState.selected()) total += Config.MODULE_SELECT_COST.get();
+            for (var insightId : moduleState.unlockedInsights()) {
+                var insight = iReg.get(insightId);
+                if (insight != null) total += insight.cost();
+            }
+        }
+        return total;
     }
 
     // Removes all rewards from a player before resetting their data.
