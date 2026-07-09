@@ -39,6 +39,7 @@ public final class ModuleGridController {
     // attach
     public static void attach(UI ui) {
         cachedCardWidth = -1;  // reset cache
+        InsightTreeView.clearPanOffsets();  // reset insight tree pan positions
         UIElement grid = selectOne(ui, "#module-grid", UIElement.class);
         Epiphany.LOGGER.info("ModuleGrid attached: grid identity = {}", System.identityHashCode(grid));
 

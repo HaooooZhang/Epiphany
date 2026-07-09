@@ -22,6 +22,15 @@ public class InsightTreeView {
 
     private static final int NODE_SIZE = 20;
     private static final int LINE_COLOR = 0xFF666666;
+    private static final float INITIAL_PAD = 4f;
+
+    /** Persists drag-pan offsets across rebuilds so large trees restore their position. */
+    private static final Map<ResourceLocation, float[]> PAN_OFFSETS = new HashMap<>();
+
+    /** Clears all cached pan offsets. Call when the UI is first attached. */
+    public static void clearPanOffsets() {
+        PAN_OFFSETS.clear();
+    }
 
     private InsightTreeView() {
     }
@@ -140,7 +149,7 @@ public class InsightTreeView {
         boolean largeTree = maxDepth > 2 || maxPerDepth > 3;
         container.addChild(content);
         if (largeTree) {
-            addDragPan(container, content, contentWidth, contentHeight);
+            addDragPan(container, content, moduleId, contentWidth, contentHeight);
         } else {
             container.addEventListener(UIEvents.LAYOUT_CHANGED, e -> {
                 float cw = container.getSizeWidth();
@@ -155,25 +164,36 @@ public class InsightTreeView {
     }
 
     // Drag pan: MOUSE_DOWN/UP for state, TICK for movement with GLFW mouse.
+    // Persists offset via PAN_OFFSETS so position survives tree rebuilds.
     private static void addDragPan(UIElement container, UIElement content,
-                                    int cw, int ch) {
-        final float[] ox = {0}, oy = {0};
-        final boolean[] centered = {false}, dragging = {false}, moved = {false};
+                                    ResourceLocation moduleId, int cw, int ch) {
+        // Restore saved offset or default to 0,0.
+        float[] saved = PAN_OFFSETS.get(moduleId);
+        final float[] ox = {saved != null ? saved[0] : 0};
+        final float[] oy = {saved != null ? saved[1] : 0};
+        final boolean[] initialized = {saved != null}, dragging = {false}, moved = {false};
         final float[] dragStartCX = {0}, dragStartCY = {0};
         final double[] dragStartMX = {0}, dragStartMY = {0};
         final int MIN_DRAG = 3;
 
         container.addEventListener(UIEvents.LAYOUT_CHANGED, e -> {
-            if (centered[0]) return;
+            if (initialized[0]) return;
             float ccw = container.getSizeWidth();
             float cch = container.getSizeHeight();
             if (ccw > 0 && cch > 0) {
-                ox[0] = cw > ccw ? 0 : Math.max(0, (ccw - cw) / 2f);
-                oy[0] = ch > cch ? 0 : Math.max(2, (cch - ch) / 2f);
+                // First time: center if it fits, otherwise pad from top-left.
+                ox[0] = cw > ccw ? INITIAL_PAD : Math.max(0, (ccw - cw) / 2f);
+                oy[0] = ch > cch ? INITIAL_PAD : Math.max(2, (cch - ch) / 2f);
                 content.layout(l -> l.left(ox[0]).top(oy[0]));
-                centered[0] = true;
+                initialized[0] = true;
+                PAN_OFFSETS.put(moduleId, new float[]{ox[0], oy[0]});
             }
         });
+
+        // If we already have a saved offset, apply it immediately.
+        if (saved != null) {
+            content.layout(l -> l.left(ox[0]).top(oy[0]));
+        }
 
         container.addEventListener(UIEvents.MOUSE_DOWN, e -> {
             dragging[0] = true;
@@ -206,9 +226,10 @@ public class InsightTreeView {
             moved[0] = true;
             float ccw = container.getSizeWidth();
             float cch = container.getSizeHeight();
-            if (cw > ccw) ox[0] = Math.min(0, Math.max(ccw - cw, dragStartCX[0] + dx));
-            if (ch > cch) oy[0] = Math.min(0, Math.max(cch - ch, dragStartCY[0] + dy));
+            if (cw > ccw) ox[0] = Math.min(INITIAL_PAD, Math.max(ccw - cw - INITIAL_PAD, dragStartCX[0] + dx));
+            if (ch > cch) oy[0] = Math.min(INITIAL_PAD, Math.max(cch - ch - INITIAL_PAD, dragStartCY[0] + dy));
             content.layout(l -> l.left(ox[0]).top(oy[0]));
+            PAN_OFFSETS.put(moduleId, new float[]{ox[0], oy[0]});
         });
     }
 
