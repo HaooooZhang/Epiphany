@@ -2,7 +2,6 @@
     "name": "奥术飞弹",
     "description": "+2 心得点",
     "cost": 4,
-    "icon": "minecraft:textures/item/glowstone_dust.png",
     "reward": {
         "type": "epiphany:insight_points",
         "amount": 2

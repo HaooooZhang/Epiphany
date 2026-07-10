@@ -6,7 +6,8 @@ import dev.latvian.mods.kubejs.event.EventHandler;
 /**
  * All Epiphany KubeJS event definitions.
  * <p>
- * EventGroup name "Epiphany" is auto-exposed as {@code EpiphanyEvents} in JS scripts.
+ * EventGroup "EpiphanyEvents" is exposed as {@code EpiphanyEvents} in JS scripts.
+ * Separated from the Binding {@code Epiphany} to avoid name collisions.
  * <p>
  * Naming convention:
  * <ul>
@@ -16,7 +17,7 @@ import dev.latvian.mods.kubejs.event.EventHandler;
  */
 public interface KubeEvents {
 
-    EventGroup GROUP = EventGroup.of("Epiphany");
+    EventGroup GROUP = EventGroup.of("EpiphanyEvents");
 
     // ─── Module events ──────────────────────────────────────────────
 
@@ -64,6 +65,9 @@ public interface KubeEvents {
 
     /** Fired after a player's aptitude value changes. */
     EventHandler APTITUDE_CHANGED = GROUP.server("aptitudeChanged", () -> AptitudeChangedKubeEvent.class);
+
+    /** Fired when the aptitude bar fills and the player earns a new Insight Point. */
+    EventHandler APTITUDE_LEVEL_UP = GROUP.server("aptitudeLevelUp", () -> AptitudeLevelUpKubeEvent.class);
 
     /** Fired after a player's available Insight Points balance changes. */
     EventHandler INSIGHT_POINTS_CHANGED = GROUP.server("insightPointsChanged", () -> InsightPointsChangedKubeEvent.class);

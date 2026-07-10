@@ -3,39 +3,33 @@ package ink.myumoon.epiphany.event.kubejs;
 import com.mojang.logging.LogUtils;
 import ink.myumoon.epiphany.binding.EpiphanyBinding;
 import ink.myumoon.epiphany.event.*;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.common.NeoForge;
 import dev.latvian.mods.kubejs.plugin.KubeJSPlugin;
 import dev.latvian.mods.kubejs.script.BindingRegistry;
+import dev.latvian.mods.kubejs.event.EventGroupRegistry;
 import org.slf4j.Logger;
 
-import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
-
 /**
- * KubeJS Plugin for Epiphany — Origins-JS pattern precisely.
+ * KubeJS Plugin for Epiphany.
  * <p>
- * Bridges in static{} (class-load time, before any KubeJS lifecycle).
- * Callbacks cleared in clearCaches() (KubeJS calls this before reload).
- * No registerEvents() — KubeJS 2101.7.2 does not call it.
+ * <b>Events</b> (EpiphanyEvents.*) — all event listeners go through the native
+ * KubeJS EventGroup. Pre events support {@code event.cancel()}.
+ * <p>
+ * <b>Binding</b> (Epiphany.*) — Manager API calls only (query/modify player data).
+ * <p>
+ * Plugin discovered via {@code kubejs.plugins.txt}.
  */
 public final class EpiphanyKubeJSPlugin implements KubeJSPlugin {
 
     private static final Logger LOGGER = LogUtils.getLogger();
     private static boolean bridgesRegistered;
 
-    public static final List<BiConsumer<ServerPlayer, ResourceLocation>> MODULE_UNLOCKED = new CopyOnWriteArrayList<>();
-    public static final List<BiConsumer<ServerPlayer, ResourceLocation>> MODULE_SELECTED = new CopyOnWriteArrayList<>();
-    public static final List<BiConsumer<ServerPlayer, ResourceLocation>> MODULE_COMPLETED = new CopyOnWriteArrayList<>();
-    public static final List<BiConsumer<ServerPlayer, ResourceLocation>> EPIPHANY_UNLOCKED = new CopyOnWriteArrayList<>();
-    public static final List<BiConsumer<ServerPlayer, ResourceLocation>> EPIPHANY_SELECTED = new CopyOnWriteArrayList<>();
-    public static final List<Consumer<ServerPlayer>> APTITUDE_CHANGED = new CopyOnWriteArrayList<>();
-    public static final List<Consumer<ServerPlayer>> INSIGHT_POINTS_CHANGED = new CopyOnWriteArrayList<>();
-
     @Override public void init() {}
+
+    @Override
+    public void registerEvents(EventGroupRegistry registry) {
+        registry.register(KubeEvents.GROUP);
+    }
 
     @Override
     public void registerBindings(BindingRegistry registry) {
@@ -47,35 +41,86 @@ public final class EpiphanyKubeJSPlugin implements KubeJSPlugin {
         }
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void clearCaches() {}
 
-    @Override
-    public void beforeScriptsLoaded(dev.latvian.mods.kubejs.script.ScriptManager manager) {
-        MODULE_UNLOCKED.clear();
-        MODULE_SELECTED.clear();
-        MODULE_COMPLETED.clear();
-        EPIPHANY_UNLOCKED.clear();
-        EPIPHANY_SELECTED.clear();
-        APTITUDE_CHANGED.clear();
-        INSIGHT_POINTS_CHANGED.clear();
-    }
-
     private void registerBridges() {
+        // ─── Pre events (cancellable) ─────────────────────────────────────────
+
+        NeoForge.EVENT_BUS.addListener(ModuleUnlockEvent.class, e -> {
+            var result = KubeEvents.MODULE_UNLOCK.post(
+                    new ModuleUnlockKubeEvent(e.getPlayer(), e.getModuleId()));
+            result.applyCancel(e);
+        });
+
+        NeoForge.EVENT_BUS.addListener(ModuleSelectEvent.class, e -> {
+            var result = KubeEvents.MODULE_SELECT.post(
+                    new ModuleSelectKubeEvent(e.getPlayer(), e.getModuleId()));
+            result.applyCancel(e);
+        });
+
+        NeoForge.EVENT_BUS.addListener(ModuleCompleteEvent.class, e -> {
+            var result = KubeEvents.MODULE_COMPLETE.post(
+                    new ModuleCompleteKubeEvent(e.getPlayer(), e.getModuleId()));
+            result.applyCancel(e);
+        });
+
+        NeoForge.EVENT_BUS.addListener(InsightSelectEvent.class, e -> {
+            var result = KubeEvents.INSIGHT_SELECT.post(
+                    new InsightSelectKubeEvent(e.getPlayer(), e.getInsightId(), e.getModuleId()));
+            result.applyCancel(e);
+        });
+
+        NeoForge.EVENT_BUS.addListener(EpiphanyUnlockEvent.class, e -> {
+            var result = KubeEvents.EPIPHANY_UNLOCK.post(
+                    new EpiphanyUnlockKubeEvent(e.getPlayer(), e.getEpiphanyId()));
+            result.applyCancel(e);
+        });
+
+        NeoForge.EVENT_BUS.addListener(EpiphanySelectEvent.class, e -> {
+            var result = KubeEvents.EPIPHANY_SELECT.post(
+                    new EpiphanySelectKubeEvent(e.getPlayer(), e.getEpiphanyId()));
+            result.applyCancel(e);
+        });
+
+        // ─── Post events ───────────────────────────────────────────────────────
+
         NeoForge.EVENT_BUS.addListener(ModuleUnlockedEvent.class, e ->
-                MODULE_UNLOCKED.forEach(cb -> cb.accept(e.getPlayer(), e.getModuleId())));
+                KubeEvents.MODULE_UNLOCKED.post(
+                        new ModuleUnlockedKubeEvent(e.getPlayer(), e.getModuleId())));
+
         NeoForge.EVENT_BUS.addListener(ModuleSelectedEvent.class, e ->
-                MODULE_SELECTED.forEach(cb -> cb.accept(e.getPlayer(), e.getModuleId())));
+                KubeEvents.MODULE_SELECTED.post(
+                        new ModuleSelectedKubeEvent(e.getPlayer(), e.getModuleId())));
+
         NeoForge.EVENT_BUS.addListener(ModuleCompletedEvent.class, e ->
-                MODULE_COMPLETED.forEach(cb -> cb.accept(e.getPlayer(), e.getModuleId())));
+                KubeEvents.MODULE_COMPLETED.post(
+                        new ModuleCompletedKubeEvent(e.getPlayer(), e.getModuleId())));
+
+        NeoForge.EVENT_BUS.addListener(InsightSelectedEvent.class, e ->
+                KubeEvents.INSIGHT_SELECTED.post(
+                        new InsightSelectedKubeEvent(e.getPlayer(), e.getInsightId(), e.getModuleId())));
+
         NeoForge.EVENT_BUS.addListener(EpiphanyUnlockedEvent.class, e ->
-                EPIPHANY_UNLOCKED.forEach(cb -> cb.accept(e.getPlayer(), e.getEpiphanyId())));
+                KubeEvents.EPIPHANY_UNLOCKED.post(
+                        new EpiphanyUnlockedKubeEvent(e.getPlayer(), e.getEpiphanyId())));
+
         NeoForge.EVENT_BUS.addListener(EpiphanySelectedEvent.class, e ->
-                EPIPHANY_SELECTED.forEach(cb -> cb.accept(e.getPlayer(), e.getEpiphanyId())));
+                KubeEvents.EPIPHANY_SELECTED.post(
+                        new EpiphanySelectedKubeEvent(e.getPlayer(), e.getEpiphanyId())));
+
+        // ─── Standalone events ─────────────────────────────────────────────────
+
         NeoForge.EVENT_BUS.addListener(AptitudeChangedEvent.class, e ->
-                APTITUDE_CHANGED.forEach(cb -> cb.accept(e.getPlayer())));
+                KubeEvents.APTITUDE_CHANGED.post(
+                        new AptitudeChangedKubeEvent(e.getPlayer(), e.getOldAptitude(), e.getNewAptitude())));
+
+        NeoForge.EVENT_BUS.addListener(AptitudeLevelUpEvent.class, e ->
+                KubeEvents.APTITUDE_LEVEL_UP.post(
+                        new AptitudeLevelUpKubeEvent(e.getPlayer(), e.getNewInsightPoints())));
+
         NeoForge.EVENT_BUS.addListener(InsightPointsChangedEvent.class, e ->
-                INSIGHT_POINTS_CHANGED.forEach(cb -> cb.accept(e.getPlayer())));
+                KubeEvents.INSIGHT_POINTS_CHANGED.post(
+                        new InsightPointsChangedKubeEvent(e.getPlayer(), e.getOldValue(), e.getNewValue())));
     }
 }

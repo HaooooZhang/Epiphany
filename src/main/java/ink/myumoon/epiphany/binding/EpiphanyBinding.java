@@ -1,18 +1,18 @@
 package ink.myumoon.epiphany.binding;
 
 import ink.myumoon.epiphany.api.*;
-import ink.myumoon.epiphany.event.kubejs.EpiphanyKubeJSPlugin;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+import org.jetbrains.annotations.Nullable;
 
 /**
- * KubeJS binding for Epiphany Manager APIs + event callbacks.
+ * KubeJS binding for Epiphany Manager APIs.
  * <p>
  * Registered via {@code BindingRegistry.add("Epiphany", EpiphanyBinding.class)}.
  * All static methods become callable from JS as {@code Epiphany.methodName(...)}.
+ * <p>
+ * Event listeners live in {@code EpiphanyEvents.*} (KubeJS EventGroup), not here.
  */
 public interface EpiphanyBinding {
 
@@ -20,36 +20,6 @@ public interface EpiphanyBinding {
 
     static ResourceLocation id(String namespace, String path) {
         return ResourceLocation.fromNamespaceAndPath(namespace, path);
-    }
-
-    // ─── Event callbacks (Origins-JS style) ─────────────────────────
-
-    static void moduleUnlocked(BiConsumer<ServerPlayer, ResourceLocation> callback) {
-        EpiphanyKubeJSPlugin.MODULE_UNLOCKED.add(callback);
-    }
-
-    static void moduleSelected(BiConsumer<ServerPlayer, ResourceLocation> callback) {
-        EpiphanyKubeJSPlugin.MODULE_SELECTED.add(callback);
-    }
-
-    static void moduleCompleted(BiConsumer<ServerPlayer, ResourceLocation> callback) {
-        EpiphanyKubeJSPlugin.MODULE_COMPLETED.add(callback);
-    }
-
-    static void epiphanyUnlocked(BiConsumer<ServerPlayer, ResourceLocation> callback) {
-        EpiphanyKubeJSPlugin.EPIPHANY_UNLOCKED.add(callback);
-    }
-
-    static void epiphanySelected(BiConsumer<ServerPlayer, ResourceLocation> callback) {
-        EpiphanyKubeJSPlugin.EPIPHANY_SELECTED.add(callback);
-    }
-
-    static void aptitudeChanged(Consumer<ServerPlayer> callback) {
-        EpiphanyKubeJSPlugin.APTITUDE_CHANGED.add(callback);
-    }
-
-    static void insightPointsChanged(Consumer<ServerPlayer> callback) {
-        EpiphanyKubeJSPlugin.INSIGHT_POINTS_CHANGED.add(callback);
     }
 
     // ─── Module API ────────────────────────────────────────────────
@@ -198,5 +168,34 @@ public interface EpiphanyBinding {
     /** Sets Insight Points to an exact value. JS: {@code Epiphany.setInsightPoints(player, 5)} */
     static void setInsightPoints(ServerPlayer player, int value) {
         AptitudeManager.setInsightPoints(player, value);
+    }
+
+    /** Calculates aptitude required for the next Insight Point. JS: {@code Epiphany.calcRequiredAptitude(totalSpent, points)} */
+    static long calcRequiredAptitude(long totalSpent, int insightPoints) {
+        return AptitudeFormula.calcRequiredAptitude(totalSpent, insightPoints);
+    }
+
+    // ─── Aptitude Source API (third-party behavior integration) ────
+
+    /**
+     * Pure resolution: returns the reward for one behavior+target pair without applying side effects.
+     * JS: {@code var r = Epiphany.resolveAptitudeSource(player, id("epiphany","kill_entity"), id("minecraft","zombie"), null)}
+     */
+    static AptitudeSourceResolver.Resolution resolveAptitudeSource(
+            ServerPlayer sp, ResourceLocation behaviorId, ResourceLocation targetId, @Nullable Registry<?> registry
+    ) {
+        return AptitudeSourceManager.resolve(sp, behaviorId, targetId, registry);
+    }
+
+    /**
+     * Resolve + grant: applies multiplier, marks first_reward claim, fires aptitude events.
+     * JS: {@code Epiphany.grantAptitude(player, id("epiphany","kill_entity"), id("minecraft","zombie"), null)}
+     *
+     * @return true if any aptitude was granted
+     */
+    static boolean grantAptitude(
+            ServerPlayer sp, ResourceLocation behaviorId, ResourceLocation targetId, @Nullable Registry<?> registry
+    ) {
+        return AptitudeSourceManager.grant(sp, behaviorId, targetId, registry);
     }
 }
