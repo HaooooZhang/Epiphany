@@ -5,7 +5,9 @@
 > 夫尽小者大，积微者著。  
 > <p align="right">——《荀子·大略》</p>
 
-<p align="middle"> [English](README.md) | [简体中文](README_CN.md) </p>
+<p align="middle">
+  <a href="README.md">English</a> | <a href="README_CN.md">简体中文</a>
+</p>
 
 「顿悟 Epiphany」受到经典科幻策略游戏《群星》传统机制的启发，为 Minecraft 添加了一套数据驱动的模块化技能树系统。模组是面向开发者的 API 模组，本身不包含任何具体技能树，旨在为整合包与模组作者提供一套高自由度的角色构筑框架。
 - 玩家可自由组合模块，积累阅历、点亮心得、选择顿悟，构建独特成长路线。

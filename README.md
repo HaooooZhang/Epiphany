@@ -7,7 +7,9 @@
 > *<p align="right">Xunzi · General Principles</p>*
 
 
-<p align="middle"> [English](README.md) | [简体中文](README_CN.md) </p>
+<p align="middle">
+  <a href="README.md">English</a> | <a href="README_CN.md">简体中文</a>
+</p>
 
 Inspired by the Tradition mechanics of the classic sci-fi strategy game Stellaris, **Epiphany** adds a **data-driven**, modular skill tree system to Minecraft. As an API mod designed for developers, it does not include any builtin skill trees. Instead, it provides a flexible building system for modpack and mod authors.   
 - Players can freely combine **modules**, accumulate **Aptitude**, unlock **Insights**, and choose **Epiphanies** to forge their own unique build.  
