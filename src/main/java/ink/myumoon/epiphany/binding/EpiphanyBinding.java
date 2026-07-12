@@ -1,9 +1,12 @@
 package ink.myumoon.epiphany.binding;
 
 import ink.myumoon.epiphany.api.*;
+import ink.myumoon.epiphany.content.*;
+import ink.myumoon.epiphany.registry.EpiphanyRegistries;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.Nullable;
 
 /**
@@ -197,5 +200,59 @@ public interface EpiphanyBinding {
             ServerPlayer sp, ResourceLocation behaviorId, ResourceLocation targetId, @Nullable Registry<?> registry
     ) {
         return AptitudeSourceManager.grant(sp, behaviorId, targetId, registry);
+    }
+
+    // ─── Datapack Registry Queries ─────────────────────────────────
+
+    /**
+     * Look up an Insight definition from the datapack registry.
+     * JS: {@code var i = Epiphany.getInsight(id("epiphany","fire_mastery")); i.cost()}
+     *
+     * @return the InsightData record, or null if not found
+     */
+    @Nullable
+    static InsightData getInsight(ResourceLocation insightId) {
+        return ServerLifecycleHooks.getCurrentServer().registryAccess()
+                .registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY)
+                .getOptional(insightId).orElse(null);
+    }
+
+    /**
+     * Look up a Module definition from the datapack registry.
+     * JS: {@code var m = Epiphany.getModule(id("epiphany","combat")); m.insights()}
+     *
+     * @return the ModuleData record, or null if not found
+     */
+    @Nullable
+    static ModuleData getModule(ResourceLocation moduleId) {
+        return ServerLifecycleHooks.getCurrentServer().registryAccess()
+                .registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY)
+                .getOptional(moduleId).orElse(null);
+    }
+
+    /**
+     * Look up an Epiphany definition from the datapack registry.
+     * JS: {@code var e = Epiphany.getEpiphany(id("epiphany","blazing_aura")); e.path()}
+     *
+     * @return the EpiphanyData record, or null if not found
+     */
+    @Nullable
+    static EpiphanyData getEpiphany(ResourceLocation epiphanyId) {
+        return ServerLifecycleHooks.getCurrentServer().registryAccess()
+                .registryOrThrow(EpiphanyRegistries.EPIPHANY_REGISTRY_KEY)
+                .getOptional(epiphanyId).orElse(null);
+    }
+
+    /**
+     * Look up a Path definition from the datapack registry.
+     * JS: {@code var p = Epiphany.getPath(id("epiphany","fire")); p.name()}
+     *
+     * @return the PathData record, or null if not found
+     */
+    @Nullable
+    static PathData getPath(ResourceLocation pathId) {
+        return ServerLifecycleHooks.getCurrentServer().registryAccess()
+                .registryOrThrow(EpiphanyRegistries.PATH_REGISTRY_KEY)
+                .getOptional(pathId).orElse(null);
     }
 }

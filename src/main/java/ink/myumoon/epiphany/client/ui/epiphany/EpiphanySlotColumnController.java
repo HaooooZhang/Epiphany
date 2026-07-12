@@ -117,22 +117,22 @@ public final class EpiphanySlotColumnController {
         // Tooltip
         slot.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
             var lines = new ArrayList<Component>();
-            String name = epiphanyData != null && epiphanyData.name().isPresent()
-                    ? epiphanyData.name().get().getString() : id.toString();
+            String name = epiphanyData != null
+                    ? epiphanyData.effectiveName(id).getString() : id.toString();
             lines.add(Component.literal(name)
                     .withStyle(ChatFormatting.WHITE));
-            if (epiphanyData != null && epiphanyData.description().isPresent()) {
-                lines.add(epiphanyData.description().get().copy()
+            if (epiphanyData != null) {
+                lines.add(epiphanyData.effectiveDescription(id).copy()
                         .withStyle(ChatFormatting.GRAY));
             }
             if (Screen.hasShiftDown()) {
-                if (epiphanyData != null && epiphanyData.rewardDescription().isPresent()) {
+                if (epiphanyData != null && epiphanyData.reward().isPresent()) {
                     lines.add(Component.translatable("epiphany.tooltip.reward")
-                            .append(": ").append(epiphanyData.rewardDescription().get())
+                            .append(": ").append(epiphanyData.effectiveRewardDescription(id))
                             .withStyle(ChatFormatting.GOLD));
                 }
             } else {
-                if (epiphanyData != null && epiphanyData.rewardDescription().isPresent()) {
+                if (epiphanyData != null && epiphanyData.reward().isPresent()) {
                     lines.add(Component.translatable("epiphany.ui.shift_hint")
                             .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
                 }

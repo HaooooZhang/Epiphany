@@ -134,9 +134,6 @@ public final class AptitudeGainListener {
      * so they don't trigger aptitude grants from automation mods (Create block-breakers,
      * Quartz automation, mob grinders driven by FakePlayer, etc.).
      * <p>
-     * Real players always have a network connection; FakePlayer gets a synthetic
-     * {@link ServerPlayer#getConnection()} that is a {@code FakePlayerNetHandler},
-     * but the simplest cross-version-stable check is the explicit type test.
      */
     private static boolean isFakePlayer(ServerPlayer sp) {
         return sp instanceof FakePlayer;

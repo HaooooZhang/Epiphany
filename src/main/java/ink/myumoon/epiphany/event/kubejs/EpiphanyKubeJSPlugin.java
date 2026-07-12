@@ -87,7 +87,7 @@ public final class EpiphanyKubeJSPlugin implements KubeJSPlugin {
 
         NeoForge.EVENT_BUS.addListener(ModuleUnlockedEvent.class, e ->
                 KubeEvents.MODULE_UNLOCKED.post(
-                        new ModuleUnlockedKubeEvent(e.getPlayer(), e.getModuleId())));
+                        new ModuleUnlockedKubeEvent(e.getPlayer(), e.getModuleId(), e.isSilent())));
 
         NeoForge.EVENT_BUS.addListener(ModuleSelectedEvent.class, e ->
                 KubeEvents.MODULE_SELECTED.post(
@@ -103,7 +103,7 @@ public final class EpiphanyKubeJSPlugin implements KubeJSPlugin {
 
         NeoForge.EVENT_BUS.addListener(EpiphanyUnlockedEvent.class, e ->
                 KubeEvents.EPIPHANY_UNLOCKED.post(
-                        new EpiphanyUnlockedKubeEvent(e.getPlayer(), e.getEpiphanyId())));
+                        new EpiphanyUnlockedKubeEvent(e.getPlayer(), e.getEpiphanyId(), e.isSilent())));
 
         NeoForge.EVENT_BUS.addListener(EpiphanySelectedEvent.class, e ->
                 KubeEvents.EPIPHANY_SELECTED.post(

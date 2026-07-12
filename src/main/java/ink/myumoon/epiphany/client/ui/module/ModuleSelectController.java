@@ -140,7 +140,7 @@ public final class ModuleSelectController {
         // Title Bar
         UIElement titleBar = new UIElement();
         titleBar.addClass("module-card-title");
-        String name = module.name().isPresent() ? module.name().get().getString() : moduleId.toString();
+        String name = module.effectiveName(moduleId).getString();
         Label nameLabel = new Label();
         nameLabel.setText(Component.literal(name));
         nameLabel.textStyle(t -> t.fontSize(8).textColor(0xFFFFFFFF).textShadow(true)
@@ -158,23 +158,21 @@ public final class ModuleSelectController {
         btn.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
             var lines = new ArrayList<Component>();
             lines.add(Component.literal(name).withStyle(ChatFormatting.WHITE));
-            if (module.description().isPresent()) {
-                lines.add(module.description().get().copy()
-                        .withStyle(ChatFormatting.GRAY));
-            }
+            lines.add(module.effectiveDescription(moduleId).copy()
+                    .withStyle(ChatFormatting.GRAY));
             if (Screen.hasShiftDown()) {
-                if (module.onSelectRewardDescription().isPresent()) {
+                if (module.onSelectReward().isPresent()) {
                     lines.add(Component.translatable("epiphany.tooltip.reward")
-                            .append(": ").append(module.onSelectRewardDescription().get())
+                            .append(": ").append(module.effectiveOnSelectRewardDescription(moduleId))
                             .withStyle(ChatFormatting.GOLD));
                 }
-                if (module.onCompleteRewardDescription().isPresent()) {
+                if (module.onCompleteReward().isPresent()) {
                     lines.add(Component.translatable("epiphany.tooltip.completion_reward")
-                            .append(": ").append(module.onCompleteRewardDescription().get())
+                            .append(": ").append(module.effectiveOnCompleteRewardDescription(moduleId))
                             .withStyle(ChatFormatting.GOLD));
                 }
-            } else if (module.onSelectRewardDescription().isPresent()
-                    || module.onCompleteRewardDescription().isPresent()) {
+            } else if (module.onSelectReward().isPresent()
+                    || module.onCompleteReward().isPresent()) {
                 lines.add(Component.translatable("epiphany.ui.shift_hint")
                         .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
             }
@@ -182,8 +180,8 @@ public final class ModuleSelectController {
                 var cd = ClientData.clientData();
                 var st = cd != null ? cd.modules().get(moduleId) : null;
                 boolean isUnlocked = st != null ? st.unlocked() : module.initialState() == InitialState.SELECTABLE;
-                if (!isUnlocked && module.conditionDescription().isPresent()) {
-                    lines.add(module.conditionDescription().get().copy()
+                if (!isUnlocked && module.condition().isPresent()) {
+                    lines.add(module.effectiveConditionDescription(moduleId).copy()
                             .withStyle(ChatFormatting.DARK_RED));
                 }
                 lines.add(Component.translatable(isUnlocked ? "epiphany.ui.error.no_points" : "epiphany.ui.module.locked_hint")
@@ -214,8 +212,8 @@ public final class ModuleSelectController {
         card.addChild(bodySlot);
 
         // Description
-        if (module.description().isPresent()) {
-            String raw = module.description().get().getString();
+        {
+            String raw = module.effectiveDescription(moduleId).getString();
             var font = Minecraft.getInstance().font;
             int maxPixelWidth = 84;
             int start = 0;
@@ -232,13 +230,6 @@ public final class ModuleSelectController {
                 bodySlot.addChild(lineLbl);
                 start = end;
             }
-        } else {
-            // Fallback: show placeholder text so the area isn't empty.
-            Label placeholder = new Label();
-            placeholder.setText(Component.literal("???"));
-            placeholder.textStyle(t -> t.fontSize(8).textColor(0xFF666666).textShadow(false)
-                    .textAlignHorizontal(Horizontal.CENTER));
-            bodySlot.addChild(placeholder);
         }
 
         // Insight preview element

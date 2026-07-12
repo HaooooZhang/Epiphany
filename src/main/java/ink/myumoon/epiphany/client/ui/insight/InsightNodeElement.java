@@ -81,24 +81,22 @@ public class InsightNodeElement extends UIElement {
     private void onHoverTooltips(UIEvent event) {
         List<Component> lines = new ArrayList<>();
         // Name.
-        String name = insightData.name().isPresent()
-                ? insightData.name().get().getString()
-                : insightId.toString();
+        String name = insightData.effectiveName(insightId).getString();
         lines.add(Component.literal(name).withStyle(ChatFormatting.WHITE));
         // Description.
-        if (insightData.description().isPresent()) {
-            lines.add(insightData.description().get().copy()
+        {
+            lines.add(insightData.effectiveDescription(insightId).copy()
                     .withStyle(ChatFormatting.GRAY));
         }
         if (Screen.hasShiftDown()) {
-            if (insightData.rewardDescription().isPresent()) {
+            if (insightData.reward().isPresent()) {
                 lines.add(Component.translatable("epiphany.tooltip.reward")
                         .append(": ")
-                        .append(insightData.rewardDescription().get())
+                        .append(insightData.effectiveRewardDescription(insightId))
                         .withStyle(ChatFormatting.GOLD));
             }
         } else {
-            if (insightData.rewardDescription().isPresent()) {
+            if (insightData.reward().isPresent()) {
                 lines.add(Component.translatable("epiphany.ui.shift_hint")
                         .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
             }

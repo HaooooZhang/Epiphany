@@ -147,8 +147,8 @@ public final class ModuleGridController {
         // title bar
         UIElement titleBar = new UIElement();
         titleBar.addClass("module-card-title");
-        String name = (moduleData != null && moduleData.name().isPresent())
-                ? moduleData.name().get().getString()
+        String name = moduleData != null
+                ? moduleData.effectiveName(moduleId).getString()
                 : moduleId.toString();
         Label nameLabel = new Label();
         nameLabel.setText(Component.literal(name));
@@ -160,26 +160,26 @@ public final class ModuleGridController {
         titleBar.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
             var lines = new ArrayList<Component>();
             lines.add(Component.literal(name).withStyle(ChatFormatting.WHITE));
-            if (moduleData != null && moduleData.description().isPresent()) {
-                lines.add(moduleData.description().get().copy()
+            if (moduleData != null) {
+                lines.add(moduleData.effectiveDescription(moduleId).copy()
                         .withStyle(ChatFormatting.GRAY));
             }
             if (Screen.hasShiftDown()) {
-                if (moduleData != null && moduleData.onSelectRewardDescription().isPresent()) {
+                if (moduleData != null && moduleData.onSelectReward().isPresent()) {
                     lines.add(Component.translatable("epiphany.tooltip.reward")
                             .append(": ")
-                            .append(moduleData.onSelectRewardDescription().get())
+                            .append(moduleData.effectiveOnSelectRewardDescription(moduleId))
                             .withStyle(ChatFormatting.GOLD));
                 }
-                if (moduleData != null && moduleData.onCompleteRewardDescription().isPresent()) {
+                if (moduleData != null && moduleData.onCompleteReward().isPresent()) {
                     lines.add(Component.translatable("epiphany.tooltip.completion_reward")
                             .append(": ")
-                            .append(moduleData.onCompleteRewardDescription().get())
+                            .append(moduleData.effectiveOnCompleteRewardDescription(moduleId))
                             .withStyle(ChatFormatting.GOLD));
                 }
             } else {
-                if (moduleData != null && (moduleData.onSelectRewardDescription().isPresent()
-                        || moduleData.onCompleteRewardDescription().isPresent())) {
+                if (moduleData != null && (moduleData.onSelectReward().isPresent()
+                        || moduleData.onCompleteReward().isPresent())) {
                     lines.add(Component.translatable("epiphany.ui.shift_hint")
                             .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
                 }

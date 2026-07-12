@@ -1,6 +1,4 @@
 {
-    "name": "狂战士",
-    "description": "aaaaaaaa aaaaaaaa aaaaaaaa aaaa aaaaa aaaaaaaa aaaaaaaa",
     "icon": "minecraft:textures/item/iron_axe.png",
     "initial_state": "selectable",
     "on_select_reward": {
@@ -9,12 +7,10 @@
         "duration": 1200,
         "amplifier": 0
     },
-    "on_select_reward_description": "永久获得力量效果",
     "on_complete_reward": {
         "type": "epiphany:aptitude",
         "amount": 200
     },
-    "on_complete_reward_description": "+200 阅历",
     "insights": [
         {
             "id": "epiphany:brute_force",

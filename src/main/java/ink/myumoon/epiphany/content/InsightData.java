@@ -35,4 +35,28 @@ public record InsightData(
             ComponentSerialization.CODEC.optionalFieldOf("reward_description").forGetter(InsightData::rewardDescription),
             Codec.INT.optionalFieldOf("weight", 100).forGetter(InsightData::weight)
     ).apply(instance, InsightData::new));
+
+    /**
+     * Returns the name, falling back to a translatable key {@code insight.<ns>.<path>.name}.
+     */
+    public Component effectiveName(ResourceLocation id) {
+        return name.orElseGet(() ->
+                Component.translatable("insight." + id.getNamespace() + "." + id.getPath() + ".name"));
+    }
+
+    /**
+     * Returns the description, falling back to a translatable key {@code insight.<ns>.<path>.description}.
+     */
+    public Component effectiveDescription(ResourceLocation id) {
+        return description.orElseGet(() ->
+                Component.translatable("insight." + id.getNamespace() + "." + id.getPath() + ".description"));
+    }
+
+    /**
+     * Returns the reward description, falling back to a translatable key {@code insight.<ns>.<path>.reward_description}.
+     */
+    public Component effectiveRewardDescription(ResourceLocation id) {
+        return rewardDescription.orElseGet(() ->
+                Component.translatable("insight." + id.getNamespace() + "." + id.getPath() + ".reward_description"));
+    }
 }

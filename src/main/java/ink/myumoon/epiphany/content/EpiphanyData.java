@@ -44,4 +44,36 @@ public record EpiphanyData(
             ComponentSerialization.CODEC.optionalFieldOf("reward_description").forGetter(EpiphanyData::rewardDescription),
             Codec.INT.optionalFieldOf("weight", 100).forGetter(EpiphanyData::weight)
     ).apply(instance, EpiphanyData::new));
+
+    /**
+     * Returns the name, falling back to a translatable key {@code epiphany.<ns>.<path>.name}.
+     */
+    public Component effectiveName(ResourceLocation id) {
+        return name.orElseGet(() ->
+                Component.translatable("epiphany." + id.getNamespace() + "." + id.getPath() + ".name"));
+    }
+
+    /**
+     * Returns the description, falling back to a translatable key {@code epiphany.<ns>.<path>.description}.
+     */
+    public Component effectiveDescription(ResourceLocation id) {
+        return description.orElseGet(() ->
+                Component.translatable("epiphany." + id.getNamespace() + "." + id.getPath() + ".description"));
+    }
+
+    /**
+     * Returns the condition description, falling back to a translatable key {@code epiphany.<ns>.<path>.condition_description}.
+     */
+    public Component effectiveConditionDescription(ResourceLocation id) {
+        return conditionDescription.orElseGet(() ->
+                Component.translatable("epiphany." + id.getNamespace() + "." + id.getPath() + ".condition_description"));
+    }
+
+    /**
+     * Returns the reward description, falling back to a translatable key {@code epiphany.<ns>.<path>.reward_description}.
+     */
+    public Component effectiveRewardDescription(ResourceLocation id) {
+        return rewardDescription.orElseGet(() ->
+                Component.translatable("epiphany." + id.getNamespace() + "." + id.getPath() + ".reward_description"));
+    }
 }

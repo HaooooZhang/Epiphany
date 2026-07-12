@@ -28,4 +28,20 @@ public record PathData(
             ResourceLocation.CODEC.optionalFieldOf("icon").forGetter(PathData::icon),
             Codec.INT.optionalFieldOf("weight", 100).forGetter(PathData::weight)
     ).apply(instance, PathData::new));
+
+    /**
+     * Returns the name, falling back to a translatable key {@code path.<ns>.<path>.name}.
+     */
+    public Component effectiveName(ResourceLocation id) {
+        return name.orElseGet(() ->
+                Component.translatable("path." + id.getNamespace() + "." + id.getPath() + ".name"));
+    }
+
+    /**
+     * Returns the description, falling back to a translatable key {@code path.<ns>.<path>.description}.
+     */
+    public Component effectiveDescription(ResourceLocation id) {
+        return description.orElseGet(() ->
+                Component.translatable("path." + id.getNamespace() + "." + id.getPath() + ".description"));
+    }
 }

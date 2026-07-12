@@ -52,4 +52,44 @@ public record ModuleData(
                     .forGetter(ModuleData::onCompleteRewardDescription),
             Codec.INT.optionalFieldOf("weight", 100).forGetter(ModuleData::weight)
     ).apply(instance, ModuleData::new));
+
+    /**
+     * Returns the name, falling back to a translatable key {@code module.<ns>.<path>.name}.
+     */
+    public Component effectiveName(ResourceLocation id) {
+        return name.orElseGet(() ->
+                Component.translatable("module." + id.getNamespace() + "." + id.getPath() + ".name"));
+    }
+
+    /**
+     * Returns the description, falling back to a translatable key {@code module.<ns>.<path>.description}.
+     */
+    public Component effectiveDescription(ResourceLocation id) {
+        return description.orElseGet(() ->
+                Component.translatable("module." + id.getNamespace() + "." + id.getPath() + ".description"));
+    }
+
+    /**
+     * Returns the condition description, falling back to a translatable key {@code module.<ns>.<path>.condition_description}.
+     */
+    public Component effectiveConditionDescription(ResourceLocation id) {
+        return conditionDescription.orElseGet(() ->
+                Component.translatable("module." + id.getNamespace() + "." + id.getPath() + ".condition_description"));
+    }
+
+    /**
+     * Returns the on-select reward description, falling back to a translatable key {@code module.<ns>.<path>.on_select_reward_description}.
+     */
+    public Component effectiveOnSelectRewardDescription(ResourceLocation id) {
+        return onSelectRewardDescription.orElseGet(() ->
+                Component.translatable("module." + id.getNamespace() + "." + id.getPath() + ".on_select_reward_description"));
+    }
+
+    /**
+     * Returns the on-complete reward description, falling back to a translatable key {@code module.<ns>.<path>.on_complete_reward_description}.
+     */
+    public Component effectiveOnCompleteRewardDescription(ResourceLocation id) {
+        return onCompleteRewardDescription.orElseGet(() ->
+                Component.translatable("module." + id.getNamespace() + "." + id.getPath() + ".on_complete_reward_description"));
+    }
 }

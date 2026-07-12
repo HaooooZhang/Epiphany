@@ -90,8 +90,8 @@ public final class NotificationListener {
         Registry<ModuleData> registry = sp.server.registryAccess()
                 .registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY);
         ModuleData module = registry.get(id);
-        if (module != null && module.name().isPresent()) {
-            return module.name().get();
+        if (module != null) {
+            return module.effectiveName(id);
         }
         return Component.literal(id.toString()).withStyle(ChatFormatting.GRAY);
     }
@@ -104,8 +104,8 @@ public final class NotificationListener {
         Registry<EpiphanyData> registry = sp.server.registryAccess()
                 .registryOrThrow(EpiphanyRegistries.EPIPHANY_REGISTRY_KEY);
         EpiphanyData epiphany = registry.get(id);
-        if (epiphany != null && epiphany.name().isPresent()) {
-            return epiphany.name().get();
+        if (epiphany != null) {
+            return epiphany.effectiveName(id);
         }
         return Component.literal(id.toString()).withStyle(ChatFormatting.GRAY);
     }
