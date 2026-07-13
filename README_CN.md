@@ -28,7 +28,7 @@
 - [Github](https://github.com/HaooooZhang/Epiphany)
 - [Issues](https://github.com/HaooooZhang/Epiphany/issues)
 - [Discord](https://discord.gg/xSEWpdae9C)
-- [Wiki](https://github.com/HaooooZhang/Epiphany/wiki)
+- [Wiki](https://docs.myumoon.ink/zh-CN/Epiphany/Overview.html)
 
 ## 进阶开发与未来计划
 - 提供丰富的自定义事件与 API。

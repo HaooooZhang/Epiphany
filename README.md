@@ -31,7 +31,7 @@ Inspired by the Tradition mechanics of the classic sci-fi strategy game Stellar
 - [Github](https://github.com/HaooooZhang/Epiphany)
 - [Issues](https://github.com/HaooooZhang/Epiphany/issues)
 - [Discord](https://discord.gg/xSEWpdae9C)
-- [Wiki](https://github.com/HaooooZhang/Epiphany/wiki)
+- [Wiki](https://docs.myumoon.ink/Epiphany/Overview.html)
 
 
 ## Advanced Development
