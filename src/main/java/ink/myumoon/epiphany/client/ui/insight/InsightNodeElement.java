@@ -85,15 +85,15 @@ public class InsightNodeElement extends UIElement {
         lines.add(Component.literal(name).withStyle(ChatFormatting.WHITE));
         // Description.
         {
-            lines.add(insightData.effectiveDescription(insightId).copy()
-                    .withStyle(ChatFormatting.GRAY));
+            insightData.effectiveDescription(insightId)
+                    .ifPresent(d -> lines.add(d.copy().withStyle(ChatFormatting.GRAY)));
         }
         if (Screen.hasShiftDown()) {
             if (insightData.reward().isPresent()) {
-                lines.add(Component.translatable("epiphany.tooltip.reward")
-                        .append(": ")
-                        .append(insightData.effectiveRewardDescription(insightId))
-                        .withStyle(ChatFormatting.GOLD));
+                insightData.effectiveRewardDescription(insightId).ifPresent(d ->
+                        lines.add(Component.translatable("epiphany.tooltip.reward")
+                                .append(": ").append(d)
+                                .withStyle(ChatFormatting.GOLD)));
             }
         } else {
             if (insightData.reward().isPresent()) {

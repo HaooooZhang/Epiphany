@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import ink.myumoon.epiphany.content.condition.Condition;
 import ink.myumoon.epiphany.content.reward.InsightReward;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.ResourceLocation;
@@ -64,32 +65,31 @@ public record ModuleData(
     /**
      * Returns the description, falling back to a translatable key {@code module.<ns>.<path>.description}.
      */
-    public Component effectiveDescription(ResourceLocation id) {
-        return description.orElseGet(() ->
-                Component.translatable("module." + id.getNamespace() + "." + id.getPath() + ".description"));
+    public Optional<Component> effectiveDescription(ResourceLocation id) {
+        if (description.isPresent()) return description;
+        String key = "module." + id.getNamespace() + "." + id.getPath() + ".description";
+        if (Language.getInstance().has(key)) return Optional.of(Component.translatable(key));
+        return Optional.empty();
     }
 
-    /**
-     * Returns the condition description, falling back to a translatable key {@code module.<ns>.<path>.condition_description}.
-     */
-    public Component effectiveConditionDescription(ResourceLocation id) {
-        return conditionDescription.orElseGet(() ->
-                Component.translatable("module." + id.getNamespace() + "." + id.getPath() + ".condition_description"));
+    public Optional<Component> effectiveConditionDescription(ResourceLocation id) {
+        if (conditionDescription.isPresent()) return conditionDescription;
+        String key = "module." + id.getNamespace() + "." + id.getPath() + ".condition_description";
+        if (Language.getInstance().has(key)) return Optional.of(Component.translatable(key));
+        return Optional.empty();
     }
 
-    /**
-     * Returns the on-select reward description, falling back to a translatable key {@code module.<ns>.<path>.on_select_reward_description}.
-     */
-    public Component effectiveOnSelectRewardDescription(ResourceLocation id) {
-        return onSelectRewardDescription.orElseGet(() ->
-                Component.translatable("module." + id.getNamespace() + "." + id.getPath() + ".on_select_reward_description"));
+    public Optional<Component> effectiveOnSelectRewardDescription(ResourceLocation id) {
+        if (onSelectRewardDescription.isPresent()) return onSelectRewardDescription;
+        String key = "module." + id.getNamespace() + "." + id.getPath() + ".on_select_reward_description";
+        if (Language.getInstance().has(key)) return Optional.of(Component.translatable(key));
+        return Optional.empty();
     }
 
-    /**
-     * Returns the on-complete reward description, falling back to a translatable key {@code module.<ns>.<path>.on_complete_reward_description}.
-     */
-    public Component effectiveOnCompleteRewardDescription(ResourceLocation id) {
-        return onCompleteRewardDescription.orElseGet(() ->
-                Component.translatable("module." + id.getNamespace() + "." + id.getPath() + ".on_complete_reward_description"));
+    public Optional<Component> effectiveOnCompleteRewardDescription(ResourceLocation id) {
+        if (onCompleteRewardDescription.isPresent()) return onCompleteRewardDescription;
+        String key = "module." + id.getNamespace() + "." + id.getPath() + ".on_complete_reward_description";
+        if (Language.getInstance().has(key)) return Optional.of(Component.translatable(key));
+        return Optional.empty();
     }
 }

@@ -1,1 +1,0 @@
-{"name": "暗影步", "description": "+100 经验", "cost": 2, "icon": "minecraft:textures/item/ender_pearl.png", "reward": {"type": "epiphany:experience", "amount": 100}, "reward_description": "+100 经验"}

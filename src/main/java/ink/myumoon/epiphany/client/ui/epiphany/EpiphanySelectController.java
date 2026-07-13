@@ -180,9 +180,10 @@ public final class EpiphanySelectController {
                     String nm = ed != null ? ed.effectiveName(sid).getString() : sid.toString();
                     lines.add(Component.literal(nm).withStyle(ChatFormatting.WHITE));
                     if (ed != null)
-                        lines.add(ed.effectiveDescription(sid).copy().withStyle(ChatFormatting.GRAY));
+                        ed.effectiveDescription(sid).ifPresent(d -> lines.add(d.copy().withStyle(ChatFormatting.GRAY)));
                     if (Screen.hasShiftDown() && ed != null && ed.reward().isPresent())
-                        lines.add(Component.translatable("epiphany.tooltip.reward").append(": ").append(ed.effectiveRewardDescription(sid)).withStyle(ChatFormatting.GOLD));
+                        ed.effectiveRewardDescription(sid).ifPresent(d ->
+                                lines.add(Component.translatable("epiphany.tooltip.reward").append(": ").append(d).withStyle(ChatFormatting.GOLD)));
                     else if (ed != null && ed.reward().isPresent())
                         lines.add(Component.translatable("epiphany.ui.shift_hint").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
                     e.hoverTooltips = HoverTooltips.empty();
@@ -236,13 +237,15 @@ public final class EpiphanySelectController {
             var lines = new java.util.ArrayList<Component>();
             String name = data.effectiveName(id).getString();
             lines.add(Component.literal(name).withStyle(ChatFormatting.WHITE));
-            lines.add(data.effectiveDescription(id).copy().withStyle(ChatFormatting.GRAY));
+            data.effectiveDescription(id).ifPresent(d -> lines.add(d.copy().withStyle(ChatFormatting.GRAY)));
             if (Screen.hasShiftDown() && data.reward().isPresent())
-                lines.add(Component.translatable("epiphany.tooltip.reward").append(": ").append(data.effectiveRewardDescription(id)).withStyle(ChatFormatting.GOLD));
+                data.effectiveRewardDescription(id).ifPresent(d ->
+                        lines.add(Component.translatable("epiphany.tooltip.reward").append(": ").append(d).withStyle(ChatFormatting.GOLD)));
             else if (data.reward().isPresent())
                 lines.add(Component.translatable("epiphany.ui.shift_hint").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
             if (!unlocked && data.condition().isPresent())
-                lines.add(data.effectiveConditionDescription(id).copy().withStyle(ChatFormatting.DARK_RED));
+                data.effectiveConditionDescription(id).ifPresent(d ->
+                        lines.add(d.copy().withStyle(ChatFormatting.DARK_RED)));
             e.hoverTooltips = HoverTooltips.empty();
             for (var ln : lines) e.hoverTooltips = e.hoverTooltips.append(ln);
         });

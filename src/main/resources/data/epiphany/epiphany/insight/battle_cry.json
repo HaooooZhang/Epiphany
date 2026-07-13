@@ -1,1 +1,0 @@
-{"name": "战斗呐喊", "description": "获得时：执行命令给予抗性提升", "cost": 3, "icon": "minecraft:textures/mob_effect/resistance.png", "reward": {"type": "epiphany:command", "command": "effect give @p minecraft:resistance 600 1"}, "reward_description": "抗性提升 II，30 秒"}

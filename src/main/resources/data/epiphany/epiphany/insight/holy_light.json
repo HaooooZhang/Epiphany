@@ -1,1 +1,0 @@
-{"name": "圣光", "description": "获得时：释放末影粒子", "cost": 2, "icon": "minecraft:textures/item/glowstone_dust.png", "reward": {"type": "epiphany:particle", "particle": "minecraft:portal", "count": 40}, "reward_description": "末影粒子爆发"}

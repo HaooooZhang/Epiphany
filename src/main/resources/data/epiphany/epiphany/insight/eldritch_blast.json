@@ -1,1 +1,0 @@
-{"name": "邪能爆", "description": "获得时：释放大型爆炸粒子 + 执行命令", "cost": 4, "icon": "minecraft:textures/item/firework_star.png", "reward": {"type": "epiphany:command", "command": "particle minecraft:explosion ~ ~1 ~ 1 1 1 0 30"}, "reward_description": "爆炸粒子特效"}

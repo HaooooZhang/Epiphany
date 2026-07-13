@@ -2,6 +2,7 @@ package ink.myumoon.epiphany.content;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.ResourceLocation;
@@ -40,8 +41,10 @@ public record PathData(
     /**
      * Returns the description, falling back to a translatable key {@code path.<ns>.<path>.description}.
      */
-    public Component effectiveDescription(ResourceLocation id) {
-        return description.orElseGet(() ->
-                Component.translatable("path." + id.getNamespace() + "." + id.getPath() + ".description"));
+    public Optional<Component> effectiveDescription(ResourceLocation id) {
+        if (description.isPresent()) return description;
+        String key = "path." + id.getNamespace() + "." + id.getPath() + ".description";
+        if (Language.getInstance().has(key)) return Optional.of(Component.translatable(key));
+        return Optional.empty();
     }
 }

@@ -1,5 +1,6 @@
 package ink.myumoon.epiphany.content.reward;
 
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -18,7 +19,7 @@ public record ItemReward(Item item, int count) implements InsightReward, Epiphan
     public static final MapCodec<ItemReward> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
             BuiltInRegistries.ITEM.byNameCodec()
                     .fieldOf("item").forGetter(ItemReward::item),
-            com.mojang.serialization.Codec.INT.optionalFieldOf("count", 1)
+            Codec.INT.optionalFieldOf("count", 1)
                     .forGetter(ItemReward::count)
     ).apply(instance, ItemReward::new));
 

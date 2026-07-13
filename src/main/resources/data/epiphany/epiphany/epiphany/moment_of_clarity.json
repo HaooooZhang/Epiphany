@@ -1,1 +1,0 @@
-{"name": "顿悟之刻", "description": "+500 阅历 +3 心得点", "path": "epiphany:arcane", "initial_state": "selectable", "reward": {"type": "epiphany:insight_points", "amount": 3}, "weight": 60}

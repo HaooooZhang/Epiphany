@@ -1,1 +1,0 @@
-{"name": "火球术", "description": "获得时：释放火焰粒子", "cost": 3, "icon": "minecraft:textures/item/fire_charge.png", "reward": {"type": "epiphany:particle", "particle": "minecraft:flame", "count": 20}, "reward_description": "火焰粒子"}

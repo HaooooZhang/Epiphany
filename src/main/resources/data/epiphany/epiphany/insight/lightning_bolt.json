@@ -1,1 +1,0 @@
-{"name": "闪电箭", "description": "获得时：执行命令给予速度效果", "cost": 2, "icon": "minecraft:textures/item/arrow.png", "reward": {"type": "epiphany:command", "command": "effect give @p minecraft:speed 300 1"}, "reward_description": "速度 II，15 秒"}

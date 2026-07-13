@@ -161,21 +161,21 @@ public final class ModuleGridController {
             var lines = new ArrayList<Component>();
             lines.add(Component.literal(name).withStyle(ChatFormatting.WHITE));
             if (moduleData != null) {
-                lines.add(moduleData.effectiveDescription(moduleId).copy()
-                        .withStyle(ChatFormatting.GRAY));
+                moduleData.effectiveDescription(moduleId)
+                        .ifPresent(d -> lines.add(d.copy().withStyle(ChatFormatting.GRAY)));
             }
             if (Screen.hasShiftDown()) {
                 if (moduleData != null && moduleData.onSelectReward().isPresent()) {
-                    lines.add(Component.translatable("epiphany.tooltip.reward")
-                            .append(": ")
-                            .append(moduleData.effectiveOnSelectRewardDescription(moduleId))
-                            .withStyle(ChatFormatting.GOLD));
+                    moduleData.effectiveOnSelectRewardDescription(moduleId).ifPresent(d ->
+                            lines.add(Component.translatable("epiphany.tooltip.reward")
+                                    .append(": ").append(d)
+                                    .withStyle(ChatFormatting.GOLD)));
                 }
                 if (moduleData != null && moduleData.onCompleteReward().isPresent()) {
-                    lines.add(Component.translatable("epiphany.tooltip.completion_reward")
-                            .append(": ")
-                            .append(moduleData.effectiveOnCompleteRewardDescription(moduleId))
-                            .withStyle(ChatFormatting.GOLD));
+                    moduleData.effectiveOnCompleteRewardDescription(moduleId).ifPresent(d ->
+                            lines.add(Component.translatable("epiphany.tooltip.completion_reward")
+                                    .append(": ").append(d)
+                                    .withStyle(ChatFormatting.GOLD)));
                 }
             } else {
                 if (moduleData != null && (moduleData.onSelectReward().isPresent()

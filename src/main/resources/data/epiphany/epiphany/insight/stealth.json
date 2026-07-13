@@ -1,1 +1,0 @@
-{"name": "潜行", "description": "获得30秒隐身效果", "cost": 1, "icon": "minecraft:textures/mob_effect/invisibility.png", "reward": {"type": "epiphany:effect", "effect": "minecraft:invisibility", "duration": 600, "amplifier": 0}, "reward_description": "隐身 30 秒"}

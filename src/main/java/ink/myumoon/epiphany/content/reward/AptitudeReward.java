@@ -1,5 +1,6 @@
 package ink.myumoon.epiphany.content.reward;
 
+import com.mojang.serialization.Codec;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import ink.myumoon.epiphany.api.AptitudeManager;
@@ -14,7 +15,7 @@ import net.minecraft.server.level.ServerPlayer;
 public record AptitudeReward(long amount) implements InsightReward, EpiphanyReward {
 
     public static final MapCodec<AptitudeReward> CODEC = RecordCodecBuilder.mapCodec(instance -> instance.group(
-            com.mojang.serialization.Codec.LONG.fieldOf("amount").forGetter(AptitudeReward::amount)
+            Codec.LONG.fieldOf("amount").forGetter(AptitudeReward::amount)
     ).apply(instance, AptitudeReward::new));
 
     @Override

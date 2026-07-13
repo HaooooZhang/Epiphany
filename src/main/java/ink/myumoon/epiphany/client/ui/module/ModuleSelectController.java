@@ -158,18 +158,20 @@ public final class ModuleSelectController {
         btn.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
             var lines = new ArrayList<Component>();
             lines.add(Component.literal(name).withStyle(ChatFormatting.WHITE));
-            lines.add(module.effectiveDescription(moduleId).copy()
-                    .withStyle(ChatFormatting.GRAY));
+            module.effectiveDescription(moduleId)
+                    .ifPresent(d -> lines.add(d.copy().withStyle(ChatFormatting.GRAY)));
             if (Screen.hasShiftDown()) {
                 if (module.onSelectReward().isPresent()) {
-                    lines.add(Component.translatable("epiphany.tooltip.reward")
-                            .append(": ").append(module.effectiveOnSelectRewardDescription(moduleId))
-                            .withStyle(ChatFormatting.GOLD));
+                    module.effectiveOnSelectRewardDescription(moduleId).ifPresent(d ->
+                            lines.add(Component.translatable("epiphany.tooltip.reward")
+                                    .append(": ").append(d)
+                                    .withStyle(ChatFormatting.GOLD)));
                 }
                 if (module.onCompleteReward().isPresent()) {
-                    lines.add(Component.translatable("epiphany.tooltip.completion_reward")
-                            .append(": ").append(module.effectiveOnCompleteRewardDescription(moduleId))
-                            .withStyle(ChatFormatting.GOLD));
+                    module.effectiveOnCompleteRewardDescription(moduleId).ifPresent(d ->
+                            lines.add(Component.translatable("epiphany.tooltip.completion_reward")
+                                    .append(": ").append(d)
+                                    .withStyle(ChatFormatting.GOLD)));
                 }
             } else if (module.onSelectReward().isPresent()
                     || module.onCompleteReward().isPresent()) {
@@ -181,8 +183,8 @@ public final class ModuleSelectController {
                 var st = cd != null ? cd.modules().get(moduleId) : null;
                 boolean isUnlocked = st != null ? st.unlocked() : module.initialState() == InitialState.SELECTABLE;
                 if (!isUnlocked && module.condition().isPresent()) {
-                    lines.add(module.effectiveConditionDescription(moduleId).copy()
-                            .withStyle(ChatFormatting.DARK_RED));
+                    module.effectiveConditionDescription(moduleId).ifPresent(d ->
+                            lines.add(d.copy().withStyle(ChatFormatting.DARK_RED)));
                 }
                 lines.add(Component.translatable(isUnlocked ? "epiphany.ui.error.no_points" : "epiphany.ui.module.locked_hint")
                         .withStyle(ChatFormatting.RED));
@@ -212,8 +214,8 @@ public final class ModuleSelectController {
         card.addChild(bodySlot);
 
         // Description
-        {
-            String raw = module.effectiveDescription(moduleId).getString();
+        module.effectiveDescription(moduleId).ifPresent(desc -> {
+            String raw = desc.getString();
             var font = Minecraft.getInstance().font;
             int maxPixelWidth = 84;
             int start = 0;
@@ -230,7 +232,7 @@ public final class ModuleSelectController {
                 bodySlot.addChild(lineLbl);
                 start = end;
             }
-        }
+        });
 
         // Insight preview element
         UIElement previewArea = new UIElement();

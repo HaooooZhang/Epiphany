@@ -1,1 +1,0 @@
-{"name": "KJS Stage 奖励测试", "description": "测试 kubejs_stage 奖励：选择后获得 test_stage_reward 阶段", "path": "epiphany:ftbq_test", "condition": {"type": "epiphany:always"}, "initial_state": "selectable", "reward": {"type": "epiphany:kubejs_stage", "stage": "test_stage_reward", "action": "add"}, "reward_description": "获得 test_stage_reward 阶段"}

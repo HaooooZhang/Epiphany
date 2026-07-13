@@ -1,1 +1,0 @@
-{"name": "暗夜斗篷", "description": "获得时：获得永久隐身效果", "path": "epiphany:shadow", "initial_state": "selectable", "reward": {"type": "epiphany:effect", "effect": "minecraft:invisibility", "duration": -1, "amplifier": 0}, "reward_description": "永久隐身"}

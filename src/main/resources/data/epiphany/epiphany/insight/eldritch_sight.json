@@ -1,1 +1,0 @@
-{"name": "邪异感知", "description": "获得永久夜视效果", "cost": 2, "icon": "minecraft:textures/mob_effect/night_vision.png", "reward": {"type": "epiphany:effect", "effect": "minecraft:night_vision", "duration": -1, "amplifier": 0}, "reward_description": "永久夜视"}

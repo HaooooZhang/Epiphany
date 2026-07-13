@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import ink.myumoon.epiphany.content.condition.Condition;
 import ink.myumoon.epiphany.content.reward.EpiphanyReward;
+import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.ResourceLocation;
@@ -56,24 +57,24 @@ public record EpiphanyData(
     /**
      * Returns the description, falling back to a translatable key {@code epiphany.<ns>.<path>.description}.
      */
-    public Component effectiveDescription(ResourceLocation id) {
-        return description.orElseGet(() ->
-                Component.translatable("epiphany." + id.getNamespace() + "." + id.getPath() + ".description"));
+    public Optional<Component> effectiveDescription(ResourceLocation id) {
+        if (description.isPresent()) return description;
+        String key = "epiphany." + id.getNamespace() + "." + id.getPath() + ".description";
+        if (Language.getInstance().has(key)) return Optional.of(Component.translatable(key));
+        return Optional.empty();
     }
 
-    /**
-     * Returns the condition description, falling back to a translatable key {@code epiphany.<ns>.<path>.condition_description}.
-     */
-    public Component effectiveConditionDescription(ResourceLocation id) {
-        return conditionDescription.orElseGet(() ->
-                Component.translatable("epiphany." + id.getNamespace() + "." + id.getPath() + ".condition_description"));
+    public Optional<Component> effectiveConditionDescription(ResourceLocation id) {
+        if (conditionDescription.isPresent()) return conditionDescription;
+        String key = "epiphany." + id.getNamespace() + "." + id.getPath() + ".condition_description";
+        if (Language.getInstance().has(key)) return Optional.of(Component.translatable(key));
+        return Optional.empty();
     }
 
-    /**
-     * Returns the reward description, falling back to a translatable key {@code epiphany.<ns>.<path>.reward_description}.
-     */
-    public Component effectiveRewardDescription(ResourceLocation id) {
-        return rewardDescription.orElseGet(() ->
-                Component.translatable("epiphany." + id.getNamespace() + "." + id.getPath() + ".reward_description"));
+    public Optional<Component> effectiveRewardDescription(ResourceLocation id) {
+        if (rewardDescription.isPresent()) return rewardDescription;
+        String key = "epiphany." + id.getNamespace() + "." + id.getPath() + ".reward_description";
+        if (Language.getInstance().has(key)) return Optional.of(Component.translatable(key));
+        return Optional.empty();
     }
 }

@@ -90,10 +90,5 @@
 
   "epiphany.notify.insight_points.gained": "获得 %1$s 心得点，当前有 %2$s 点心得点待使用",
   "epiphany.notify.module.unlocked": "模块已解锁：%s",
-  "epiphany.notify.epiphany.unlocked": "顿悟已解锁：%s",
-
-  "module.epiphany.berserker.name": "狂战士",
-  "module.epiphany.berserker.description": "以纯粹的蛮力碾压一切敌人。",
-  "module.epiphany.berserker.on_select_reward_description": "永久获得力量效果",
-  "module.epiphany.berserker.on_complete_reward_description": "+200 阅历"
+  "epiphany.notify.epiphany.unlocked": "顿悟已解锁：%s"
 }

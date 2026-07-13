@@ -1,1 +1,0 @@
-{"name": "魔力护盾", "description": "护甲 +4", "cost": 2, "icon": "minecraft:textures/item/diamond_chestplate.png", "reward": {"type": "epiphany:attribute", "attribute": "minecraft:generic.armor", "amount": 4.0, "operation": "ADD_VALUE"}, "reward_description": "+4 护甲"}

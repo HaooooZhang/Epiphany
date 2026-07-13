@@ -122,14 +122,15 @@ public final class EpiphanySlotColumnController {
             lines.add(Component.literal(name)
                     .withStyle(ChatFormatting.WHITE));
             if (epiphanyData != null) {
-                lines.add(epiphanyData.effectiveDescription(id).copy()
-                        .withStyle(ChatFormatting.GRAY));
+                epiphanyData.effectiveDescription(id)
+                        .ifPresent(d -> lines.add(d.copy().withStyle(ChatFormatting.GRAY)));
             }
             if (Screen.hasShiftDown()) {
                 if (epiphanyData != null && epiphanyData.reward().isPresent()) {
-                    lines.add(Component.translatable("epiphany.tooltip.reward")
-                            .append(": ").append(epiphanyData.effectiveRewardDescription(id))
-                            .withStyle(ChatFormatting.GOLD));
+                    epiphanyData.effectiveRewardDescription(id).ifPresent(d ->
+                            lines.add(Component.translatable("epiphany.tooltip.reward")
+                                    .append(": ").append(d)
+                                    .withStyle(ChatFormatting.GOLD)));
                 }
             } else {
                 if (epiphanyData != null && epiphanyData.reward().isPresent()) {

@@ -1,1 +1,0 @@
-{"name": "战争践踏", "description": "获得时：脚下释放火焰粒子特效", "cost": 2, "icon": "minecraft:textures/item/blaze_powder.png", "reward": {"type": "epiphany:particle", "particle": "minecraft:flame", "count": 30}, "reward_description": "火焰粒子爆发"}
