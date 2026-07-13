@@ -15,15 +15,26 @@
 - 目前支持 1.21.1 NeoForge
 - 模组依赖 **LDLib**。
 
-快速开始
+## 快速开始
 - 按K键打开构筑系统界面。
 - 查阅实例数据包与 Wiki，深入了解「顿悟 Epiphany」，快速创建技能树。
 
-进阶开发与未来计划
+## 相关链接
+- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/epiphany-mod)
+- [Modrinth](https://modrinth.com/mod/epiphan-mody)
+- [红石中继站 / MCZWLT](https://www.mczwlt.net/resource/o2ibcjz7)
+- [MCMOD](https://www.mcmod.cn/mod/epiphany)
+- [MCBBS Memorial Edition](https://www.mcbbs.co/forum.php?mod=viewthread&tid=5487)
+- [Github](https://github.com/HaooooZhang/Epiphany)
+- [Issues](https://github.com/HaooooZhang/Epiphany/issues)
+- [Discord](https://discord.gg/xSEWpdae9C)
+- [Wiki](https://github.com/HaooooZhang/Epiphany/wiki)
+
+## 进阶开发与未来计划
 - 提供丰富的自定义事件与 API。
 - 支持 KubeJS 脚本调用事件与管理数据。
 - 条件类型、奖励类型与阅历获取均通过注册表注册。
 - 未来计划：制作联动更多主流模组的附加包，扩展兼容性。
 
-AI内容披露
+## AI内容披露
 模组开发过程中，大量使用了人工智能工具来执行批量化的编码工作以极大提高开发效率，但本模组的核心底层逻辑、框架架构设计、UI 交互体验以及产品细节均由人类作者完全主导制作，AI 仅提供辅助功能

@@ -23,7 +23,16 @@ Inspired by the Tradition mechanics of the classic sci-fi strategy game Stellar
 - Check out the example **datapack** and the **Wiki** to dive deeper into Epiphany and quickly create your own skill trees.
 
 ## Links
-// todo
+- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/epiphany-mod)
+- [Modrinth](https://modrinth.com/mod/epiphan-mody)
+- [红石中继站 / MCZWLT](https://www.mczwlt.net/resource/o2ibcjz7)
+- [MCMOD](https://www.mcmod.cn/mod/epiphany)
+- [MCBBS Memorial Edition](https://www.mcbbs.co/forum.php?mod=viewthread&tid=5487)
+- [Github](https://github.com/HaooooZhang/Epiphany)
+- [Issues](https://github.com/HaooooZhang/Epiphany/issues)
+- [Discord](https://discord.gg/xSEWpdae9C)
+- [Wiki](https://github.com/HaooooZhang/Epiphany/wiki)
+
 
 ## Advanced Development
 
