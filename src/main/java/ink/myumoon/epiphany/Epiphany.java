@@ -1,5 +1,6 @@
 package ink.myumoon.epiphany;
 
+import net.minecraft.server.level.ServerPlayer;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -42,7 +43,7 @@ public class Epiphany {
 
         // Re-apply persistent rewards after entity rebuild (death, end portal)
         NeoForge.EVENT_BUS.addListener(PlayerEvent.PlayerRespawnEvent.class, event -> {
-            var sp = (net.minecraft.server.level.ServerPlayer) event.getEntity();
+            var sp = (ServerPlayer) event.getEntity();
             PersistentReward.reapplyAll(sp);
             sp.setHealth(sp.getMaxHealth());
         });
