@@ -3,11 +3,13 @@ package ink.myumoon.epiphany.content;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import ink.myumoon.epiphany.content.reward.InsightReward;
+import ink.myumoon.epiphany.content.reward.RewardListCodec;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -22,8 +24,9 @@ public record InsightData(
         Optional<Component> name,
         Optional<Component> description,
         Optional<ResourceLocation> icon,
+    Optional<ResourceLocation> itemIcon,
         int cost,
-        Optional<InsightReward> reward,
+        List<InsightReward> reward,
         Optional<Component> rewardDescription,
         int weight
 ) {
@@ -31,11 +34,20 @@ public record InsightData(
             ComponentSerialization.CODEC.optionalFieldOf("name").forGetter(InsightData::name),
             ComponentSerialization.CODEC.optionalFieldOf("description").forGetter(InsightData::description),
             ResourceLocation.CODEC.optionalFieldOf("icon").forGetter(InsightData::icon),
+            ResourceLocation.CODEC.optionalFieldOf("item_icon").forGetter(InsightData::itemIcon),
             Codec.INT.optionalFieldOf("cost", 1).forGetter(InsightData::cost),
-            InsightReward.CODEC.optionalFieldOf("reward").forGetter(InsightData::reward),
+                RewardListCodec.objectOrList(InsightReward.CODEC).optionalFieldOf("reward", List.of())
+                    .forGetter(InsightData::reward),
             ComponentSerialization.CODEC.optionalFieldOf("reward_description").forGetter(InsightData::rewardDescription),
             Codec.INT.optionalFieldOf("weight", 100).forGetter(InsightData::weight)
     ).apply(instance, InsightData::new));
+
+    public InsightData(Optional<Component> name, Optional<Component> description,
+                       Optional<ResourceLocation> icon, int cost,
+                       List<InsightReward> reward, Optional<Component> rewardDescription,
+                       int weight) {
+        this(name, description, icon, Optional.empty(), cost, reward, rewardDescription, weight);
+    }
 
     /**
      * Returns the name, falling back to a translatable key {@code insight.<ns>.<path>.name}.

@@ -161,20 +161,20 @@ public final class ModuleSelectController {
             module.effectiveDescription(moduleId)
                     .ifPresent(d -> lines.add(d.copy().withStyle(ChatFormatting.GRAY)));
             if (Screen.hasShiftDown()) {
-                if (module.onSelectReward().isPresent()) {
+                if (!module.onSelectReward().isEmpty()) {
                     module.effectiveOnSelectRewardDescription(moduleId).ifPresent(d ->
                             lines.add(Component.translatable("epiphany.tooltip.reward")
                                     .append(": ").append(d)
                                     .withStyle(ChatFormatting.GOLD)));
                 }
-                if (module.onCompleteReward().isPresent()) {
+                if (!module.onCompleteReward().isEmpty()) {
                     module.effectiveOnCompleteRewardDescription(moduleId).ifPresent(d ->
                             lines.add(Component.translatable("epiphany.tooltip.completion_reward")
                                     .append(": ").append(d)
                                     .withStyle(ChatFormatting.GOLD)));
                 }
-            } else if (module.onSelectReward().isPresent()
-                    || module.onCompleteReward().isPresent()) {
+                } else if (!module.onSelectReward().isEmpty()
+                    || !module.onCompleteReward().isEmpty()) {
                 lines.add(Component.translatable("epiphany.ui.shift_hint")
                         .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
             }

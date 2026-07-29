@@ -248,6 +248,6 @@ public class InsightTreeView {
         return new InsightData(
                 Optional.of(Component.literal(id.toString())),
                 Optional.empty(), Optional.empty(),
-                1, Optional.empty(), Optional.empty(), 100);
+                1, List.of(), Optional.empty(), 100);
     }
 }

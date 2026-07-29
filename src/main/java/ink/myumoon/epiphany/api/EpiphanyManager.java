@@ -1,11 +1,13 @@
 package ink.myumoon.epiphany.api;
 
 import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.attachment.EpiphanyPlayerState;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.content.EpiphanyData;
 import ink.myumoon.epiphany.content.InitialState;
 import ink.myumoon.epiphany.content.condition.Condition;
+import ink.myumoon.epiphany.content.reward.RewardListHelper;
 import ink.myumoon.epiphany.event.*;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
@@ -90,7 +92,7 @@ public final class EpiphanyManager {
 
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
 
-        epiphany.reward().ifPresent(r -> r.apply(player, epiphanyId));
+        RewardListHelper.applyEpiphany(epiphany.reward(), player, epiphanyId);
 
         NeoForge.EVENT_BUS.post(new EpiphanySelectedEvent(player, epiphanyId));
     }
@@ -111,7 +113,7 @@ public final class EpiphanyManager {
 
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
 
-        epiphany.reward().ifPresent(r -> r.apply(player, epiphanyId));
+        RewardListHelper.applyEpiphany(epiphany.reward(), player, epiphanyId);
         NeoForge.EVENT_BUS.post(new EpiphanySelectedEvent(player, epiphanyId));
     }
 
@@ -123,7 +125,7 @@ public final class EpiphanyManager {
 
         EpiphanyData epiphany = epiphanyRegistry(player).get(epiphanyId);
         if (epiphany != null && state.selected()) {
-            epiphany.reward().ifPresent(r -> r.remove(player, epiphanyId));
+            RewardListHelper.removeEpiphany(epiphany.reward(), player, epiphanyId);
         }
 
         int refund = state.selected() ? 1 : 0;
@@ -147,6 +149,7 @@ public final class EpiphanyManager {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         PlayerEpiphanyData newData = data;
         boolean changed = false;
+        java.util.List<ResourceLocation> removedEpiphanies = new java.util.ArrayList<>();
 
         for (var entry : data.epiphanies().entrySet()) {
             ResourceLocation epiphanyId = entry.getKey();
@@ -157,11 +160,15 @@ public final class EpiphanyManager {
                 newData = newData.withUsedEpiphanySlots(Math.max(0, newData.usedEpiphanySlots() - 1));
             }
             newData = newData.withoutEpiphany(epiphanyId);
+                removedEpiphanies.add(epiphanyId);
             changed = true;
         }
 
         if (changed) {
             player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
+                String playerName = player.getGameProfile().getName();
+                Epiphany.LOGGER.warn("Removed orphaned Epiphany entries for player {}: {}",
+                    playerName, removedEpiphanies);
         }
     }
 

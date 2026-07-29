@@ -1,6 +1,5 @@
 package ink.myumoon.epiphany.client.ui.epiphany;
 
-import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.data.Vertical;
@@ -15,7 +14,6 @@ import dev.vfyjxf.taffy.style.TaffyPosition;
 import ink.myumoon.epiphany.Config;
 import ink.myumoon.epiphany.client.EpiphanyIcons;
 import ink.myumoon.epiphany.client.ui.ClientData;
-import ink.myumoon.epiphany.client.ui.ItemIconElement;
 import ink.myumoon.epiphany.client.ui.overlay.Overlay;
 import ink.myumoon.epiphany.content.EpiphanyData;
 import ink.myumoon.epiphany.content.InitialState;
@@ -181,10 +179,10 @@ public final class EpiphanySelectController {
                     lines.add(Component.literal(nm).withStyle(ChatFormatting.WHITE));
                     if (ed != null)
                         ed.effectiveDescription(sid).ifPresent(d -> lines.add(d.copy().withStyle(ChatFormatting.GRAY)));
-                    if (Screen.hasShiftDown() && ed != null && ed.reward().isPresent())
+                    if (Screen.hasShiftDown() && ed != null && !ed.reward().isEmpty())
                         ed.effectiveRewardDescription(sid).ifPresent(d ->
                                 lines.add(Component.translatable("epiphany.tooltip.reward").append(": ").append(d).withStyle(ChatFormatting.GOLD)));
-                    else if (ed != null && ed.reward().isPresent())
+                    else if (ed != null && !ed.reward().isEmpty())
                         lines.add(Component.translatable("epiphany.ui.shift_hint").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
                     e.hoverTooltips = HoverTooltips.empty();
                     for (var ln : lines) e.hoverTooltips = e.hoverTooltips.append(ln);
@@ -204,18 +202,7 @@ public final class EpiphanySelectController {
                 EpiphanyRegistries.EPIPHANY_REGISTRY_KEY, id);
         var ed = lookup.get(key).map(Holder.Reference::value).orElse(null);
         if (ed != null) {
-            var iconOpt = EpiphanyIcons.iconTexture(ed, id);
-            if (iconOpt.isPresent() && resourceExists(iconOpt.get())) {
-                var icon = new UIElement();
-                icon.layout(l -> l.width(16).height(16));
-                icon.style(s -> s.background(SpriteTexture.of(iconOpt.get())));
-                slot.addChild(icon);
-            } else {
-                var icon = new ItemIconElement(
-                        EpiphanyIcons.defaultEpiphany());
-                icon.layout(l -> l.width(16).height(16));
-                slot.addChild(icon);
-            }
+            slot.addChild(EpiphanyIcons.createElement(EpiphanyIcons.resolve(ed, id)));
         }
     }
 
@@ -238,10 +225,10 @@ public final class EpiphanySelectController {
             String name = data.effectiveName(id).getString();
             lines.add(Component.literal(name).withStyle(ChatFormatting.WHITE));
             data.effectiveDescription(id).ifPresent(d -> lines.add(d.copy().withStyle(ChatFormatting.GRAY)));
-            if (Screen.hasShiftDown() && data.reward().isPresent())
+            if (Screen.hasShiftDown() && !data.reward().isEmpty())
                 data.effectiveRewardDescription(id).ifPresent(d ->
                         lines.add(Component.translatable("epiphany.tooltip.reward").append(": ").append(d).withStyle(ChatFormatting.GOLD)));
-            else if (data.reward().isPresent())
+            else if (!data.reward().isEmpty())
                 lines.add(Component.translatable("epiphany.ui.shift_hint").withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
             if (!unlocked && data.condition().isPresent())
                 data.effectiveConditionDescription(id).ifPresent(d ->
@@ -256,11 +243,6 @@ public final class EpiphanySelectController {
         if (lookup == null) return 100;
         var pk = ResourceKey.create(EpiphanyRegistries.PATH_REGISTRY_KEY, key);
         return lookup.get(pk).map(h -> h.value().weight()).orElse(100);
-    }
-
-    private static boolean resourceExists(ResourceLocation rl) {
-        try { return Minecraft.getInstance().getResourceManager().getResource(rl).isPresent(); }
-        catch (Throwable ignored) { return false; }
     }
 
     private static void clearError(UI ui) {

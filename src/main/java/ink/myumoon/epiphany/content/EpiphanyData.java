@@ -4,11 +4,13 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import ink.myumoon.epiphany.content.condition.Condition;
 import ink.myumoon.epiphany.content.reward.EpiphanyReward;
+import ink.myumoon.epiphany.content.reward.RewardListCodec;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
 import net.minecraft.resources.ResourceLocation;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -23,11 +25,12 @@ public record EpiphanyData(
         Optional<Component> name,
         Optional<Component> description,
         Optional<ResourceLocation> icon,
+    Optional<ResourceLocation> itemIcon,
         Optional<ResourceLocation> path,
         Optional<Condition> condition,
         Optional<Component> conditionDescription,
         InitialState initialState,
-        Optional<EpiphanyReward> reward,
+        List<EpiphanyReward> reward,
         Optional<Component> rewardDescription,
         int weight
 ) {
@@ -35,16 +38,27 @@ public record EpiphanyData(
             ComponentSerialization.CODEC.optionalFieldOf("name").forGetter(EpiphanyData::name),
             ComponentSerialization.CODEC.optionalFieldOf("description").forGetter(EpiphanyData::description),
             ResourceLocation.CODEC.optionalFieldOf("icon").forGetter(EpiphanyData::icon),
+            ResourceLocation.CODEC.optionalFieldOf("item_icon").forGetter(EpiphanyData::itemIcon),
             ResourceLocation.CODEC.optionalFieldOf("path").forGetter(EpiphanyData::path),
             Condition.CODEC.optionalFieldOf("condition").forGetter(EpiphanyData::condition),
             ComponentSerialization.CODEC.optionalFieldOf("condition_description")
                     .forGetter(EpiphanyData::conditionDescription),
             InitialState.CODEC.optionalFieldOf("initial_state", InitialState.SELECTABLE)
                     .forGetter(EpiphanyData::initialState),
-            EpiphanyReward.CODEC.optionalFieldOf("reward").forGetter(EpiphanyData::reward),
+                RewardListCodec.objectOrList(EpiphanyReward.CODEC).optionalFieldOf("reward", List.of())
+                    .forGetter(EpiphanyData::reward),
             ComponentSerialization.CODEC.optionalFieldOf("reward_description").forGetter(EpiphanyData::rewardDescription),
             Codec.INT.optionalFieldOf("weight", 100).forGetter(EpiphanyData::weight)
     ).apply(instance, EpiphanyData::new));
+
+            public EpiphanyData(Optional<Component> name, Optional<Component> description,
+                    Optional<ResourceLocation> icon, Optional<ResourceLocation> path,
+                    Optional<Condition> condition, Optional<Component> conditionDescription,
+                    InitialState initialState, List<EpiphanyReward> reward,
+                    Optional<Component> rewardDescription, int weight) {
+            this(name, description, icon, Optional.empty(), path, condition,
+                conditionDescription, initialState, reward, rewardDescription, weight);
+            }
 
     /**
      * Returns the name, falling back to a translatable key {@code epiphany.<ns>.<path>.name}.

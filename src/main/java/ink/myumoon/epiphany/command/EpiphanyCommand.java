@@ -8,6 +8,7 @@ import ink.myumoon.epiphany.Config;
 import ink.myumoon.epiphany.api.*;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.client.ui.EpiphanyUIFactory;
+import ink.myumoon.epiphany.content.reward.RewardListHelper;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
 import net.minecraft.commands.CommandSourceStack;
@@ -613,12 +614,12 @@ public final class EpiphanyCommand {
         for (var me : data.modules().entrySet()) {
             var module = mReg.get(me.getKey());
             if (module != null) {
-                module.onSelectReward().ifPresent(r -> r.remove(player, me.getKey()));
-                module.onCompleteReward().ifPresent(r -> r.remove(player, me.getKey()));
+                RewardListHelper.removeInsight(module.onSelectReward(), player, me.getKey(), "on_select_reward");
+                RewardListHelper.removeInsight(module.onCompleteReward(), player, me.getKey(), "on_complete_reward");
             }
             for (ResourceLocation iId : me.getValue().unlockedInsights()) {
                 var insight = iReg.get(iId);
-                if (insight != null) insight.reward().ifPresent(r -> r.remove(player, iId));
+                if (insight != null) RewardListHelper.removeInsight(insight.reward(), player, iId);
             }
         }
 
@@ -626,7 +627,7 @@ public final class EpiphanyCommand {
         for (var ee : data.epiphanies().entrySet()) {
             if (ee.getValue().selected()) {
                 var epiphany = eReg.get(ee.getKey());
-                if (epiphany != null) epiphany.reward().ifPresent(r -> r.remove(player, ee.getKey()));
+                if (epiphany != null) RewardListHelper.removeEpiphany(epiphany.reward(), player, ee.getKey());
             }
         }
     }

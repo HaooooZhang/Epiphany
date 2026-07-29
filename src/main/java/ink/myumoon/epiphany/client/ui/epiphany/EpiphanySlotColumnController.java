@@ -1,6 +1,5 @@
 package ink.myumoon.epiphany.client.ui.epiphany;
 
-import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
@@ -10,12 +9,10 @@ import com.lowdragmc.lowdraglib2.gui.util.UISoundUtils;
 import ink.myumoon.epiphany.Config;
 import ink.myumoon.epiphany.client.EpiphanyIcons;
 import ink.myumoon.epiphany.client.ui.ClientData;
-import ink.myumoon.epiphany.client.ui.ItemIconElement;
 import ink.myumoon.epiphany.client.ui.overlay.Overlay;
 import ink.myumoon.epiphany.content.EpiphanyData;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.core.Holder;
 import net.minecraft.core.HolderLookup;
@@ -100,19 +97,7 @@ public final class EpiphanySlotColumnController {
                 EpiphanyRegistries.EPIPHANY_REGISTRY_KEY, id);
         var epiphanyData = lookup != null ? lookup.get(key).map(Holder.Reference::value).orElse(null) : null;
         if (epiphanyData != null) {
-            var iconOpt = EpiphanyIcons.iconTexture(epiphanyData, id);
-            if (iconOpt.isPresent() && resourceExists(iconOpt.get())) {
-                var icon = new UIElement();
-                icon.layout(l -> l.width(16).height(16));
-                icon.style(s -> s.background(
-                        SpriteTexture.of(iconOpt.get())));
-                slot.addChild(icon);
-            } else {
-                var icon = new ItemIconElement(
-                        EpiphanyIcons.defaultEpiphany());
-                icon.layout(l -> l.width(16).height(16));
-                slot.addChild(icon);
-            }
+            slot.addChild(EpiphanyIcons.createElement(EpiphanyIcons.resolve(epiphanyData, id)));
         }
         // Tooltip
         slot.addEventListener(UIEvents.HOVER_TOOLTIPS, e -> {
@@ -126,14 +111,14 @@ public final class EpiphanySlotColumnController {
                         .ifPresent(d -> lines.add(d.copy().withStyle(ChatFormatting.GRAY)));
             }
             if (Screen.hasShiftDown()) {
-                if (epiphanyData != null && epiphanyData.reward().isPresent()) {
+                if (epiphanyData != null && !epiphanyData.reward().isEmpty()) {
                     epiphanyData.effectiveRewardDescription(id).ifPresent(d ->
                             lines.add(Component.translatable("epiphany.tooltip.reward")
                                     .append(": ").append(d)
                                     .withStyle(ChatFormatting.GOLD)));
                 }
             } else {
-                if (epiphanyData != null && epiphanyData.reward().isPresent()) {
+                if (epiphanyData != null && !epiphanyData.reward().isEmpty()) {
                     lines.add(Component.translatable("epiphany.ui.shift_hint")
                             .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
                 }
@@ -142,12 +127,6 @@ public final class EpiphanySlotColumnController {
             for (var ln : lines) e.hoverTooltips = e.hoverTooltips.append(ln);
         });
         return slot;
-    }
-
-    private static boolean resourceExists(ResourceLocation rl) {
-        try {
-            return Minecraft.getInstance().getResourceManager().getResource(rl).isPresent();
-        } catch (Throwable ignored) { return false; }
     }
 
     // build empty slot

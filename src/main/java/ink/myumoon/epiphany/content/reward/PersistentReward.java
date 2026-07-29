@@ -60,30 +60,28 @@ public interface PersistentReward {
 
             // on_select_reward
             if (state.selected()) {
-                if (module.onSelectReward().isPresent()
-                        && module.onSelectReward().get() instanceof PersistentReward) {
-                    module.onSelectReward().get().apply(player, moduleId);
-                    count++;
-                }
+                count += module.onSelectReward().stream()
+                        .filter(PersistentReward.class::isInstance).count();
+                RewardListHelper.reapplyPersistentInsight(
+                    module.onSelectReward(), player, moduleId, "on_select_reward");
             }
 
             // on_complete_reward
             if (state.completed()) {
-                if (module.onCompleteReward().isPresent()
-                        && module.onCompleteReward().get() instanceof PersistentReward) {
-                    module.onCompleteReward().get().apply(player, moduleId);
-                    count++;
-                }
+                count += module.onCompleteReward().stream()
+                        .filter(PersistentReward.class::isInstance).count();
+                RewardListHelper.reapplyPersistentInsight(
+                    module.onCompleteReward(), player, moduleId, "on_complete_reward");
             }
 
             // Insight rewards
             if (state.selected()) {
                 for (var insightId : state.unlockedInsights()) {
                     InsightData insight = insightReg.get(insightId);
-                    if (insight != null && insight.reward().isPresent()
-                            && insight.reward().get() instanceof PersistentReward) {
-                        insight.reward().get().apply(player, insightId);
-                        count++;
+                    if (insight != null) {
+                        count += insight.reward().stream()
+                                .filter(PersistentReward.class::isInstance).count();
+                        RewardListHelper.reapplyPersistentInsight(insight.reward(), player, insightId);
                     }
                 }
             }
@@ -96,10 +94,10 @@ public interface PersistentReward {
             if (!state.selected()) continue;
 
             EpiphanyData epiphany = epiphanyReg.get(epiphanyId);
-            if (epiphany != null && epiphany.reward().isPresent()
-                    && epiphany.reward().get() instanceof PersistentReward) {
-                epiphany.reward().get().apply(player, epiphanyId);
-                count++;
+            if (epiphany != null) {
+                count += epiphany.reward().stream()
+                        .filter(PersistentReward.class::isInstance).count();
+                RewardListHelper.reapplyPersistentEpiphany(epiphany.reward(), player, epiphanyId);
             }
         }
 

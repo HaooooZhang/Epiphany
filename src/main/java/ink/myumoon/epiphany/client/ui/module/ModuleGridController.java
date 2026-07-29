@@ -165,21 +165,21 @@ public final class ModuleGridController {
                         .ifPresent(d -> lines.add(d.copy().withStyle(ChatFormatting.GRAY)));
             }
             if (Screen.hasShiftDown()) {
-                if (moduleData != null && moduleData.onSelectReward().isPresent()) {
+                if (moduleData != null && !moduleData.onSelectReward().isEmpty()) {
                     moduleData.effectiveOnSelectRewardDescription(moduleId).ifPresent(d ->
                             lines.add(Component.translatable("epiphany.tooltip.reward")
                                     .append(": ").append(d)
                                     .withStyle(ChatFormatting.GOLD)));
                 }
-                if (moduleData != null && moduleData.onCompleteReward().isPresent()) {
+                if (moduleData != null && !moduleData.onCompleteReward().isEmpty()) {
                     moduleData.effectiveOnCompleteRewardDescription(moduleId).ifPresent(d ->
                             lines.add(Component.translatable("epiphany.tooltip.completion_reward")
                                     .append(": ").append(d)
                                     .withStyle(ChatFormatting.GOLD)));
                 }
             } else {
-                if (moduleData != null && (moduleData.onSelectReward().isPresent()
-                        || moduleData.onCompleteReward().isPresent())) {
+                if (moduleData != null && (!moduleData.onSelectReward().isEmpty()
+                    || !moduleData.onCompleteReward().isEmpty())) {
                     lines.add(Component.translatable("epiphany.ui.shift_hint")
                             .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
                 }

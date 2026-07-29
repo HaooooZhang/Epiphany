@@ -1,6 +1,5 @@
 package ink.myumoon.epiphany.client.ui.insight;
 
-import com.lowdragmc.lowdraglib2.gui.texture.SpriteTexture;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvent;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
@@ -8,7 +7,6 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.util.UISoundUtils;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import ink.myumoon.epiphany.client.EpiphanyIcons;
-import ink.myumoon.epiphany.client.ui.ItemIconElement;
 import ink.myumoon.epiphany.content.InsightData;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.screens.Screen;
@@ -47,23 +45,7 @@ public class InsightNodeElement extends UIElement {
             case CAN_UNLOCK -> addClass("insight-node-can-unlock");
         }
 
-        // Icon: custom texture as child (preserves border from LSS).
-        boolean hasCustomIcon = InsightIcons.iconTexture(insightData, insightId)
-                .filter(InsightIcons::resourceExists)
-                .map(rl -> {
-                    var icon = new UIElement();
-                    icon.layout(l -> l.width(16).height(16));
-                    icon.style(s -> s.background(SpriteTexture.of(rl)));
-                    addChild(icon);
-                    return true;
-                })
-                .orElse(false);
-
-        if (!hasCustomIcon) {
-            var iconChild = new ItemIconElement(EpiphanyIcons.defaultInsight());
-            iconChild.layout(l -> l.width(16).height(16));
-            addChild(iconChild);
-        }
+        addChild(EpiphanyIcons.createElement(EpiphanyIcons.resolve(insightData, insightId)));
 
         // tooltip
         addEventListener(UIEvents.HOVER_TOOLTIPS, this::onHoverTooltips);
@@ -89,14 +71,14 @@ public class InsightNodeElement extends UIElement {
                     .ifPresent(d -> lines.add(d.copy().withStyle(ChatFormatting.GRAY)));
         }
         if (Screen.hasShiftDown()) {
-            if (insightData.reward().isPresent()) {
+            if (!insightData.reward().isEmpty()) {
                 insightData.effectiveRewardDescription(insightId).ifPresent(d ->
                         lines.add(Component.translatable("epiphany.tooltip.reward")
                                 .append(": ").append(d)
                                 .withStyle(ChatFormatting.GOLD)));
             }
         } else {
-            if (insightData.reward().isPresent()) {
+            if (!insightData.reward().isEmpty()) {
                 lines.add(Component.translatable("epiphany.ui.shift_hint")
                         .withStyle(ChatFormatting.DARK_GRAY, ChatFormatting.ITALIC));
             }

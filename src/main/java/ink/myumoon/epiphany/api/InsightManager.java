@@ -5,6 +5,7 @@ import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.content.InsightData;
 import ink.myumoon.epiphany.content.InsightTreeResolver;
 import ink.myumoon.epiphany.content.ModuleData;
+import ink.myumoon.epiphany.content.reward.RewardListHelper;
 import ink.myumoon.epiphany.event.InsightSelectEvent;
 import ink.myumoon.epiphany.event.InsightSelectedEvent;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
@@ -102,7 +103,7 @@ public final class InsightManager {
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
 
         // Apply reward
-        insight.reward().ifPresent(r -> r.apply(player, insightId));
+        RewardListHelper.applyInsight(insight.reward(), player, insightId);
 
         NeoForge.EVENT_BUS.post(new InsightSelectedEvent(player, insightId, moduleId));
 
@@ -132,7 +133,7 @@ public final class InsightManager {
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
                 data.withModuleState(moduleId, newModuleState));
 
-        insight.reward().ifPresent(r -> r.apply(player, insightId));
+        RewardListHelper.applyInsight(insight.reward(), player, insightId);
 
         NeoForge.EVENT_BUS.post(new InsightSelectedEvent(player, insightId, moduleId));
     }
@@ -146,7 +147,7 @@ public final class InsightManager {
         for (var entry : data.modules().entrySet()) {
             ModulePlayerState state = entry.getValue();
             if (state.unlockedInsights().contains(insightId)) {
-                insight.reward().ifPresent(r -> r.remove(player, insightId));
+                RewardListHelper.removeInsight(insight.reward(), player, insightId);
                 Set<ResourceLocation> newUnlocked = new HashSet<>(state.unlockedInsights());
                 newUnlocked.remove(insightId);
                 ModulePlayerState newState = new ModulePlayerState(

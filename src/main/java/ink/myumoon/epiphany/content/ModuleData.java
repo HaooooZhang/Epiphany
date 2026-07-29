@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import ink.myumoon.epiphany.content.condition.Condition;
 import ink.myumoon.epiphany.content.reward.InsightReward;
+import ink.myumoon.epiphany.content.reward.RewardListCodec;
 import net.minecraft.locale.Language;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.ComponentSerialization;
@@ -22,12 +23,13 @@ public record ModuleData(
         Optional<Component> name,
         Optional<Component> description,
         Optional<ResourceLocation> icon,
+        Optional<ResourceLocation> itemIcon,
         Optional<Condition> condition,
         Optional<Component> conditionDescription,
         InitialState initialState,
         List<InsightEntry> insights,
-        Optional<InsightReward> onSelectReward,
-        Optional<InsightReward> onCompleteReward,
+        List<InsightReward> onSelectReward,
+        List<InsightReward> onCompleteReward,
         Optional<Component> onSelectRewardDescription,
         Optional<Component> onCompleteRewardDescription,
         int weight
@@ -36,6 +38,7 @@ public record ModuleData(
             ComponentSerialization.CODEC.optionalFieldOf("name").forGetter(ModuleData::name),
             ComponentSerialization.CODEC.optionalFieldOf("description").forGetter(ModuleData::description),
             ResourceLocation.CODEC.optionalFieldOf("icon").forGetter(ModuleData::icon),
+            ResourceLocation.CODEC.optionalFieldOf("item_icon").forGetter(ModuleData::itemIcon),
             Condition.CODEC.optionalFieldOf("condition").forGetter(ModuleData::condition),
             ComponentSerialization.CODEC.optionalFieldOf("condition_description")
                     .forGetter(ModuleData::conditionDescription),
@@ -43,9 +46,9 @@ public record ModuleData(
                     .forGetter(ModuleData::initialState),
             InsightEntry.CODEC.listOf().optionalFieldOf("insights", List.of())
                     .forGetter(ModuleData::insights),
-            InsightReward.CODEC.optionalFieldOf("on_select_reward")
+            RewardListCodec.objectOrList(InsightReward.CODEC).optionalFieldOf("on_select_reward", List.of())
                     .forGetter(ModuleData::onSelectReward),
-            InsightReward.CODEC.optionalFieldOf("on_complete_reward")
+            RewardListCodec.objectOrList(InsightReward.CODEC).optionalFieldOf("on_complete_reward", List.of())
                     .forGetter(ModuleData::onCompleteReward),
             ComponentSerialization.CODEC.optionalFieldOf("on_select_reward_description")
                     .forGetter(ModuleData::onSelectRewardDescription),
@@ -53,6 +56,18 @@ public record ModuleData(
                     .forGetter(ModuleData::onCompleteRewardDescription),
             Codec.INT.optionalFieldOf("weight", 100).forGetter(ModuleData::weight)
     ).apply(instance, ModuleData::new));
+
+    public ModuleData(Optional<Component> name, Optional<Component> description,
+                      Optional<ResourceLocation> icon, Optional<Condition> condition,
+                      Optional<Component> conditionDescription, InitialState initialState,
+                      List<InsightEntry> insights, List<InsightReward> onSelectReward,
+                      List<InsightReward> onCompleteReward,
+                      Optional<Component> onSelectRewardDescription,
+                      Optional<Component> onCompleteRewardDescription, int weight) {
+        this(name, description, icon, Optional.empty(), condition, conditionDescription,
+                initialState, insights, onSelectReward, onCompleteReward,
+                onSelectRewardDescription, onCompleteRewardDescription, weight);
+    }
 
     /**
      * Returns the name, falling back to a translatable key {@code module.<ns>.<path>.name}.

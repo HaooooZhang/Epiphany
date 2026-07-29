@@ -1,6 +1,7 @@
 package ink.myumoon.epiphany.api;
 
 import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.attachment.InsightPlayerState;
 import ink.myumoon.epiphany.attachment.ModulePlayerState;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
@@ -8,6 +9,7 @@ import ink.myumoon.epiphany.content.InitialState;
 import ink.myumoon.epiphany.content.InsightData;
 import ink.myumoon.epiphany.content.condition.Condition;
 import ink.myumoon.epiphany.content.ModuleData;
+import ink.myumoon.epiphany.content.reward.RewardListHelper;
 import ink.myumoon.epiphany.event.*;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
@@ -111,7 +113,7 @@ public final class ModuleManager {
         // Apply on_select_reward
         ModuleData module = moduleRegistry(player).get(moduleId);
         if (module != null) {
-            module.onSelectReward().ifPresent(r -> r.apply(player, moduleId));
+            RewardListHelper.applyInsight(module.onSelectReward(), player, moduleId, "on_select_reward");
         }
 
         NeoForge.EVENT_BUS.post(new ModuleSelectedEvent(player, moduleId));
@@ -149,7 +151,7 @@ public final class ModuleManager {
 
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
 
-        module.onCompleteReward().ifPresent(r -> r.apply(player, moduleId));
+        RewardListHelper.applyInsight(module.onCompleteReward(), player, moduleId, "on_complete_reward");
         NeoForge.EVENT_BUS.post(new ModuleCompletedEvent(player, moduleId));
     }
 
@@ -241,7 +243,7 @@ public final class ModuleManager {
 
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
 
-        module.onCompleteReward().ifPresent(r -> r.apply(player, moduleId));
+        RewardListHelper.applyInsight(module.onCompleteReward(), player, moduleId, "on_complete_reward");
         NeoForge.EVENT_BUS.post(new ModuleCompletedEvent(player, moduleId));
     }
 
@@ -257,7 +259,7 @@ public final class ModuleManager {
             InsightData insight = iRegistry.get(insightId);
             if (insight != null) {
                 refund += insight.cost();
-                insight.reward().ifPresent(r -> r.remove(player, insightId));
+                RewardListHelper.removeInsight(insight.reward(), player, insightId);
             }
         }
         if (state.selected()) {
@@ -274,8 +276,8 @@ public final class ModuleManager {
 
         // Remove module rewards
         if (module != null) {
-            module.onSelectReward().ifPresent(r -> r.remove(player, moduleId));
-            module.onCompleteReward().ifPresent(r -> r.remove(player, moduleId));
+            RewardListHelper.removeInsight(module.onSelectReward(), player, moduleId, "on_select_reward");
+            RewardListHelper.removeInsight(module.onCompleteReward(), player, moduleId, "on_complete_reward");
         }
 
         PlayerEpiphanyData newData = data.withModuleState(moduleId, newState)
@@ -295,6 +297,9 @@ public final class ModuleManager {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         PlayerEpiphanyData newData = data;
         boolean changed = false;
+        java.util.List<ResourceLocation> removedModules = new java.util.ArrayList<>();
+        java.util.List<ResourceLocation> removedInsights = new java.util.ArrayList<>();
+        int totalRefund = 0;
         // Tracks insight ids already refunded as part of orphaned modules,
         // to avoid double-refunding them again in the top-level insight sweep.
         java.util.Set<ResourceLocation> alreadyRefundedInsights = new java.util.HashSet<>();
@@ -313,7 +318,7 @@ public final class ModuleManager {
                 InsightData insight = iRegistry.get(insightId);
                 if (insight != null) {
                     refund += insight.cost();
-                    insight.reward().ifPresent(r -> r.remove(player, insightId));
+                    RewardListHelper.removeInsight(insight.reward(), player, insightId);
                 } else {
                     refund += 1;  // fallback when insight definition itself is gone
                 }
@@ -326,6 +331,8 @@ public final class ModuleManager {
             newData = newData.withoutModule(moduleId);
             newData = newData.withInsightPoints(newData.insightPoints() + refund)
                     .withTotalInsightPointsSpent(Math.max(0, newData.totalInsightPointsSpent() - refund));
+                removedModules.add(moduleId);
+                totalRefund += refund;
             changed = true;
         }
 
@@ -340,13 +347,19 @@ public final class ModuleManager {
             if (iState.selected()) {
                 newData = newData.withInsightPoints(newData.insightPoints() + 1)
                         .withTotalInsightPointsSpent(Math.max(0, newData.totalInsightPointsSpent() - 1));
+                totalRefund += 1;
             }
             newData = newData.withoutInsight(insightId);
+                removedInsights.add(insightId);
             changed = true;
         }
 
         if (changed) {
             player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
+                String playerName = player.getGameProfile().getName();
+                Epiphany.LOGGER.warn(
+                    "Removed orphaned Epiphany data for player {}: modules={}, insights={}, refundedInsightPoints={}",
+                    playerName, removedModules, removedInsights, totalRefund);
         }
     }
 }

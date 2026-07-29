@@ -21,14 +21,21 @@ public record PathData(
         Optional<Component> name,
         Optional<Component> description,
         Optional<ResourceLocation> icon,
+    Optional<ResourceLocation> itemIcon,
         int weight
 ) {
     public static final Codec<PathData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
             ComponentSerialization.CODEC.optionalFieldOf("name").forGetter(PathData::name),
             ComponentSerialization.CODEC.optionalFieldOf("description").forGetter(PathData::description),
             ResourceLocation.CODEC.optionalFieldOf("icon").forGetter(PathData::icon),
+                ResourceLocation.CODEC.optionalFieldOf("item_icon").forGetter(PathData::itemIcon),
             Codec.INT.optionalFieldOf("weight", 100).forGetter(PathData::weight)
     ).apply(instance, PathData::new));
+
+            public PathData(Optional<Component> name, Optional<Component> description,
+                    Optional<ResourceLocation> icon, int weight) {
+            this(name, description, icon, Optional.empty(), weight);
+            }
 
     /**
      * Returns the name, falling back to a translatable key {@code path.<ns>.<path>.name}.
