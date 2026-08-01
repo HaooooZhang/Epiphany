@@ -614,8 +614,12 @@ public final class EpiphanyCommand {
         for (var me : data.modules().entrySet()) {
             var module = mReg.get(me.getKey());
             if (module != null) {
-                RewardListHelper.removeInsight(module.onSelectReward(), player, me.getKey(), "on_select_reward");
-                RewardListHelper.removeInsight(module.onCompleteReward(), player, me.getKey(), "on_complete_reward");
+                                if (me.getValue().selected()) {
+                                        RewardListHelper.removeInsight(module.onSelectReward(), player, me.getKey(), "on_select_reward");
+                                }
+                                if (me.getValue().completed()) {
+                                        RewardListHelper.removeInsight(module.onCompleteReward(), player, me.getKey(), "on_complete_reward");
+                                }
             }
             for (ResourceLocation iId : me.getValue().unlockedInsights()) {
                 var insight = iReg.get(iId);

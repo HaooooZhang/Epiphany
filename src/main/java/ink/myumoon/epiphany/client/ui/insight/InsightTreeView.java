@@ -69,12 +69,11 @@ public class InsightTreeView {
             int depth = depthEntry.getKey();
             var entries = depthEntry.getValue();
             int y = depth * rowPitch;
+            int layerWidth = (entries.size() - 1) * colPitch + NODE_SIZE;
+            int layerStartX = (contentWidth - layerWidth) / 2;
             for (int col = 0; col < entries.size(); col++) {
                 InsightEntry ie = entries.get(col);
-                // Center single-node depths; left-align multi-node depths.
-                int x = entries.size() == 1
-                        ? (contentWidth - NODE_SIZE) / 2
-                        : col * colPitch;
+                int x = layerStartX + col * colPitch;
                 nodePositions.put(ie.id(), new int[]{x, y});
             }
         }
@@ -114,11 +113,11 @@ public class InsightTreeView {
             int depth = depthEntry.getKey();
             var entries = depthEntry.getValue();
             int y = depth * rowPitch;
+            int layerWidth = (entries.size() - 1) * colPitch + NODE_SIZE;
+            int layerStartX = (contentWidth - layerWidth) / 2;
             for (int col = 0; col < entries.size(); col++) {
                 InsightEntry ie = entries.get(col);
-                int x = entries.size() == 1
-                        ? (contentWidth - NODE_SIZE) / 2
-                        : col * colPitch;
+                int x = layerStartX + col * colPitch;
 
                 InsightData idata = ClientData.insight(ie.id());
                 InsightNodeElement.State ns;

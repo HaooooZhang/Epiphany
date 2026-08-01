@@ -16,7 +16,7 @@ import java.util.function.Function;
  * <p>
  * Extensible via the {@link EpiphanyRegistries#EPIPHANY_REWARD_SERIALIZERS} registry.
  */
-public interface EpiphanyReward {
+public interface EpiphanyReward extends RewardSourceAware {
 
     Codec<EpiphanyReward> CODEC = DefaultedCodec.registryDispatch(
             EpiphanyRegistries.EPIPHANY_REWARD_SERIALIZERS,

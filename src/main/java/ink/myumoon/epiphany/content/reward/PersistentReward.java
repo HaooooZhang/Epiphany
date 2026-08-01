@@ -61,7 +61,7 @@ public interface PersistentReward {
             // on_select_reward
             if (state.selected()) {
                 count += module.onSelectReward().stream()
-                        .filter(PersistentReward.class::isInstance).count();
+                    .filter(RewardListHelper::isReapplicablePersistent).count();
                 RewardListHelper.reapplyPersistentInsight(
                     module.onSelectReward(), player, moduleId, "on_select_reward");
             }
@@ -69,7 +69,7 @@ public interface PersistentReward {
             // on_complete_reward
             if (state.completed()) {
                 count += module.onCompleteReward().stream()
-                        .filter(PersistentReward.class::isInstance).count();
+                    .filter(RewardListHelper::isReapplicablePersistent).count();
                 RewardListHelper.reapplyPersistentInsight(
                     module.onCompleteReward(), player, moduleId, "on_complete_reward");
             }
@@ -80,7 +80,7 @@ public interface PersistentReward {
                     InsightData insight = insightReg.get(insightId);
                     if (insight != null) {
                         count += insight.reward().stream()
-                                .filter(PersistentReward.class::isInstance).count();
+                            .filter(RewardListHelper::isReapplicablePersistent).count();
                         RewardListHelper.reapplyPersistentInsight(insight.reward(), player, insightId);
                     }
                 }
@@ -96,11 +96,49 @@ public interface PersistentReward {
             EpiphanyData epiphany = epiphanyReg.get(epiphanyId);
             if (epiphany != null) {
                 count += epiphany.reward().stream()
-                        .filter(PersistentReward.class::isInstance).count();
+                    .filter(RewardListHelper::isReapplicablePersistent).count();
                 RewardListHelper.reapplyPersistentEpiphany(epiphany.reward(), player, epiphanyId);
             }
         }
 
         Epiphany.LOGGER.debug("Reapplied {} persistent rewards for player {}", count, player.getGameProfile().getName());
+    }
+
+    /** Rebuilds only persistent effect sources without replaying other reward types. */
+    static void reapplyEffects(ServerPlayer player) {
+        var previousEffects = EffectReward.clearTrackedSources(player);
+        PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+        Registry<ModuleData> moduleReg = player.server.registryAccess()
+                .registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY);
+        Registry<InsightData> insightReg = player.server.registryAccess()
+                .registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY);
+        Registry<EpiphanyData> epiphanyReg = player.server.registryAccess()
+                .registryOrThrow(EpiphanyRegistries.EPIPHANY_REGISTRY_KEY);
+
+        for (var entry : data.modules().entrySet()) {
+            ModuleData module = moduleReg.get(entry.getKey());
+            if (module == null) continue;
+            var state = entry.getValue();
+            if (state.selected()) {
+                RewardListHelper.reapplyPersistentEffects(module.onSelectReward(), player,
+                        entry.getKey(), "on_select_reward");
+                for (var insightId : state.unlockedInsights()) {
+                    InsightData insight = insightReg.get(insightId);
+                    if (insight != null) RewardListHelper.reapplyPersistentEffects(
+                            insight.reward(), player, insightId, "reward");
+                }
+            }
+            if (state.completed()) {
+                RewardListHelper.reapplyPersistentEffects(module.onCompleteReward(), player,
+                        entry.getKey(), "on_complete_reward");
+            }
+        }
+        for (var entry : data.epiphanies().entrySet()) {
+            if (!entry.getValue().selected()) continue;
+            EpiphanyData epiphany = epiphanyReg.get(entry.getKey());
+            if (epiphany != null) RewardListHelper.reapplyPersistentEffects(
+                    epiphany.reward(), player, entry.getKey());
+        }
+        EffectReward.finishSourceRebuild(player, previousEffects);
     }
 }

@@ -213,8 +213,10 @@ public final class ModuleManager {
         }
     }
 
-    // select (force)
+    /** Force-selects a module without cost or limits, while granting all selection rewards once. */
     public static void forceSelect(ServerPlayer player, ResourceLocation moduleId) {
+        ModuleData module = moduleRegistry(player).get(moduleId);
+        if (module == null) return;
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         ModulePlayerState state = data.modules().getOrDefault(moduleId, ModulePlayerState.createDefault());
         if (state.selected()) return;
@@ -223,15 +225,21 @@ public final class ModuleManager {
                 true, true, state.completed(), state.unlockedInsights()
         );
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, data.withModuleState(moduleId, newState));
+        RewardListHelper.applyInsight(module.onSelectReward(), player, moduleId, "on_select_reward");
         NeoForge.EVENT_BUS.post(new ModuleSelectedEvent(player, moduleId));
     }
 
-    // complete (force)
+    /**
+     * Force-completes a module and grants each newly acquired selection, Insight,
+     * and completion reward exactly once.
+     */
     public static void forceComplete(ServerPlayer player, ResourceLocation moduleId) {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         ModuleData module = moduleRegistry(player).get(moduleId);
         if (module == null) return;
-        if (isCompleted(player, moduleId)) return;
+        ModulePlayerState oldState = data.modules()
+            .getOrDefault(moduleId, ModulePlayerState.createDefault());
+        if (oldState.completed()) return;
 
         Set<ResourceLocation> allIds = new java.util.HashSet<>();
         for (var e : module.insights()) allIds.add(e.id());
@@ -243,6 +251,19 @@ public final class ModuleManager {
 
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
 
+        if (!oldState.selected()) {
+            RewardListHelper.applyInsight(module.onSelectReward(), player, moduleId, "on_select_reward");
+            NeoForge.EVENT_BUS.post(new ModuleSelectedEvent(player, moduleId));
+        }
+        Registry<InsightData> insights = insightRegistry(player);
+        for (ResourceLocation insightId : allIds) {
+            if (oldState.unlockedInsights().contains(insightId)) continue;
+            InsightData insight = insights.get(insightId);
+            if (insight != null) {
+                RewardListHelper.applyInsight(insight.reward(), player, insightId);
+                NeoForge.EVENT_BUS.post(new InsightSelectedEvent(player, insightId, moduleId));
+            }
+        }
         RewardListHelper.applyInsight(module.onCompleteReward(), player, moduleId, "on_complete_reward");
         NeoForge.EVENT_BUS.post(new ModuleCompletedEvent(player, moduleId));
     }
@@ -276,8 +297,12 @@ public final class ModuleManager {
 
         // Remove module rewards
         if (module != null) {
-            RewardListHelper.removeInsight(module.onSelectReward(), player, moduleId, "on_select_reward");
-            RewardListHelper.removeInsight(module.onCompleteReward(), player, moduleId, "on_complete_reward");
+            if (state.selected()) {
+                RewardListHelper.removeInsight(module.onSelectReward(), player, moduleId, "on_select_reward");
+            }
+            if (state.completed()) {
+                RewardListHelper.removeInsight(module.onCompleteReward(), player, moduleId, "on_complete_reward");
+            }
         }
 
         PlayerEpiphanyData newData = data.withModuleState(moduleId, newState)
