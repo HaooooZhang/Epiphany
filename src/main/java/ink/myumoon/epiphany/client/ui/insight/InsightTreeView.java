@@ -46,13 +46,15 @@ public class InsightTreeView {
         for (InsightEntry entry : insights) {
             byDepth.computeIfAbsent(entry.depth(), k -> new ArrayList<>()).add(entry);
         }
+        int minDepth = byDepth.keySet().stream().mapToInt(Integer::intValue).min().orElse(0);
         int maxDepth = byDepth.keySet().stream().mapToInt(Integer::intValue).max().orElse(0);
+        int depthSpan = maxDepth - minDepth;
         int maxPerDepth = byDepth.values().stream().mapToInt(List::size).max().orElse(0);
 
         int colPitch = NODE_SIZE + 10;
         int rowPitch = colPitch; // same spacing for both axes
         int contentWidth = (maxPerDepth - 1) * colPitch + NODE_SIZE;  // exactly node bounds
-        int contentHeight = (maxDepth + 1) * rowPitch;
+        int contentHeight = (depthSpan + 1) * rowPitch;
 
         // Inner content wrapper.
         UIElement content = new UIElement();
@@ -68,7 +70,7 @@ public class InsightTreeView {
         for (var depthEntry : byDepth.entrySet()) {
             int depth = depthEntry.getKey();
             var entries = depthEntry.getValue();
-            int y = depth * rowPitch;
+            int y = (depth - minDepth) * rowPitch;
             int layerWidth = (entries.size() - 1) * colPitch + NODE_SIZE;
             int layerStartX = (contentWidth - layerWidth) / 2;
             for (int col = 0; col < entries.size(); col++) {
@@ -112,7 +114,7 @@ public class InsightTreeView {
         for (var depthEntry : byDepth.entrySet()) {
             int depth = depthEntry.getKey();
             var entries = depthEntry.getValue();
-            int y = depth * rowPitch;
+            int y = (depth - minDepth) * rowPitch;
             int layerWidth = (entries.size() - 1) * colPitch + NODE_SIZE;
             int layerStartX = (contentWidth - layerWidth) / 2;
             for (int col = 0; col < entries.size(); col++) {
@@ -144,7 +146,7 @@ public class InsightTreeView {
 
         // Large Tree: enable drag when content likely exceeds card bounds.
         // Vertical: 4+ depths (≥120px > 86px container). Horizontal: 5+ per depth (≥110px).
-        boolean largeTree = maxDepth > 2 || maxPerDepth > 3;
+        boolean largeTree = depthSpan > 2 || maxPerDepth > 3;
         container.addChild(content);
         if (largeTree) {
             addDragPan(container, content, moduleId, contentWidth, contentHeight);
@@ -173,6 +175,7 @@ public class InsightTreeView {
         final float[] dragStartCX = {0}, dragStartCY = {0};
         final double[] dragStartMX = {0}, dragStartMY = {0};
         final int MIN_DRAG = 3;
+        final float PAN_MARGIN = 4;
 
         container.addEventListener(UIEvents.LAYOUT_CHANGED, e -> {
             if (userPanned[0]) return;
@@ -180,7 +183,11 @@ public class InsightTreeView {
             float cch = container.getSizeHeight();
             if (ccw > 0 && cch > 0) {
                 // Follow dynamic card sizing until the user explicitly pans the tree.
-                ox[0] = cw > ccw ? 4 : Math.max(0, (ccw - cw) / 2f);
+                boolean overflowsWidth = cw > ccw;
+                boolean overflowsHeight = ch > cch;
+                ox[0] = overflowsWidth && !overflowsHeight
+                        ? 4
+                        : (ccw - cw) / 2f;
                 oy[0] = ch > cch ? 4 : Math.max(2, (cch - ch) / 2f);
                 content.layout(l -> l.left(ox[0]).top(oy[0]));
             }
@@ -223,7 +230,10 @@ public class InsightTreeView {
             userPanned[0] = true;
             float ccw = container.getSizeWidth();
             float cch = container.getSizeHeight();
-            if (cw > ccw) ox[0] = Math.min(4, Math.max(ccw - cw, dragStartCX[0] + dx));
+            if (cw > ccw) {
+                ox[0] = Math.min(PAN_MARGIN,
+                        Math.max(ccw - cw - PAN_MARGIN, dragStartCX[0] + dx));
+            }
             if (ch > cch) oy[0] = Math.min(4, Math.max(cch - ch, dragStartCY[0] + dy));
             content.layout(l -> l.left(ox[0]).top(oy[0]));
             PAN_OFFSETS.put(moduleId, new float[]{ox[0], oy[0]});
