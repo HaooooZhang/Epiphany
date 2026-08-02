@@ -169,22 +169,20 @@ public class InsightTreeView {
         float[] saved = PAN_OFFSETS.get(moduleId);
         final float[] ox = {saved != null ? saved[0] : 0};
         final float[] oy = {saved != null ? saved[1] : 0};
-        final boolean[] initialized = {saved != null}, dragging = {false}, moved = {false};
+        final boolean[] userPanned = {saved != null}, dragging = {false}, moved = {false};
         final float[] dragStartCX = {0}, dragStartCY = {0};
         final double[] dragStartMX = {0}, dragStartMY = {0};
         final int MIN_DRAG = 3;
 
         container.addEventListener(UIEvents.LAYOUT_CHANGED, e -> {
-            if (initialized[0]) return;
+            if (userPanned[0]) return;
             float ccw = container.getSizeWidth();
             float cch = container.getSizeHeight();
             if (ccw > 0 && cch > 0) {
-                // First time: center if it fits, otherwise pad from top-left.
+                // Follow dynamic card sizing until the user explicitly pans the tree.
                 ox[0] = cw > ccw ? 4 : Math.max(0, (ccw - cw) / 2f);
                 oy[0] = ch > cch ? 4 : Math.max(2, (cch - ch) / 2f);
                 content.layout(l -> l.left(ox[0]).top(oy[0]));
-                initialized[0] = true;
-                PAN_OFFSETS.put(moduleId, new float[]{ox[0], oy[0]});
             }
         });
 
@@ -222,6 +220,7 @@ public class InsightTreeView {
             float dy = (float)(my - dragStartMY[0] / scale);
             if (!moved[0] && Math.abs(dx) < MIN_DRAG && Math.abs(dy) < MIN_DRAG) return;
             moved[0] = true;
+            userPanned[0] = true;
             float ccw = container.getSizeWidth();
             float cch = container.getSizeHeight();
             if (cw > ccw) ox[0] = Math.min(4, Math.max(ccw - cw, dragStartCX[0] + dx));

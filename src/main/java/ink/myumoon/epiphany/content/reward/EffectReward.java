@@ -7,6 +7,7 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import ink.myumoon.epiphany.Epiphany;
 import net.minecraft.core.Holder;
 import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.StringTag;
 import net.minecraft.nbt.Tag;
@@ -272,7 +273,7 @@ public record EffectReward(
         }
     }
 
-    private static void writeRecords(net.minecraft.nbt.CompoundTag data, List<Record> records) {
+    private static void writeRecords(CompoundTag data, List<Record> records) {
         if (records.isEmpty()) {
             data.remove(KEY);
             return;
@@ -328,7 +329,7 @@ public record EffectReward(
         }
 
         private Tag write() {
-            var compound = new net.minecraft.nbt.CompoundTag();
+            var compound = new CompoundTag();
             if (source == null) {
                 compound.putBoolean("legacy", true);
             } else {
