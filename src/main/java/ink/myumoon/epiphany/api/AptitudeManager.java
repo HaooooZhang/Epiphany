@@ -103,4 +103,47 @@ public final class AptitudeManager {
                 data.withInsightPoints(clamped));
         NeoForge.EVENT_BUS.post(new InsightPointsChangedEvent(player, old, clamped));
     }
+
+    /**
+     * Adds the given amount to the player's Insight Points.
+     * Equivalent to {@code setInsightPoints(player, getInsightPoints(player) + amount)}, and fires
+     * {@link InsightPointsChangedEvent} when the value changes. Symmetric with {@link #addAptitude}.
+     *
+     * @param amount may be negative; final value is clamped to {@code >= 0}
+     */
+    public static void addInsightPoints(ServerPlayer player, int amount) {
+        setInsightPoints(player, getInsightPoints(player) + amount);
+    }
+
+    /**
+     * Convenience getter: aptitude required for the player's next Insight Point, based on their
+     * current {@code totalInsightPointsSpent} and {@code insightPoints}.
+     * Wraps {@link AptitudeFormula#calcRequiredAptitude(long, int)} so callers (UI, commands, scripts)
+     * don't have to combine three getters plus the formula.
+     */
+    public static long getRequiredForNextPoint(ServerPlayer player) {
+        PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+        return AptitudeFormula.calcRequiredAptitude(
+                data.totalInsightPointsSpent(), data.insightPoints());
+    }
+
+    /**
+     * Tops up the player's aptitude just enough to reach the threshold for the next Insight Point,
+     * then defers to {@link #addAptitude} which runs the level-up loop (converting overflow into
+     * Insight Points) and fires the usual aptitude/level-up events.
+     * <p>
+     * Extracted from the {@code /epiphany aptitude fill} command so the same behavior is available
+     * to UI and KubeJS scripts without re-implementing the formula.
+     *
+     * @return the amount of aptitude actually granted (0 if the player was already at/above threshold)
+     */
+    public static long fillAptitude(ServerPlayer player) {
+        long required = getRequiredForNextPoint(player);
+        long toAdd = required - getAptitude(player);
+        if (toAdd > 0) {
+            addAptitude(player, toAdd);
+            return toAdd;
+        }
+        return 0L;
+    }
 }

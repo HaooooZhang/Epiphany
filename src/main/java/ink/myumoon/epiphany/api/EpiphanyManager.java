@@ -42,6 +42,23 @@ public final class EpiphanyManager {
         return state != null && state.selected();
     }
 
+    // ─── Convenience getters (slots) ───────────────────────────────
+
+    /** Slots the player has unlocked (one per completed Module, up to {@link #getMaxEpiphanySlots()}). */
+    public static int getEpiphanySlots(ServerPlayer player) {
+        return player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA).epiphanySlots();
+    }
+
+    /** Slots currently occupied by a selected Epiphany. */
+    public static int getUsedEpiphanySlots(ServerPlayer player) {
+        return player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA).usedEpiphanySlots();
+    }
+
+    /** Hard cap on selectable Epiphanies, from {@link Config#MAX_EPIPHANY_SLOTS}. */
+    public static int getMaxEpiphanySlots() {
+        return Config.MAX_EPIPHANY_SLOTS.get();
+    }
+
     // unlock
     public static void setUnlocked(ServerPlayer player, ResourceLocation epiphanyId, boolean unlocked) {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);

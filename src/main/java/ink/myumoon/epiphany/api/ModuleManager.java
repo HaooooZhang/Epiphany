@@ -57,6 +57,19 @@ public final class ModuleManager {
         return state != null && state.completed();
     }
 
+    /** Number of Modules the player currently has selected. */
+    public static int getSelectedModuleCount(ServerPlayer player) {
+        return (int) player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)
+                .modules().values().stream()
+                .filter(ModulePlayerState::selected)
+                .count();
+    }
+
+    /** Hard cap on simultaneously selected Modules, from {@link Config#MAX_SELECTED_MODULES}. */
+    public static int getMaxSelectedModules() {
+        return Config.MAX_SELECTED_MODULES.get();
+    }
+
     // unlock
     public static void setUnlocked(ServerPlayer player, ResourceLocation moduleId, boolean unlocked) {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);

@@ -112,11 +112,8 @@ public final class EpiphanyCommand {
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
-                                    long required = AptitudeFormula.calcRequiredAptitude(
-                                            AptitudeManager.getTotalInsightPointsSpent(target),
-                                            AptitudeManager.getInsightPoints(target));
-                                    long toAdd = required - AptitudeManager.getAptitude(target);
-                                    if (toAdd > 0) AptitudeManager.addAptitude(target, toAdd);
+                                    long required = AptitudeManager.getRequiredForNextPoint(target);
+                                    AptitudeManager.fillAptitude(target);
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.aptitude.fill.success", required, target.getGameProfile().getName()), true);
                                     return 1;
@@ -124,11 +121,7 @@ public final class EpiphanyCommand {
                                 .then(Commands.literal(SILENT_FLAG)
                                         .executes(ctx -> {
                                             ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
-                                            long required = AptitudeFormula.calcRequiredAptitude(
-                                                    AptitudeManager.getTotalInsightPointsSpent(target),
-                                                    AptitudeManager.getInsightPoints(target));
-                                            long toAdd = required - AptitudeManager.getAptitude(target);
-                                            if (toAdd > 0) AptitudeManager.addAptitude(target, toAdd);
+                                            AptitudeManager.fillAptitude(target);
                                             return 1;
                                         }))));
     }
@@ -227,8 +220,7 @@ public final class EpiphanyCommand {
                                                 .executes(ctx -> {
                                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                                     int amt = IntegerArgumentType.getInteger(ctx, "amount");
-                                                    int current = AptitudeManager.getInsightPoints(target);
-                                                    AptitudeManager.setInsightPoints(target, current + amt);
+                                                    AptitudeManager.addInsightPoints(target, amt);
                                                     ctx.getSource().sendSuccess(
                                                             () -> t("commands.epiphany.insight.points.add.success", amt, target.getGameProfile().getName()), true);
                                                     return 1;
@@ -237,8 +229,7 @@ public final class EpiphanyCommand {
                                                 .then(Commands.argument("amount", IntegerArgumentType.integer(1))
                                                         .executes(ctx -> {
                                                             ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
-                                                            int amt = IntegerArgumentType.getInteger(ctx, "amount");
-                                                            AptitudeManager.setInsightPoints(target, AptitudeManager.getInsightPoints(target) + amt);
+                                                            AptitudeManager.addInsightPoints(target, IntegerArgumentType.getInteger(ctx, "amount"));
                                                             return 1;
                                                         })))))
                         .then(Commands.literal("set")
@@ -502,11 +493,7 @@ public final class EpiphanyCommand {
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
-                                    removeAllRewards(target);
-                                    target.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
-                                            PlayerEpiphanyData.createDefault());
-                                    ModuleManager.checkAutoUnlock(target, false, true);
-                                    EpiphanyManager.checkAutoUnlock(target, false, true);
+                                    EpiphanyDataUtils.resetAll(target);
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.reset.all.success", target.getGameProfile().getName()), true);
                                     return 1;
@@ -514,34 +501,14 @@ public final class EpiphanyCommand {
                                 .then(Commands.literal(SILENT_FLAG)
                                         .executes(ctx -> {
                                             ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
-                                            removeAllRewards(target);
-                                            target.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
-                                                    PlayerEpiphanyData.createDefault());
-                                            ModuleManager.checkAutoUnlock(target, false, true);
-                                            EpiphanyManager.checkAutoUnlock(target, false, true);
+                                            EpiphanyDataUtils.resetAll(target);
                                             return 1;
                                         }))))
                 .then(Commands.literal("select")
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
-                                    removeAllRewards(target);
-                                    PlayerEpiphanyData data = target.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
-                                    // Refund insight points from all unlocked insights.
-                                    int refund = refundInsightCosts(target, data);
-                                    PlayerEpiphanyData cleaned = new PlayerEpiphanyData(
-                                            data.aptitude(),
-                                            data.insightPoints() + refund,
-                                            Math.max(0, data.totalInsightPointsSpent() - refund),
-                                            java.util.Collections.emptyMap(),
-                                            java.util.Collections.emptyMap(),
-                                            java.util.Collections.emptyMap(),
-                                            0, 0,
-                                            java.util.Collections.emptyMap()
-                                    );
-                                    target.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, cleaned);
-                                    ModuleManager.checkAutoUnlock(target, false, true);
-                                    EpiphanyManager.checkAutoUnlock(target, false, true);
+                                    EpiphanyDataUtils.resetSelections(target);
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.reset.select.success", target.getGameProfile().getName()), true);
                                     return 1;
@@ -549,23 +516,7 @@ public final class EpiphanyCommand {
                                 .then(Commands.literal(SILENT_FLAG)
                                         .executes(ctx -> {
                                             ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
-                                            removeAllRewards(target);
-                                            PlayerEpiphanyData data = target.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
-                                            // Refund insight points from all unlocked insights.
-                                            int refund = refundInsightCosts(target, data);
-                                            PlayerEpiphanyData cleaned = new PlayerEpiphanyData(
-                                                    data.aptitude(),
-                                                    data.insightPoints() + refund,
-                                                    Math.max(0, data.totalInsightPointsSpent() - refund),
-                                                    java.util.Collections.emptyMap(),
-                                                    java.util.Collections.emptyMap(),
-                                                    java.util.Collections.emptyMap(),
-                                                    0, 0,
-                                                    java.util.Collections.emptyMap()
-                                            );
-                                            target.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, cleaned);
-                                            ModuleManager.checkAutoUnlock(target, false, true);
-                                            EpiphanyManager.checkAutoUnlock(target, false, true);
+                                            EpiphanyDataUtils.resetSelections(target);
                                             return 1;
                                         }))));
     }
@@ -584,56 +535,6 @@ public final class EpiphanyCommand {
                                     () -> t("commands.epiphany.open.success", target.getGameProfile().getName()), true);
                             return 1;
                         }));
-    }
-
-    // Sums the cost of all unlocked insights across all modules (for refunding on reset).
-    private static int refundInsightCosts(ServerPlayer player, PlayerEpiphanyData data) {
-        var iReg = player.server.registryAccess()
-                .registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY);
-        int total = 0;
-        for (var moduleState : data.modules().values()) {
-            if (moduleState.selected()) total += Config.MODULE_SELECT_COST.get();
-            for (var insightId : moduleState.unlockedInsights()) {
-                var insight = iReg.get(insightId);
-                if (insight != null) total += insight.cost();
-            }
-        }
-        return total;
-    }
-
-    // Removes all rewards from a player before resetting their data.
-    private static void removeAllRewards(ServerPlayer player) {
-        var access = player.server.registryAccess();
-        var iReg = access.registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY);
-        var mReg = access.registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY);
-        var eReg = access.registryOrThrow(EpiphanyRegistries.EPIPHANY_REGISTRY_KEY);
-
-        PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
-
-        // Modules: on_select, on_complete, and all unlocked insight rewards
-        for (var me : data.modules().entrySet()) {
-            var module = mReg.get(me.getKey());
-            if (module != null) {
-                                if (me.getValue().selected()) {
-                                        RewardListHelper.removeInsight(module.onSelectReward(), player, me.getKey(), "on_select_reward");
-                                }
-                                if (me.getValue().completed()) {
-                                        RewardListHelper.removeInsight(module.onCompleteReward(), player, me.getKey(), "on_complete_reward");
-                                }
-            }
-            for (ResourceLocation iId : me.getValue().unlockedInsights()) {
-                var insight = iReg.get(iId);
-                if (insight != null) RewardListHelper.removeInsight(insight.reward(), player, iId);
-            }
-        }
-
-        // Epiphanies
-        for (var ee : data.epiphanies().entrySet()) {
-            if (ee.getValue().selected()) {
-                var epiphany = eReg.get(ee.getKey());
-                if (epiphany != null) RewardListHelper.removeEpiphany(epiphany.reward(), player, ee.getKey());
-            }
-        }
     }
 
     // ============================================================

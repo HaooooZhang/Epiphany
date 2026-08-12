@@ -9,6 +9,8 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.server.ServerLifecycleHooks;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
+
 /**
  * KubeJS binding for Epiphany Manager APIs.
  * <p>
@@ -141,6 +143,53 @@ public interface EpiphanyBinding {
         EpiphanyManager.resetEpiphany(player, epiphanyId);
     }
 
+    // ─── Epiphany Slots ────────────────────────────────────────────
+
+    /** Slots the player has unlocked. JS: {@code Epiphany.getEpiphanySlots(player)} */
+    static int getEpiphanySlots(ServerPlayer player) {
+        return EpiphanyManager.getEpiphanySlots(player);
+    }
+
+    /** Slots currently occupied. JS: {@code Epiphany.getUsedEpiphanySlots(player)} */
+    static int getUsedEpiphanySlots(ServerPlayer player) {
+        return EpiphanyManager.getUsedEpiphanySlots(player);
+    }
+
+    /** Hard cap on selectable Epiphanies. JS: {@code Epiphany.getMaxEpiphanySlots()} */
+    static int getMaxEpiphanySlots() {
+        return EpiphanyManager.getMaxEpiphanySlots();
+    }
+
+    /** Number of Modules the player has selected. JS: {@code Epiphany.getSelectedModuleCount(player)} */
+    static int getSelectedModuleCount(ServerPlayer player) {
+        return ModuleManager.getSelectedModuleCount(player);
+    }
+
+    /** Hard cap on simultaneously selected Modules. JS: {@code Epiphany.getMaxSelectedModules()} */
+    static int getMaxSelectedModules() {
+        return ModuleManager.getMaxSelectedModules();
+    }
+
+    // ─── Whole-data resets ─────────────────────────────────────────
+
+    /**
+     * Full wipe: removes all rewards, clears all data, re-grants SELECTABLE entries.
+     * Equivalent to {@code /epiphany reset all}. <b>Fires no events.</b>
+     * JS: {@code Epiphany.resetAll(player)}
+     */
+    static void resetAll(ServerPlayer player) {
+        EpiphanyDataUtils.resetAll(player);
+    }
+
+    /**
+     * Clears selections while preserving aptitude and refunding Insight Points for what was unlocked.
+     * Equivalent to {@code /epiphany reset select}. <b>Fires no events.</b>
+     * JS: {@code Epiphany.resetSelections(player)}
+     */
+    static void resetSelections(ServerPlayer player) {
+        EpiphanyDataUtils.resetSelections(player);
+    }
+
     // ─── Aptitude / Points API ─────────────────────────────────────
 
     /** JS: {@code Epiphany.getAptitude(player)} → long */
@@ -171,6 +220,26 @@ public interface EpiphanyBinding {
     /** Sets Insight Points to an exact value. JS: {@code Epiphany.setInsightPoints(player, 5)} */
     static void setInsightPoints(ServerPlayer player, int value) {
         AptitudeManager.setInsightPoints(player, value);
+    }
+
+    /** Adds to the player's Insight Points (clamped to >= 0). JS: {@code Epiphany.addInsightPoints(player, 3)} */
+    static void addInsightPoints(ServerPlayer player, int amount) {
+        AptitudeManager.addInsightPoints(player, amount);
+    }
+
+    /**
+     * Tops up aptitude to the threshold for the next Insight Point, then runs the level-up loop.
+     * Equivalent to {@code /epiphany aptitude fill}. JS: {@code Epiphany.fillAptitude(player)}
+     *
+     * @return aptitude actually granted (0 if already at/above threshold)
+     */
+    static long fillAptitude(ServerPlayer player) {
+        return AptitudeManager.fillAptitude(player);
+    }
+
+    /** Aptitude required for the player's next Insight Point. JS: {@code Epiphany.getRequiredForNextPoint(player)} */
+    static long getRequiredForNextPoint(ServerPlayer player) {
+        return AptitudeManager.getRequiredForNextPoint(player);
     }
 
     /** Calculates aptitude required for the next Insight Point. JS: {@code Epiphany.calcRequiredAptitude(totalSpent, points)} */
@@ -228,6 +297,81 @@ public interface EpiphanyBinding {
         return ServerLifecycleHooks.getCurrentServer().registryAccess()
                 .registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY)
                 .getOptional(moduleId).orElse(null);
+    }
+
+    /**
+     * All registered Module ids from the datapack registry, sorted.
+     * JS: {@code var ids = Epiphany.allModuleIds(); for (var i = 0; i < ids.length; i++) { var id = ids[i]; ... }}
+     *
+     * @return ids as a JS array (each element is a ResourceLocation). Returns an ARRAY, not a List:
+     *         KubeJS/Rhino's {@code List.get(i)} is unreliable (always returns the first element),
+     *         so array indexing {@code ids[i]} is the safe access pattern from scripts.
+     */
+    static ResourceLocation[] allModuleIds() {
+        return ServerLifecycleHooks.getCurrentServer().registryAccess()
+                .registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY)
+                .keySet().stream().sorted().toArray(ResourceLocation[]::new);
+    }
+
+    /**
+     * All registered Module definitions from the datapack registry.
+     * JS: {@code var modules = Epiphany.allModules(); for (var i = 0; i < modules.length; i++) { var m = modules[i]; ... }}
+     *
+     * @return the ModuleData records (m.insights(), m.effectiveName(id), m.weight(), ... callable from JS)
+     *         Returns an ARRAY (see {@link #allModuleIds()} for why arrays are preferred over Lists).
+     */
+    static ModuleData[] allModules() {
+        return ServerLifecycleHooks.getCurrentServer().registryAccess()
+                .registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY)
+                .entrySet().stream().map(Map.Entry::getValue).toArray(ModuleData[]::new);
+    }
+
+    /**
+     * All registered Epiphany ids from the datapack registry, sorted.
+     * JS: {@code var ids = Epiphany.allEpiphanyIds(); for (var i = 0; i < ids.length; i++) { var id = ids[i]; ... }}
+     *
+     * @return ids as a JS array (each element is a ResourceLocation)
+     */
+    static ResourceLocation[] allEpiphanyIds() {
+        return ServerLifecycleHooks.getCurrentServer().registryAccess()
+                .registryOrThrow(EpiphanyRegistries.EPIPHANY_REGISTRY_KEY)
+                .keySet().stream().sorted().toArray(ResourceLocation[]::new);
+    }
+
+    /**
+     * All registered Epiphany definitions from the datapack registry.
+     * JS: {@code var es = Epiphany.allEpiphanies(); for (var i = 0; i < es.length; i++) { var e = es[i]; e.path() ... }}
+     *
+     * @return the EpiphanyData records (e.path(), e.reward(), e.effectiveName(id), ... callable from JS)
+     */
+    static EpiphanyData[] allEpiphanies() {
+        return ServerLifecycleHooks.getCurrentServer().registryAccess()
+                .registryOrThrow(EpiphanyRegistries.EPIPHANY_REGISTRY_KEY)
+                .entrySet().stream().map(Map.Entry::getValue).toArray(EpiphanyData[]::new);
+    }
+
+    /**
+     * All registered Insight ids from the datapack registry, sorted.
+     * JS: {@code var ids = Epiphany.allInsightIds(); for (var i = 0; i < ids.length; i++) { var id = ids[i]; ... }}
+     *
+     * @return ids as a JS array (each element is a ResourceLocation)
+     */
+    static ResourceLocation[] allInsightIds() {
+        return ServerLifecycleHooks.getCurrentServer().registryAccess()
+                .registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY)
+                .keySet().stream().sorted().toArray(ResourceLocation[]::new);
+    }
+
+    /**
+     * All registered Insight definitions from the datapack registry.
+     * JS: {@code var is = Epiphany.allInsights(); for (var i = 0; i < is.length; i++) { var ins = is[i]; ins.cost() ... }}
+     *
+     * @return the InsightData records (ins.cost(), ins.reward(), ins.effectiveName(id), ... callable from JS)
+     */
+    static InsightData[] allInsights() {
+        return ServerLifecycleHooks.getCurrentServer().registryAccess()
+                .registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY)
+                .entrySet().stream().map(Map.Entry::getValue).toArray(InsightData[]::new);
     }
 
     /**
