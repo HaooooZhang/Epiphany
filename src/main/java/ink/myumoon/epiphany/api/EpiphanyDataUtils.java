@@ -96,7 +96,7 @@ public final class EpiphanyDataUtils {
         }
     }
 
-    // ─── Whole-data resets ─────────────────────────────────────────
+    // ─── resets ─────────────────────────────────────────
 
     /**
      * Full wipe: removes all rewards, resets the attachment to {@link PlayerEpiphanyData#createDefault()},
