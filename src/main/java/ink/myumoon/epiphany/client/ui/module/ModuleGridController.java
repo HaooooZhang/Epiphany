@@ -11,6 +11,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import ink.myumoon.epiphany.Config;
 import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.api.InsightManager;
+import ink.myumoon.epiphany.api.DisplayDataManager;
 import ink.myumoon.epiphany.attachment.ModulePlayerState;
 import ink.myumoon.epiphany.client.ui.ClientData;
 import ink.myumoon.epiphany.client.ui.insight.InsightClickHandler;
@@ -70,8 +71,11 @@ public final class ModuleGridController {
                 new ArrayList<>();
         var data = ClientData.clientData();
         if (data != null) {
-            for (var entry : data.modules().entrySet()) {
-                if (entry.getValue().selected()) selected.add(entry);
+            for (ResourceLocation moduleId : DisplayDataManager.orderedSelectedModules(data)) {
+                var state = data.modules().get(moduleId);
+                if (state != null && state.selected()) {
+                    selected.add(Map.entry(moduleId, state));
+                }
             }
         }
 
@@ -227,10 +231,8 @@ public final class ModuleGridController {
         if (data == null) return "";
         var sb = new StringBuilder();
         sb.append("pts=").append(data.insightPoints()).append('|');
-        data.modules().entrySet().stream()
-                .filter(e -> e.getValue().selected())
-                .sorted(java.util.Map.Entry.comparingByKey())
-                .forEach(e -> {
+        DisplayDataManager.orderedSelectedModules(data).forEach(moduleId -> {
+                var e = Map.entry(moduleId, data.modules().get(moduleId));
                     var s = e.getValue();
                     sb.append(e.getKey()).append(':')
                             .append(s.completed() ? 'c' : '-').append(s.unlocked() ? 'u' : '-').append(':');

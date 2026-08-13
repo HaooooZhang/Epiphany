@@ -121,6 +121,7 @@ public final class ModuleManager {
         PlayerEpiphanyData newData = data.withInsightPoints(newPoints)
                 .withTotalInsightPointsSpent(newTotalSpent)
                 .withModuleState(moduleId, newState);
+        newData = DisplayDataManager.recordModuleSelected(newData, moduleId);
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
 
         // Apply on_select_reward
@@ -237,7 +238,9 @@ public final class ModuleManager {
         ModulePlayerState newState = new ModulePlayerState(
                 true, true, state.completed(), state.unlockedInsights()
         );
-        player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, data.withModuleState(moduleId, newState));
+        PlayerEpiphanyData newData = data.withModuleState(moduleId, newState);
+        newData = DisplayDataManager.recordModuleSelected(newData, moduleId);
+        player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
         RewardListHelper.applyInsight(module.onSelectReward(), player, moduleId, "on_select_reward");
         NeoForge.EVENT_BUS.post(new ModuleSelectedEvent(player, moduleId));
     }
@@ -261,6 +264,9 @@ public final class ModuleManager {
         int newSlots = Math.min(data.epiphanySlots() + 1, Config.MAX_EPIPHANY_SLOTS.get());
         PlayerEpiphanyData newData = data.withEpiphanySlots(newSlots)
                 .withModuleState(moduleId, newState);
+        if (!oldState.selected()) {
+            newData = DisplayDataManager.recordModuleSelected(newData, moduleId);
+        }
 
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
 
@@ -321,6 +327,7 @@ public final class ModuleManager {
         PlayerEpiphanyData newData = data.withModuleState(moduleId, newState)
                 .withInsightPoints(data.insightPoints() + refund)
                 .withTotalInsightPointsSpent(Math.max(0, data.totalInsightPointsSpent() - refund));
+        newData = DisplayDataManager.removeModule(newData, moduleId);
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
     }
 
@@ -366,7 +373,7 @@ public final class ModuleManager {
                 refund += Config.MODULE_SELECT_COST.get();
             }
 
-            newData = newData.withoutModule(moduleId);
+            newData = DisplayDataManager.removeModule(newData.withoutModule(moduleId), moduleId);
             newData = newData.withInsightPoints(newData.insightPoints() + refund)
                     .withTotalInsightPointsSpent(Math.max(0, newData.totalInsightPointsSpent() - refund));
                 removedModules.add(moduleId);

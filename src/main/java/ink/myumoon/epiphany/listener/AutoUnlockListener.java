@@ -1,6 +1,7 @@
 package ink.myumoon.epiphany.listener;
 
 import ink.myumoon.epiphany.Epiphany;
+import ink.myumoon.epiphany.api.DisplayDataManager;
 import ink.myumoon.epiphany.api.EpiphanyManager;
 import ink.myumoon.epiphany.api.ModuleManager;
 import ink.myumoon.epiphany.content.reward.PersistentReward;
@@ -44,6 +45,7 @@ public final class AutoUnlockListener {
         if (event.getEntity() instanceof ServerPlayer sp) {
             ModuleManager.cleanupOrphanedData(sp);
             EpiphanyManager.cleanupOrphanedData(sp);
+            DisplayDataManager.reconcile(sp);
             PersistentReward.reapplyEffects(sp);
             auto(sp);
         }

@@ -1,6 +1,7 @@
 package ink.myumoon.epiphany.listener;
 
 import ink.myumoon.epiphany.Epiphany;
+import ink.myumoon.epiphany.api.DisplayDataManager;
 import ink.myumoon.epiphany.api.EpiphanyManager;
 import ink.myumoon.epiphany.api.ModuleManager;
 import ink.myumoon.epiphany.content.reward.PersistentReward;
@@ -18,6 +19,7 @@ public final class EffectDatapackSyncListener {
         event.getRelevantPlayers().forEach(player -> {
             ModuleManager.cleanupOrphanedData(player);
             EpiphanyManager.cleanupOrphanedData(player);
+            DisplayDataManager.reconcile(player);
             PersistentReward.reapplyEffects(player);
         });
     }

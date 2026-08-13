@@ -1,6 +1,7 @@
 package ink.myumoon.epiphany.client.ui;
 
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
+import ink.myumoon.epiphany.attachment.PlayerDisplayData;
 import ink.myumoon.epiphany.content.EpiphanyData;
 import ink.myumoon.epiphany.content.InsightData;
 import ink.myumoon.epiphany.content.ModuleData;
@@ -47,6 +48,12 @@ public final class ClientData {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return null;
         return player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+    }
+
+    @Nullable
+    public static PlayerDisplayData displayData() {
+        PlayerEpiphanyData data = clientData();
+        return data != null ? data.displayData() : null;
     }
 
     /**

@@ -2,6 +2,7 @@ package ink.myumoon.epiphany.api;
 
 import ink.myumoon.epiphany.Config;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
+import ink.myumoon.epiphany.content.InsightData;
 import ink.myumoon.epiphany.content.reward.RewardListHelper;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
@@ -40,7 +41,7 @@ public final class EpiphanyDataUtils {
      * Pure read — does not mutate player data.
      */
     public static int refundInsightCosts(ServerPlayer player, PlayerEpiphanyData data) {
-        Registry<ink.myumoon.epiphany.content.InsightData> iReg = player.server.registryAccess()
+        Registry<InsightData> iReg = player.server.registryAccess()
                 .registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY);
         int total = 0;
         for (var moduleState : data.modules().values()) {
