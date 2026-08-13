@@ -7,7 +7,6 @@
   "epiphany.configuration.maxSelectedModules": "Max Selected Modules",
   "epiphany.configuration.baseAptitudeCap": "Base Aptitude Cap",
   "epiphany.configuration.aptitudeCapGrowth": "Aptitude Cap Growth",
-  "epiphany.configuration.aptitudeGainMultiplier": "Aptitude Gain Multiplier",
   "epiphany.configuration.notifyInsightPoints": "Insight Point Gain Notification",
   "epiphany.configuration.notifyModuleUnlock": "Module Unlock Notification",
   "epiphany.configuration.notifyEpiphanyUnlock": "Epiphany Unlock Notification",
@@ -46,6 +45,8 @@
   "commands.epiphany.reset.select.success": "Reset module/epiphany selections for %s (aptitude and insight points preserved)",
 
   "commands.epiphany.open.success": "Opened Epiphany UI for %s",
+
+  "attribute.epiphany.aptitude_gain_multiplier": "Aptitude Gain Multiplier",
 
   "key.categories.epiphany": "Epiphany",
   "key.epiphany.open_ui": "Open Epiphany UI",

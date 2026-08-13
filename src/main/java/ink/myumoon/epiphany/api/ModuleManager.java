@@ -175,6 +175,7 @@ public final class ModuleManager {
      * <p>
      * Only fires {@link ModuleUnlockedEvent} (Post); no Pre event for auto-unlocks.
      */
+
     /** Evaluate conditions and auto-unlock matching modules. */
     public static void checkAutoUnlock(ServerPlayer player) {
         checkAutoUnlock(player, false, false);

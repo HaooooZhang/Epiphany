@@ -190,7 +190,7 @@ ServerPlayer.setData(EPIPHANY_DATA, newData)
 | 顿悟槽上限 | `Config.MAX_EPIPHANY_SLOTS` (默认 8), 完成模块 +1 slot |
 | ModuleComplete cancel | Pre 事件取消时无奖励/无 slot/无 Post 事件, 模块留待重新触发 |
 | 阅历公式 | `cap = baseAptitudeCap + totalEarned × aptitudeCapGrowth` |
-| `AptitudeGainMultiplier` | Global multiplier applied to *all* datapack aptitude rewards before granting |
+| `AptitudeGainMultiplier` | Player attribute `epiphany:aptitude_gain_multiplier` (default 1.0, range 0~100); grant 读取 `attr.getValue()` (base + 所有 modifier). 其它模组/物品可用原生 AttributeModifier 扩展玩家个体倍率; 管理员可用 vanilla `/attribute` 调整 base 值. 无 Config 字段 |
 | 重置 | `/epiphany reset all` (全清), `/epiphany reset select` (保留 aptitude/points). 无单点撤销 |
 | Registry entry removal | 自动退还已消耗资源 (points/slots) |
 | 通知 | 当前用 chat message + sound (临时), 计划改为 Toast. 可配置开关 |

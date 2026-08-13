@@ -1,6 +1,9 @@
 package ink.myumoon.epiphany;
 
+import ink.myumoon.epiphany.registry.*;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.EntityType;
+import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
 import org.slf4j.Logger;
 
 import com.mojang.logging.LogUtils;
@@ -9,10 +12,6 @@ import ink.myumoon.epiphany.client.ui.EpiphanyUIFactory;
 import ink.myumoon.epiphany.command.EpiphanyCommand;
 import ink.myumoon.epiphany.content.condition.builtin.ftbq.FTBQHelper;
 import ink.myumoon.epiphany.content.reward.PersistentReward;
-import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
-import ink.myumoon.epiphany.registry.EpiphanyConditionTypes;
-import ink.myumoon.epiphany.registry.EpiphanyEpiphanyRewardTypes;
-import ink.myumoon.epiphany.registry.EpiphanyInsightRewardTypes;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.Mod;
@@ -33,6 +32,7 @@ public class Epiphany {
         EpiphanyConditionTypes.REGISTRY.register(modEventBus);
         EpiphanyInsightRewardTypes.REGISTRY.register(modEventBus);
         EpiphanyEpiphanyRewardTypes.REGISTRY.register(modEventBus);
+        EpiphanyAttributes.ATTRIBUTES.register(modEventBus);
 
         // Register the main UI on both sides.
         modEventBus.addListener(FMLCommonSetupEvent.class, event ->
@@ -47,6 +47,10 @@ public class Epiphany {
             PersistentReward.reapplyAll(sp);
             sp.setHealth(sp.getMaxHealth());
         });
+
+        modEventBus.addListener(EntityAttributeModificationEvent.class, event ->
+            event.add(EntityType.PLAYER, EpiphanyAttributes.APTITUDE_GAIN_MULTIPLIER)
+        );
 
         // FTB Quests Architectury event listeners (soft dependency)
         FTBQHelper.init();

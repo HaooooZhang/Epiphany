@@ -29,12 +29,6 @@ public class Config {
             .comment("Additional aptitude required per Insight Point already spent. Formula: cap = baseCap + totalSpent * growth")
             .defineInRange("aptitudeCapGrowth", 1L, 0L, Long.MAX_VALUE);
 
-    // Global multiplier applied to all aptitude rewards from aptitude_source datapack entries.
-    // 1.0 = use JSON values as-is. 0.0 effectively disables datapack-driven gains.
-    public static final ModConfigSpec.DoubleValue APTITUDE_GAIN_MULTIPLIER = BUILDER
-            .comment("Global multiplier for aptitude rewards from datapack sources. 1.0 = use JSON values as-is")
-            .defineInRange("aptitudeGainMultiplier", 1.0, 0.0, 100.0);
-
     // ============================================================
     // Notifications
     // Current implementation sends a chat message + advancement sound.
