@@ -106,6 +106,7 @@ public final class EpiphanyManager {
         EpiphanyPlayerState newState = new EpiphanyPlayerState(true, true);  // select implies unlock
         PlayerEpiphanyData newData = data.withUsedEpiphanySlots(newUsedSlots)
                 .withEpiphanyState(epiphanyId, newState);
+        newData = DisplayDataManager.recordEpiphanySelected(newData, epiphanyId);
 
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
 
@@ -127,6 +128,7 @@ public final class EpiphanyManager {
         EpiphanyPlayerState newState = new EpiphanyPlayerState(true, true);
         PlayerEpiphanyData newData = data.withEpiphanyState(epiphanyId, newState)
                 .withUsedEpiphanySlots(data.usedEpiphanySlots() + 1);
+        newData = DisplayDataManager.recordEpiphanySelected(newData, epiphanyId);
 
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
 
@@ -147,9 +149,10 @@ public final class EpiphanyManager {
 
         int refund = state.selected() ? 1 : 0;
         EpiphanyPlayerState newState = EpiphanyPlayerState.createDefault();
-        player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
-                data.withEpiphanyState(epiphanyId, newState)
-                        .withUsedEpiphanySlots(Math.max(0, data.usedEpiphanySlots() - refund)));
+        PlayerEpiphanyData newData = data.withEpiphanyState(epiphanyId, newState)
+                .withUsedEpiphanySlots(Math.max(0, data.usedEpiphanySlots() - refund));
+        if (state.selected()) newData = DisplayDataManager.removeEpiphany(newData, epiphanyId);
+        player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
     }
 
     /**
@@ -177,6 +180,7 @@ public final class EpiphanyManager {
                 newData = newData.withUsedEpiphanySlots(Math.max(0, newData.usedEpiphanySlots() - 1));
             }
             newData = newData.withoutEpiphany(epiphanyId);
+            newData = DisplayDataManager.removeEpiphany(newData, epiphanyId);
                 removedEpiphanies.add(epiphanyId);
             changed = true;
         }

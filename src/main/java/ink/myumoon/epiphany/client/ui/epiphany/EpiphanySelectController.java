@@ -12,6 +12,7 @@ import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.TaffyPosition;
 import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.api.DisplayDataManager;
 import ink.myumoon.epiphany.client.EpiphanyIcons;
 import ink.myumoon.epiphany.client.ui.ClientData;
 import ink.myumoon.epiphany.client.ui.overlay.Overlay;
@@ -155,11 +156,7 @@ public final class EpiphanySelectController {
         right.clearAllChildren();
         int maxSlots = Config.MAX_EPIPHANY_SLOTS.get();
         int freeSlots = Math.max(0, data.epiphanySlots() - data.usedEpiphanySlots());
-        List<ResourceLocation> selected = new ArrayList<>();
-        lookup.listElements().forEach(holder -> {
-            var st = data.epiphanies().get(holder.key().location());
-            if (st != null && st.selected()) selected.add(holder.key().location());
-        });
+        List<ResourceLocation> selected = new ArrayList<>(DisplayDataManager.orderedSelectedEpiphanies(data));
         for (int i = 0; i < maxSlots; i++) {
             boolean off = i % 2 == 1;
             UIElement slot = new UIElement();

@@ -48,25 +48,75 @@ public final class DisplayDataManager {
         return List.copyOf(ordered);
     }
 
+    public static PlayerEpiphanyData recordEpiphanySelected(
+            PlayerEpiphanyData data, ResourceLocation epiphanyId) {
+        var order = new ArrayList<>(data.displayData().selectedEpiphanyOrder());
+        order.remove(epiphanyId);
+        order.add(epiphanyId);
+        return data.withDisplayData(data.displayData().withSelectedEpiphanyOrder(order));
+    }
+
+    public static PlayerEpiphanyData removeEpiphany(
+            PlayerEpiphanyData data, ResourceLocation epiphanyId) {
+        var order = new ArrayList<>(data.displayData().selectedEpiphanyOrder());
+        if (!order.removeIf(epiphanyId::equals)) return data;
+        return data.withDisplayData(data.displayData().withSelectedEpiphanyOrder(order));
+    }
+
+    /** Returns every selected epiphany exactly once in stable display order. */
+    public static List<ResourceLocation> orderedSelectedEpiphanies(PlayerEpiphanyData data) {
+        Set<ResourceLocation> selectedIds = new HashSet<>();
+        data.epiphanies().forEach((id, state) -> {
+            if (state.selected()) selectedIds.add(id);
+        });
+
+        var ordered = new ArrayList<ResourceLocation>(selectedIds.size());
+        for (ResourceLocation id : data.displayData().selectedEpiphanyOrder()) {
+            if (selectedIds.remove(id)) ordered.add(id);
+        }
+        selectedIds.stream().sorted().forEach(ordered::add);
+        return List.copyOf(ordered);
+    }
+
     /** Repairs legacy or stale display data and writes it only when it changed. */
     public static void reconcile(ServerPlayer player) {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
-        var registry = player.server.registryAccess()
-                .registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY);
+        var registryAccess = player.server.registryAccess();
 
-        var selectedIds = new HashSet<ResourceLocation>();
+        // ── Module order ────────────────────────────────────────────
+        var moduleRegistry = registryAccess.registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY);
+
+        var selectedModules = new HashSet<ResourceLocation>();
         data.modules().forEach((id, state) -> {
-            if (state.selected() && registry.containsKey(id)) selectedIds.add(id);
+            if (state.selected() && moduleRegistry.containsKey(id)) selectedModules.add(id);
         });
 
-        var reconciled = new ArrayList<ResourceLocation>(selectedIds.size());
+        var reconciledModules = new ArrayList<ResourceLocation>(selectedModules.size());
         for (ResourceLocation id : data.displayData().selectedModuleOrder()) {
-            if (selectedIds.remove(id)) reconciled.add(id);
+            if (selectedModules.remove(id)) reconciledModules.add(id);
         }
-        selectedIds.stream().sorted().forEach(reconciled::add);
+        selectedModules.stream().sorted().forEach(reconciledModules::add);
 
-        if (!reconciled.equals(data.displayData().selectedModuleOrder())) {
-            PlayerDisplayData displayData = data.displayData().withSelectedModuleOrder(reconciled);
+        // ── Epiphany order ──────────────────────────────────────────
+        var epiphanyRegistry = registryAccess.registryOrThrow(EpiphanyRegistries.EPIPHANY_REGISTRY_KEY);
+
+        var selectedEpiphanies = new HashSet<ResourceLocation>();
+        data.epiphanies().forEach((id, state) -> {
+            if (state.selected() && epiphanyRegistry.containsKey(id)) selectedEpiphanies.add(id);
+        });
+
+        var reconciledEpiphanies = new ArrayList<ResourceLocation>(selectedEpiphanies.size());
+        for (ResourceLocation id : data.displayData().selectedEpiphanyOrder()) {
+            if (selectedEpiphanies.remove(id)) reconciledEpiphanies.add(id);
+        }
+        selectedEpiphanies.stream().sorted().forEach(reconciledEpiphanies::add);
+
+        boolean moduleChanged = !reconciledModules.equals(data.displayData().selectedModuleOrder());
+        boolean epiphanyChanged = !reconciledEpiphanies.equals(data.displayData().selectedEpiphanyOrder());
+        if (moduleChanged || epiphanyChanged) {
+            PlayerDisplayData displayData = data.displayData();
+            if (moduleChanged) displayData = displayData.withSelectedModuleOrder(reconciledModules);
+            if (epiphanyChanged) displayData = displayData.withSelectedEpiphanyOrder(reconciledEpiphanies);
             player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, data.withDisplayData(displayData));
         }
     }

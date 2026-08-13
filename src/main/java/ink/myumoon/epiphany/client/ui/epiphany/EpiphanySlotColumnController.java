@@ -7,6 +7,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.event.UIEventListener;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.util.UISoundUtils;
 import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.api.DisplayDataManager;
 import ink.myumoon.epiphany.client.EpiphanyIcons;
 import ink.myumoon.epiphany.client.ui.ClientData;
 import ink.myumoon.epiphany.client.ui.overlay.Overlay;
@@ -58,16 +59,12 @@ public final class EpiphanySlotColumnController {
         col.clearAllChildren();
         int maxSlots = Config.MAX_EPIPHANY_SLOTS.get();
 
-        // Selected epiphanies in registry order.
+        // Selected epiphanies in stable display order.
         List<ResourceLocation> selected = new ArrayList<>();
         var data = ClientData.clientData();
         var lookup = ClientData.epiphanyLookup();
         if (data != null && lookup != null) {
-            lookup.listElements().forEach(holder -> {
-                ResourceLocation id = holder.key().location();
-                var state = data.epiphanies().get(id);
-                if (state != null && state.selected()) selected.add(id);
-            });
+            selected.addAll(DisplayDataManager.orderedSelectedEpiphanies(data));
         }
 
         int freeSlots = (data != null) ? Math.max(0, data.epiphanySlots() - data.usedEpiphanySlots()) : 0;
