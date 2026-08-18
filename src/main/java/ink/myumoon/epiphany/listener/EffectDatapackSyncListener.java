@@ -20,6 +20,7 @@ public final class EffectDatapackSyncListener {
             ModuleManager.cleanupOrphanedData(player);
             EpiphanyManager.cleanupOrphanedData(player);
             DisplayDataManager.reconcile(player);
+            PersistentReward.reapplyAttributes(player);
             PersistentReward.reapplyEffects(player);
         });
     }

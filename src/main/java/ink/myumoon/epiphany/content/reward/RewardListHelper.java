@@ -54,6 +54,13 @@ public final class RewardListHelper {
                 insightKind(sourceKey), InsightReward::apply);
     }
 
+    public static void reapplyPersistentAttributes(List<? extends InsightReward> rewards,
+                                                   ServerPlayer player, ResourceLocation sourceId,
+                                                   String sourceKey) {
+        applyPersistentAttributes(rewards, player, sourceId, sourceKey,
+                insightKind(sourceKey), InsightReward::apply);
+    }
+
     public static void reapplyPersistentInsight(List<? extends InsightReward> rewards,
                                                 ServerPlayer player, ResourceLocation sourceId, String sourceKey) {
         applyPersistent(rewards, player, sourceId, sourceKey, insightKind(sourceKey), InsightReward::apply);
@@ -65,8 +72,13 @@ public final class RewardListHelper {
     }
 
     public static void reapplyPersistentEffects(List<? extends EpiphanyReward> rewards,
-                                                ServerPlayer player, ResourceLocation sourceId) {
+                                                 ServerPlayer player, ResourceLocation sourceId) {
         applyPersistentEffects(rewards, player, sourceId, "reward", "epiphany", EpiphanyReward::apply);
+    }
+
+    public static void reapplyPersistentAttributes(List<? extends EpiphanyReward> rewards,
+                                                    ServerPlayer player, ResourceLocation sourceId) {
+        applyPersistentAttributes(rewards, player, sourceId, "reward", "epiphany", EpiphanyReward::apply);
     }
 
     private static <T> void apply(List<T> rewards, ServerPlayer player,
@@ -113,6 +125,18 @@ public final class RewardListHelper {
             T reward = rewards.get(index);
             if (reward instanceof EffectReward effect && effect.duration() == -1
                     && !skipDuplicatePermanentEffect(reward, permanentEffects)) {
+                action.accept(reward, player, source(sourceId, sourceKey, ownerKind, index, rewards.size()));
+            }
+        }
+    }
+
+    private static <T> void applyPersistentAttributes(List<T> rewards, ServerPlayer player,
+                                                      ResourceLocation sourceId, String sourceKey,
+                                                      String ownerKind,
+                                                      TriConsumer<T, ServerPlayer, RewardSource> action) {
+        for (int index = 0; index < rewards.size(); index++) {
+            T reward = rewards.get(index);
+            if (reward instanceof AttributeReward) {
                 action.accept(reward, player, source(sourceId, sourceKey, ownerKind, index, rewards.size()));
             }
         }

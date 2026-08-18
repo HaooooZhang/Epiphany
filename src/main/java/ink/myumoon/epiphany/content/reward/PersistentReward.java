@@ -41,6 +41,7 @@ public interface PersistentReward {
      * @param player the server-side player to reapply rewards for
      */
     static void reapplyAll(ServerPlayer player) {
+        AttributeReward.clearTrackedSources(player);
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
 
         Registry<ModuleData> moduleReg = player.server.registryAccess()
@@ -101,7 +102,46 @@ public interface PersistentReward {
             }
         }
 
+        AttributeReward.finishSourceRebuild(player);
         Epiphany.LOGGER.debug("Reapplied {} persistent rewards for player {}", count, player.getGameProfile().getName());
+    }
+
+    /** Rebuilds managed attribute modifiers from the player's active reward state. */
+    static void reapplyAttributes(ServerPlayer player) {
+        AttributeReward.clearTrackedSources(player);
+        PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+        Registry<ModuleData> moduleReg = player.server.registryAccess()
+                .registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY);
+        Registry<InsightData> insightReg = player.server.registryAccess()
+                .registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY);
+        Registry<EpiphanyData> epiphanyReg = player.server.registryAccess()
+                .registryOrThrow(EpiphanyRegistries.EPIPHANY_REGISTRY_KEY);
+
+        for (var entry : data.modules().entrySet()) {
+            ModuleData module = moduleReg.get(entry.getKey());
+            if (module == null) continue;
+            var state = entry.getValue();
+            if (state.selected()) {
+                RewardListHelper.reapplyPersistentAttributes(module.onSelectReward(), player,
+                        entry.getKey(), "on_select_reward");
+                for (var insightId : state.unlockedInsights()) {
+                    InsightData insight = insightReg.get(insightId);
+                    if (insight != null) RewardListHelper.reapplyPersistentAttributes(
+                            insight.reward(), player, insightId, "reward");
+                }
+            }
+            if (state.completed()) {
+                RewardListHelper.reapplyPersistentAttributes(module.onCompleteReward(), player,
+                        entry.getKey(), "on_complete_reward");
+            }
+        }
+        for (var entry : data.epiphanies().entrySet()) {
+            if (!entry.getValue().selected()) continue;
+            EpiphanyData epiphany = epiphanyReg.get(entry.getKey());
+            if (epiphany != null) RewardListHelper.reapplyPersistentAttributes(
+                    epiphany.reward(), player, entry.getKey());
+        }
+        AttributeReward.finishSourceRebuild(player);
     }
 
     /** Rebuilds only persistent effect sources without replaying other reward types. */

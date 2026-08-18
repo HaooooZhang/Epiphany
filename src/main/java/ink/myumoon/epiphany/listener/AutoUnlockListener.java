@@ -46,6 +46,7 @@ public final class AutoUnlockListener {
             ModuleManager.cleanupOrphanedData(sp);
             EpiphanyManager.cleanupOrphanedData(sp);
             DisplayDataManager.reconcile(sp);
+            PersistentReward.reapplyAttributes(sp);
             PersistentReward.reapplyEffects(sp);
             auto(sp);
         }
