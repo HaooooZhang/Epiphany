@@ -217,6 +217,14 @@ public interface EpiphanyBinding {
         AptitudeManager.addAptitude(player, amount);
     }
 
+    /**
+     * Adds aptitude after applying the player's aptitude-gain multiplier.
+     * JS: {@code Epiphany.addAptitudeWithMultiplier(player, 100)}
+     */
+    static void addAptitudeWithMultiplier(ServerPlayer player, long amount) {
+        AptitudeManager.addAptitudeWithMultiplier(player, amount);
+    }
+
     /** Sets Insight Points to an exact value. JS: {@code Epiphany.setInsightPoints(player, 5)} */
     static void setInsightPoints(ServerPlayer player, int value) {
         AptitudeManager.setInsightPoints(player, value);

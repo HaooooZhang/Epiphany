@@ -5,7 +5,9 @@ import ink.myumoon.epiphany.event.AptitudeChangedEvent;
 import ink.myumoon.epiphany.event.AptitudeLevelUpEvent;
 import ink.myumoon.epiphany.event.InsightPointsChangedEvent;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
+import ink.myumoon.epiphany.registry.EpiphanyAttributes;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.neoforged.neoforge.common.NeoForge;
 
 public final class AptitudeManager {
@@ -88,6 +90,31 @@ public final class AptitudeManager {
         }
 
         NeoForge.EVENT_BUS.post(new AptitudeChangedEvent(player, oldValue, aptitude));
+    }
+
+    /**
+     * Adds aptitude after applying the player's {@code aptitude_gain_multiplier}
+     * attribute value (base plus modifiers). The scaled amount is rounded down;
+     * values that scale to zero or less are ignored.
+     * <p>
+     * Unlike {@link #addAptitude}, this method is intended for gains that should
+     * benefit from the player's aptitude-gain multiplier.
+     */
+    public static void addAptitudeWithMultiplier(ServerPlayer player, long amount) {
+        addAptitude(player, scaleAptitudeWithMultiplier(player, amount));
+    }
+
+    /**
+     * Calculates an aptitude gain using the player's effective multiplier.
+     * Package-private for source grants that must determine whether a
+     * {@code first_reward} claim should be recorded before granting.
+     */
+    static long scaleAptitudeWithMultiplier(ServerPlayer player, long amount) {
+        if (amount <= 0) return 0;
+
+        AttributeInstance attr = player.getAttribute(EpiphanyAttributes.APTITUDE_GAIN_MULTIPLIER);
+        double multiplier = attr != null ? attr.getValue() : 1.0;
+        return (long) Math.floor(amount * multiplier);
     }
 
     /**
