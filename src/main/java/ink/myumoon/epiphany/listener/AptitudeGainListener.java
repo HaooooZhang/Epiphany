@@ -11,11 +11,13 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.item.ItemStack;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.util.FakePlayer;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.AdvancementEvent;
+import net.neoforged.neoforge.event.entity.player.ItemEntityPickupEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerXpEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
@@ -34,6 +36,9 @@ import net.neoforged.neoforge.event.level.BlockEvent;
  *   <li>{@code epiphany:module_completed}     — complete module (ModuleCompletedEvent)</li>
  *   <li>{@code epiphany:insight_selected}     — select insight (InsightSelectedEvent)</li>
  *   <li>{@code epiphany:epiphany_selected}    — select epiphany (EpiphanySelectedEvent)</li>
+ *   <li>{@code epiphany:pickup_item}          — pick up an item (ItemEntityPickupEvent.Post)</li>
+ *   <li>{@code epiphany:craft_item}           — craft an item (PlayerEvent.ItemCraftedEvent)</li>
+ *   <li>{@code epiphany:smelt_item}           — take a smelted item (PlayerEvent.ItemSmeltedEvent)</li>
  * </ul>
  * Biome-enter behavior ({@code epiphany:enter_biome}) lives in {@link AptitudeStateListener}
  * (requires persistent state tracking + chunk move + tick polling).
@@ -65,6 +70,12 @@ public final class AptitudeGainListener {
             ResourceLocation.fromNamespaceAndPath(Epiphany.MODID, "epiphany_selected");
     public static final ResourceLocation EXPERIENCE_LEVEL_UP =
             ResourceLocation.fromNamespaceAndPath(Epiphany.MODID, "experience_level_up");
+    public static final ResourceLocation PICKUP_ITEM =
+            ResourceLocation.fromNamespaceAndPath(Epiphany.MODID, "pickup_item");
+    public static final ResourceLocation CRAFT_ITEM =
+            ResourceLocation.fromNamespaceAndPath(Epiphany.MODID, "craft_item");
+    public static final ResourceLocation SMELT_ITEM =
+            ResourceLocation.fromNamespaceAndPath(Epiphany.MODID, "smelt_item");
 
     private AptitudeGainListener() {
     }
@@ -127,6 +138,43 @@ public final class AptitudeGainListener {
         for (int i = 0; i < levels; i++) {
             AptitudeSourceManager.grant(sp, EXPERIENCE_LEVEL_UP, noTarget, null);
         }
+    }
+
+    @SubscribeEvent
+    static void onItemPickup(ItemEntityPickupEvent.Post event) {
+        if (!(event.getPlayer() instanceof ServerPlayer sp)) return;
+        if (isFakePlayer(sp)) return;
+
+        // Use the original stack so partial pickups still count as one pickup event.
+        ItemStack stack = event.getOriginalStack();
+        if (stack.isEmpty()) return;
+
+        ResourceLocation targetId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        AptitudeSourceManager.grant(sp, PICKUP_ITEM, targetId, BuiltInRegistries.ITEM);
+    }
+
+    @SubscribeEvent
+    static void onItemCrafted(PlayerEvent.ItemCraftedEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer sp)) return;
+        if (isFakePlayer(sp)) return;
+
+        ItemStack stack = event.getCrafting();
+        if (stack.isEmpty()) return;
+
+        ResourceLocation targetId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        AptitudeSourceManager.grant(sp, CRAFT_ITEM, targetId, BuiltInRegistries.ITEM);
+    }
+
+    @SubscribeEvent
+    static void onItemSmelted(PlayerEvent.ItemSmeltedEvent event) {
+        if (!(event.getEntity() instanceof ServerPlayer sp)) return;
+        if (isFakePlayer(sp)) return;
+
+        ItemStack stack = event.getSmelting();
+        if (stack.isEmpty()) return;
+
+        ResourceLocation targetId = BuiltInRegistries.ITEM.getKey(stack.getItem());
+        AptitudeSourceManager.grant(sp, SMELT_ITEM, targetId, BuiltInRegistries.ITEM);
     }
 
     /**

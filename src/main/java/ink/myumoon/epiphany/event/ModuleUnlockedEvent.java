@@ -21,6 +21,11 @@ public class ModuleUnlockedEvent extends EpiphanyEvent {
         this.silent = silent;
     }
 
-    public ResourceLocation getModuleId() { return moduleId; }
-    public boolean isSilent() { return silent; }
+    public ResourceLocation getModuleId() {
+        return moduleId;
+
+    }
+    public boolean isSilent() {
+        return silent;
+    }
 }
