@@ -34,7 +34,6 @@ public final class EpiphanyConditionTypes {
     public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<AdvancementCondition>> ADVANCEMENT =
             REGISTRY.register("advancement", () -> AdvancementCondition.CODEC);
 
-    // --- Phase 7.1: vanilla + Epiphany conditions ---
     public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<AttributeCondition>> ATTRIBUTE =
             REGISTRY.register("attribute", () -> AttributeCondition.CODEC);
 
@@ -62,6 +61,12 @@ public final class EpiphanyConditionTypes {
     public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<ItemUsedCondition>> ITEM_USED =
             REGISTRY.register("item_used", () -> ItemUsedCondition.CODEC);
 
+    public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<ItemCraftedCondition>> ITEM_CRAFTED =
+            REGISTRY.register("item_crafted", () -> ItemCraftedCondition.CODEC);
+
+    public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<ItemBrokenCondition>> ITEM_BROKEN =
+            REGISTRY.register("item_broken", () -> ItemBrokenCondition.CODEC);
+
     public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<BlockBrokenCondition>> BLOCK_BROKEN =
             REGISTRY.register("block_broken", () -> BlockBrokenCondition.CODEC);
 
@@ -86,7 +91,6 @@ public final class EpiphanyConditionTypes {
     public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<InsightPointsCondition>> INSIGHT_POINTS =
             REGISTRY.register("insight_points", () -> InsightPointsCondition.CODEC);
 
-    // --- Phase 7: FTB Quests compatibility (soft-dependency, isolated inner class) ---
     public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<FTBQQuestCondition>> FTBQ_QUEST =
             REGISTRY.register("ftbq_quest", () -> FTBQQuestCondition.CODEC);
 
@@ -99,7 +103,6 @@ public final class EpiphanyConditionTypes {
     public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<FTBQTagCondition>> FTBQ_TAG =
             REGISTRY.register("ftbq_tag", () -> FTBQTagCondition.CODEC);
 
-    // --- Phase 7: KubeJS compatibility (soft-dependency, isolated inner class) ---
     public static final DeferredHolder<MapCodec<? extends Condition>, MapCodec<KubeJSStageCondition>> KUBEJS_STAGE =
             REGISTRY.register("kubejs_stage", () -> KubeJSStageCondition.CODEC);
 

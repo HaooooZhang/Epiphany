@@ -11,6 +11,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.living.LivingDeathEvent;
 import net.neoforged.neoforge.event.entity.player.AdvancementEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerDestroyItemEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
@@ -59,6 +60,16 @@ public final class AutoUnlockListener {
 
     @SubscribeEvent
     static void onRightClickItem(PlayerInteractEvent.RightClickItem event) {
+        if (event.getEntity() instanceof ServerPlayer sp) auto(sp);
+    }
+
+    @SubscribeEvent
+    static void onItemCrafted(PlayerEvent.ItemCraftedEvent event) {
+        if (event.getEntity() instanceof ServerPlayer sp) auto(sp);
+    }
+
+    @SubscribeEvent
+    static void onItemBroken(PlayerDestroyItemEvent event) {
         if (event.getEntity() instanceof ServerPlayer sp) auto(sp);
     }
 
