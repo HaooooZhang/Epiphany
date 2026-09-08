@@ -28,7 +28,7 @@ public class Config {
     public static final ModConfigSpec.LongValue APTITUDE_CAP_GROWTH = BUILDER
             .comment("Additional aptitude required per Insight Point already spent. Formula: cap = baseCap + totalSpent * growth")
             .defineInRange("aptitudeCapGrowth", 1L, 0L, Long.MAX_VALUE);
-
+            
     // ============================================================
     // Notifications
     // Current implementation sends a chat message + advancement sound.

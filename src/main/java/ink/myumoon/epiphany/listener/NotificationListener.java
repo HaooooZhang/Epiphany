@@ -3,13 +3,13 @@ package ink.myumoon.epiphany.listener;
 import ink.myumoon.epiphany.Config;
 import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.content.EpiphanyData;
+import ink.myumoon.epiphany.content.InitialState;
 import ink.myumoon.epiphany.content.ModuleData;
 import ink.myumoon.epiphany.event.EpiphanyUnlockedEvent;
 import ink.myumoon.epiphany.event.InsightPointsChangedEvent;
 import ink.myumoon.epiphany.event.ModuleUnlockedEvent;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
 import net.minecraft.ChatFormatting;
-import net.minecraft.core.Registry;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -26,10 +26,10 @@ import net.neoforged.fml.common.EventBusSubscriber;
  * replace {@code sendSystemMessage} with a client-side Toast popup in a later
  * UI phase; the lang keys and config flags built here will carry over.
  * <p>
- * Selectable modules/epiphanies are intentionally NOT notified because the
- * {@code *UnlockedEvent} only fires on a false{@code ->}true state transition —
- * SELECTABLE entries are never persisted into the player's attachment state, so
- * they never produce an unlock event in the first place.
+ * Unlock notifications are validated against the registry: entries whose
+ * {@code initial_state} is {@code selectable} are treated as always-available
+ * and NOT notified (an unlock event for them means nothing new for the player).
+ * Entries missing from the registry (orphaned data) are also silenced.
  */
 @EventBusSubscriber(modid = Epiphany.MODID)
 public final class NotificationListener {
@@ -55,8 +55,11 @@ public final class NotificationListener {
         if (!Config.NOTIFY_MODULE_UNLOCK.get()) return;
 
         var sp = event.getPlayer();
-        Component name = moduleName(sp, event.getModuleId());
-        Component msg = Component.translatable("epiphany.notify.module.unlocked", name)
+        ModuleData module = moduleData(sp, event.getModuleId());
+        if (module == null || module.initialState() == InitialState.SELECTABLE) return;
+
+        Component msg = Component.translatable("epiphany.notify.module.unlocked",
+                        module.effectiveName(event.getModuleId()))
                 .withStyle(ChatFormatting.BOLD);
         send(sp, msg);
     }
@@ -67,8 +70,11 @@ public final class NotificationListener {
         if (!Config.NOTIFY_EPIPHANY_UNLOCK.get()) return;
 
         var sp = event.getPlayer();
-        Component name = epiphanyName(sp, event.getEpiphanyId());
-        Component msg = Component.translatable("epiphany.notify.epiphany.unlocked", name)
+        EpiphanyData epiphany = epiphanyData(sp, event.getEpiphanyId());
+        if (epiphany == null || epiphany.initialState() == InitialState.SELECTABLE) return;
+
+        Component msg = Component.translatable("epiphany.notify.epiphany.unlocked",
+                        epiphany.effectiveName(event.getEpiphanyId()))
                 .withStyle(ChatFormatting.BOLD);
         send(sp, msg);
     }
@@ -82,31 +88,17 @@ public final class NotificationListener {
         sp.playNotifySound(SoundEvents.PLAYER_LEVELUP, SoundSource.MASTER, 0.7F, 1.0F);
     }
 
-    /**
-     * Looks up the datapack-defined display name for a Module; falls back to the raw
-     * registry id as a Component when the entry has no {@code name} field.
-     */
-    private static Component moduleName(ServerPlayer sp, ResourceLocation id) {
-        Registry<ModuleData> registry = sp.server.registryAccess()
-                .registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY);
-        ModuleData module = registry.get(id);
-        if (module != null) {
-            return module.effectiveName(id);
-        }
-        return Component.literal(id.toString()).withStyle(ChatFormatting.GRAY);
+    /** Looks up the ModuleData behind an id; {@code null} when not in the registry. */
+    private static ModuleData moduleData(ServerPlayer sp, ResourceLocation id) {
+        return sp.server.registryAccess()
+                .registryOrThrow(EpiphanyRegistries.MODULE_REGISTRY_KEY)
+                .get(id);
     }
 
-    /**
-     * Looks up the datapack-defined display name for an Epiphany; falls back to the
-     * raw registry id as a Component when the entry has no {@code name} field.
-     */
-    private static Component epiphanyName(ServerPlayer sp, ResourceLocation id) {
-        Registry<EpiphanyData> registry = sp.server.registryAccess()
-                .registryOrThrow(EpiphanyRegistries.EPIPHANY_REGISTRY_KEY);
-        EpiphanyData epiphany = registry.get(id);
-        if (epiphany != null) {
-            return epiphany.effectiveName(id);
-        }
-        return Component.literal(id.toString()).withStyle(ChatFormatting.GRAY);
+    /** Looks up the EpiphanyData behind an id; {@code null} when not in the registry. */
+    private static EpiphanyData epiphanyData(ServerPlayer sp, ResourceLocation id) {
+        return sp.server.registryAccess()
+                .registryOrThrow(EpiphanyRegistries.EPIPHANY_REGISTRY_KEY)
+                .get(id);
     }
 }
