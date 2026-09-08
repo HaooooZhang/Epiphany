@@ -182,7 +182,9 @@ public interface EpiphanyBinding {
     }
 
     /**
-     * Clears selections while preserving aptitude and refunding Insight Points for what was unlocked.
+     * Clears selections (Module selected/completed/unlockedInsights, Epiphany selected) while
+     * preserving unlock flags (manual unlocks included), aptitude and claimedFirsts;
+     * refunds Insight Points for everything cleared.
      * Equivalent to {@code /epiphany reset select}. <b>Fires no events.</b>
      * JS: {@code Epiphany.resetSelections(player)}
      */

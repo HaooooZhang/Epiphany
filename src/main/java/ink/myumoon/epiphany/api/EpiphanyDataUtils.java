@@ -1,6 +1,8 @@
 package ink.myumoon.epiphany.api;
 
 import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.attachment.EpiphanyPlayerState;
+import ink.myumoon.epiphany.attachment.ModulePlayerState;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.content.InsightData;
 import ink.myumoon.epiphany.content.reward.RewardListHelper;
@@ -11,6 +13,10 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Cross-subsystem operations that don't naturally belong to a single {@code *Manager}.
@@ -114,17 +120,22 @@ public final class EpiphanyDataUtils {
     }
 
     /**
-     * Clears the player's selections/selectables while preserving their accumulated currency:
+     * Clears the player's selections while preserving unlock state and accumulated currency:
      * <ul>
      *   <li>all rewards removed (see {@link #removeAllRewards})</li>
-     *   <li>{@code aptitude} preserved</li>
+     *   <li>{@code aptitude} / {@code claimedFirsts} preserved</li>
      *   <li>{@code insightPoints} refunded by the total cost of every selected Module and unlocked Insight</li>
      *   <li>{@code totalInsightPointsSpent} reduced by the same refund (clamped to {@code >= 0})</li>
-     *   <li>{@code modules} / {@code insights} / {@code epiphanies} / {@code epiphanySlots} / {@code usedEpiphanySlots}
-     *       / {@code claimedFirsts} all cleared</li>
-     *   <li>{@link ModuleManager#checkAutoUnlock} / {@link EpiphanyManager#checkAutoUnlock} re-run
-     *       (silent + skip-event-driven) to re-grant {@code SELECTABLE} entries</li>
+     *   <li>Module states: {@code unlocked} flag preserved as-is (manual unlocks/locks included);
+     *       {@code selected} / {@code completed} / {@code unlockedInsights} cleared</li>
+     *   <li>Epiphany states: {@code unlocked} flag preserved; {@code selected} cleared</li>
+     *   <li>top-level {@code insights} map cleared; {@code epiphanySlots} / {@code usedEpiphanySlots}
+     *       reset to 0 (slots are re-earned by re-completing Modules)</li>
+     *   <li>selected-module / selected-epiphany display order cleared</li>
      * </ul>
+     * Unlock flags are kept instead of wipe-and-rebuild, so manually granted unlocks
+     * (command / API / {@code unlock_module} rewards) survive the reset and no
+     * {@link ModuleManager#checkAutoUnlock} rebuild is needed.
      * Equivalent to the {@code /epiphany reset select} command. <b>Fires no events.</b>
      */
     public static void resetSelections(ServerPlayer player) {
@@ -132,18 +143,28 @@ public final class EpiphanyDataUtils {
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
 
         int refund = refundInsightCosts(player, data);
+
+        Map<ResourceLocation, ModulePlayerState> modules = new HashMap<>();
+        data.modules().forEach((id, state) -> modules.put(id,
+                new ModulePlayerState(state.unlocked(), false, false, Set.of())));
+
+        Map<ResourceLocation, EpiphanyPlayerState> epiphanies = new HashMap<>();
+        data.epiphanies().forEach((id, state) -> epiphanies.put(id,
+                new EpiphanyPlayerState(false, state.unlocked())));
+
         PlayerEpiphanyData cleaned = new PlayerEpiphanyData(
                 data.aptitude(),
                 data.insightPoints() + refund,
                 Math.max(0, data.totalInsightPointsSpent() - refund),
+                modules,
                 Collections.emptyMap(),
-                Collections.emptyMap(),
-                Collections.emptyMap(),
+                epiphanies,
                 0, 0,
-                Collections.emptyMap()
+                data.claimedFirsts(),
+                data.displayData()
+                        .withSelectedModuleOrder(List.of())
+                        .withSelectedEpiphanyOrder(List.of())
         );
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, cleaned);
-        ModuleManager.checkAutoUnlock(player, false, true);
-        EpiphanyManager.checkAutoUnlock(player, false, true);
     }
 }
