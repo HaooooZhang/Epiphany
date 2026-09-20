@@ -58,6 +58,7 @@
   "epiphany.ui.apt_ratio": "%s / %s",
   "epiphany.ui.select_placeholder": "+ 选择",
   "epiphany.ui.select": "选择",
+  "epiphany.ui.none_available": "暂无可选...",
   "epiphany.ui.insight_cost": "消耗: %s 心得点",
   "epiphany.ui.shift_hint": "按住 [Shift] 查看详情",
 

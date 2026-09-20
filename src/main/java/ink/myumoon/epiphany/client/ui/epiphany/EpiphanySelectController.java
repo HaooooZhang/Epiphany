@@ -15,6 +15,7 @@ import ink.myumoon.epiphany.Config;
 import ink.myumoon.epiphany.api.DisplayDataManager;
 import ink.myumoon.epiphany.client.EpiphanyIcons;
 import ink.myumoon.epiphany.client.ui.ClientData;
+import ink.myumoon.epiphany.client.ui.EmptyStateElement;
 import ink.myumoon.epiphany.client.ui.overlay.Overlay;
 import ink.myumoon.epiphany.content.EpiphanyData;
 import ink.myumoon.epiphany.content.InitialState;
@@ -37,6 +38,7 @@ public final class EpiphanySelectController {
     private static final String PATHS_SELECTOR = "#epiphany-paths-container";
     private static final String RIGHT_SELECTOR = "#epiphany-right-col";
     private static final String ERROR_SELECTOR = "#epiphany-popup-error";
+    private static final String EMPTY_SELECTOR = "#epiphany-popup-empty";
 
     private static boolean showLocked = false;
 
@@ -115,6 +117,8 @@ public final class EpiphanySelectController {
         // Left: path rows.
         UIElement left = selectOne(ui, PATHS_SELECTOR, UIElement.class);
         left.clearAllChildren();
+        UIElement emptyState = selectOne(ui, EMPTY_SELECTOR, UIElement.class);
+        emptyState.setDisplay(false);
         for (var entry : grouped.entrySet()) {
             if (entry.getValue().isEmpty()) continue;
             entry.getValue().sort(Comparator.comparingInt(c -> c.unlocked() ? 0 : 1));
@@ -147,9 +151,10 @@ public final class EpiphanySelectController {
             left.addChild(row);
         }
         if (left.getChildren().isEmpty()) {
-            Label none = new Label();
-            none.setText(Component.translatable("epiphany.ui.epiphany.none"));
-            left.addChild(none);
+            if (emptyState.getChildren().isEmpty()) {
+                emptyState.addChild(EmptyStateElement.create());
+            }
+            emptyState.setDisplay(true);
         }
 
         // Right: vertical slot column (same layout as main UI).

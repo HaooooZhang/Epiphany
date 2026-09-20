@@ -17,6 +17,7 @@ import dev.vfyjxf.taffy.style.TaffyPosition;
 import ink.myumoon.epiphany.Config;
 import ink.myumoon.epiphany.attachment.ModulePlayerState;
 import ink.myumoon.epiphany.client.ui.ClientData;
+import ink.myumoon.epiphany.client.ui.EmptyStateElement;
 import ink.myumoon.epiphany.client.ui.insight.InsightTreeView;
 import ink.myumoon.epiphany.client.ui.overlay.Overlay;
 import ink.myumoon.epiphany.content.InitialState;
@@ -37,6 +38,7 @@ public final class ModuleSelectController {
     private static final String MODULE_POPUP = "#module-popup";
     private static final String ERROR_LABEL = "#module-popup-error";
     private static final String LIST_SELECTOR = "#module-popup-list";
+    private static final String EMPTY_SELECTOR = "#module-popup-empty";
 
     private ModuleSelectController() {
     }
@@ -99,6 +101,8 @@ public final class ModuleSelectController {
     private static void refreshList(UI ui) {
         UIElement list = selectOne(ui, LIST_SELECTOR, UIElement.class);
         list.clearAllChildren();
+        UIElement emptyState = selectOne(ui, EMPTY_SELECTOR, UIElement.class);
+        emptyState.setDisplay(false);
 
         var lookup = ClientData.moduleLookup();
         var data = ClientData.clientData();
@@ -125,6 +129,14 @@ public final class ModuleSelectController {
         candidates.sort(Comparator.<Candidate, Integer>comparing(c -> c.unlocked() ? 0 : 1)
                 .thenComparingInt(c -> c.module.weight())
                 .thenComparing(c -> c.id.toString()));
+
+        if (candidates.isEmpty()) {
+            if (emptyState.getChildren().isEmpty()) {
+                emptyState.addChild(EmptyStateElement.create());
+            }
+            emptyState.setDisplay(true);
+            return;
+        }
 
         for (var c : candidates) {
             boolean affordable = c.unlocked && playerPoints >= moduleSelectCost;
