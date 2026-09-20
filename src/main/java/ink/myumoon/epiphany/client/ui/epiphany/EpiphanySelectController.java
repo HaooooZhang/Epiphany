@@ -117,6 +117,7 @@ public final class EpiphanySelectController {
         left.clearAllChildren();
         for (var entry : grouped.entrySet()) {
             if (entry.getValue().isEmpty()) continue;
+            entry.getValue().sort(Comparator.comparingInt(c -> c.unlocked() ? 0 : 1));
             UIElement row = new UIElement();
             row.addClass("epiphany-path-row");
             String label;

@@ -122,7 +122,8 @@ public final class ModuleSelectController {
             if (!unlocked && !showLocked) return;
             candidates.add(new Candidate(id, module, unlocked));
         });
-        candidates.sort(Comparator.<Candidate, Integer>comparing(c -> c.module.weight())
+        candidates.sort(Comparator.<Candidate, Integer>comparing(c -> c.unlocked() ? 0 : 1)
+                .thenComparingInt(c -> c.module.weight())
                 .thenComparing(c -> c.id.toString()));
 
         for (var c : candidates) {
