@@ -328,6 +328,9 @@ public final class ModuleManager {
         PlayerEpiphanyData newData = data.withModuleState(moduleId, newState)
                 .withInsightPoints(data.insightPoints() + refund)
                 .withTotalInsightPointsSpent(Math.max(0, data.totalInsightPointsSpent() - refund));
+        if (state.completed()) {
+            newData = newData.withEpiphanySlots(Math.max(0, data.epiphanySlots() - 1));
+        }
         newData = DisplayDataManager.removeModule(newData, moduleId);
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
     }
