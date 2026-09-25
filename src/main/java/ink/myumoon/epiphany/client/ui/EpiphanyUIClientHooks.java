@@ -16,6 +16,7 @@ final class EpiphanyUIClientHooks {
     }
 
     static void attach(UI ui) {
+        TopBarController.attach(ui);
         ModuleGridController.attach(ui);
         EpiphanySlotColumnController.attach(ui);
         ModuleSelectController.attach(ui);

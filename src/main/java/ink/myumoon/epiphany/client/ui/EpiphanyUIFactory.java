@@ -3,7 +3,6 @@ package ink.myumoon.epiphany.client.ui;
 import com.lowdragmc.lowdraglib2.gui.factory.PlayerUIMenuType;
 import com.lowdragmc.lowdraglib2.gui.ui.ModularUI;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
-import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacket;
 import com.lowdragmc.lowdraglib2.networking.rpc.RPCPacketDistributor;
 import com.lowdragmc.lowdraglib2.syncdata.rpc.RPCSender;
@@ -16,17 +15,12 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 
-import java.io.InputStream;
-
 /**
- * Entry point for the Epiphany main UI. Registers a {@link PlayerUIMenuType}
- * that builds the screen from {@code assets/epiphany/ui/main.xml} and wires
- * up its controllers.
+ * Entry point for the Epiphany main UI. The server creates an empty menu UI;
+ * the client loads {@code assets/epiphany/ui/main.xml} and wires its controllers.
  * <p>
- * This is a Menu‑based UI: LDLib2 invokes the registered factory once per side
- * (server with ServerPlayer, client with LocalPlayer). All S→C data bindings
- * (e.g. in {@link TopBarController}) are safe because they run only on the
- * server side.
+ * LDLib2 invokes the registered factory once per side. The client reads the
+ * player data attachment after it has been synchronized from the server.
  */
 public final class EpiphanyUIFactory {
 
@@ -46,40 +40,25 @@ public final class EpiphanyUIFactory {
      * <p>
      * The factory lambda takes an outer {@code Player} (the menu opener) and
      * returns a {@code PlayerUIHolder} whose {@code createUI} receives the same
-     * player instance. We use the inner parameter for binding so that data
-     * binding getters see the side‑specific player (ServerPlayer on server,
-     * LocalPlayer on client). The UI XML is loaded from assets; if missing,
+     * player instance. The server returns an empty UI because display and data
+     * binding work is client-side. If the client XML is missing, it also
      * returns a fallback empty UI.
      */
     public static void register() {
         PlayerUIMenuType.register(MAIN_UI_ID, outerPlayer -> createUiPlayer -> {
-            var xml = loadMainUiXml(createUiPlayer.level().isClientSide);
+            if (!createUiPlayer.level().isClientSide) {
+                return ModularUI.of(UI.empty(), createUiPlayer);
+            }
+
+            var xml = XmlUtils.loadXml(MAIN_UI_XML);
             if (xml == null) {
                 Epiphany.LOGGER.error("Failed to load Epiphany main UI XML: {}", MAIN_UI_XML);
-                return ModularUI.of(UI.of(new UIElement()), createUiPlayer);
+                return ModularUI.of(UI.empty(), createUiPlayer);
             }
             var ui = UI.of(xml);
-            TopBarController.bind(ui);
-            if (createUiPlayer.level().isClientSide) {
-                EpiphanyUIClientHooks.attach(ui);
-            }
+            EpiphanyUIClientHooks.attach(ui);
             return ModularUI.of(ui, createUiPlayer);
         });
-    }
-
-    private static org.w3c.dom.Document loadMainUiXml(boolean clientSide) {
-        if (clientSide) {
-            return XmlUtils.loadXml(MAIN_UI_XML);
-        }
-
-        // Server resource managers omit client assets, so read the bundled UI from the mod jar.
-        try (InputStream stream = EpiphanyUIFactory.class.getResourceAsStream(
-                "/assets/epiphany/ui/main.xml")) {
-            return stream != null ? XmlUtils.loadXml(stream) : null;
-        } catch (Exception e) {
-            Epiphany.LOGGER.error("Failed to read bundled Epiphany main UI XML", e);
-            return null;
-        }
     }
 
     /** Opens the UI for a server‑side player. Must be called on the server thread. */
