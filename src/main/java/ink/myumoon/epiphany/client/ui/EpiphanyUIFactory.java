@@ -12,13 +12,11 @@ import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.api.EpiphanyManager;
 import ink.myumoon.epiphany.api.InsightManager;
 import ink.myumoon.epiphany.api.ModuleManager;
-import ink.myumoon.epiphany.client.ui.epiphany.EpiphanySelectController;
-import ink.myumoon.epiphany.client.ui.epiphany.EpiphanySlotColumnController;
-import ink.myumoon.epiphany.client.ui.module.ModuleGridController;
-import ink.myumoon.epiphany.client.ui.module.ModuleSelectController;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
+
+import java.io.InputStream;
 
 /**
  * Entry point for the Epiphany main UI. Registers a {@link PlayerUIMenuType}
@@ -55,19 +53,33 @@ public final class EpiphanyUIFactory {
      */
     public static void register() {
         PlayerUIMenuType.register(MAIN_UI_ID, outerPlayer -> createUiPlayer -> {
-            var xml = XmlUtils.loadXml(MAIN_UI_XML);
+            var xml = loadMainUiXml(createUiPlayer.level().isClientSide);
             if (xml == null) {
                 Epiphany.LOGGER.error("Failed to load Epiphany main UI XML: {}", MAIN_UI_XML);
                 return ModularUI.of(UI.of(new UIElement()), createUiPlayer);
             }
             var ui = UI.of(xml);
             TopBarController.bind(ui);
-            ModuleGridController.attach(ui);
-            EpiphanySlotColumnController.attach(ui);
-            ModuleSelectController.attach(ui);
-            EpiphanySelectController.attach(ui);
+            if (createUiPlayer.level().isClientSide) {
+                EpiphanyUIClientHooks.attach(ui);
+            }
             return ModularUI.of(ui, createUiPlayer);
         });
+    }
+
+    private static org.w3c.dom.Document loadMainUiXml(boolean clientSide) {
+        if (clientSide) {
+            return XmlUtils.loadXml(MAIN_UI_XML);
+        }
+
+        // Server resource managers omit client assets, so read the bundled UI from the mod jar.
+        try (InputStream stream = EpiphanyUIFactory.class.getResourceAsStream(
+                "/assets/epiphany/ui/main.xml")) {
+            return stream != null ? XmlUtils.loadXml(stream) : null;
+        } catch (Exception e) {
+            Epiphany.LOGGER.error("Failed to read bundled Epiphany main UI XML", e);
+            return null;
+        }
     }
 
     /** Opens the UI for a server‑side player. Must be called on the server thread. */
