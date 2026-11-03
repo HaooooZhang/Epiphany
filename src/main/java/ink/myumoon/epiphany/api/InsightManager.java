@@ -148,6 +148,7 @@ public final class InsightManager {
             ModulePlayerState state = entry.getValue();
             if (state.unlockedInsights().contains(insightId)) {
                 RewardListHelper.removeInsight(insight.reward(), player, insightId);
+                data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
                 Set<ResourceLocation> newUnlocked = new HashSet<>(state.unlockedInsights());
                 newUnlocked.remove(insightId);
                 ModulePlayerState newState = new ModulePlayerState(

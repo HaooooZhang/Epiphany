@@ -24,13 +24,32 @@ public record InsightPointsReward(int amount) implements InsightReward, Epiphany
 
     @Override
     public void apply(ServerPlayer player, ResourceLocation sourceId) {
-        AptitudeManager.setInsightPoints(player,
-                AptitudeManager.getInsightPoints(player) + amount);
+        apply(player, new RewardSource("legacy_api", sourceId, "reward", sourceId));
+    }
+
+    @Override
+    public void apply(ServerPlayer player, RewardSource source) {
+        AptitudeManager.applyInsightPointsReward(player, sourceKey(source), amount);
     }
 
     @Override
     public void remove(ServerPlayer player, ResourceLocation sourceId) {
-        AptitudeManager.setInsightPoints(player,
-                Math.max(0, AptitudeManager.getInsightPoints(player) - amount));
+        remove(player, new RewardSource("legacy_api", sourceId, "reward", sourceId));
+    }
+
+    @Override
+    public void remove(ServerPlayer player, RewardSource source) {
+        AptitudeManager.removeInsightPointsReward(player, sourceKey(source));
+    }
+
+    private static String sourceKey(RewardSource source) {
+        // Single rewards and the first element of a list share index zero.
+        String prefix = source.ownerId().getPath() + "/" + source.rewardSlot() + "_";
+        String index = "0";
+        if (source.ownerId().getNamespace().equals(source.legacyId().getNamespace())
+                && source.legacyId().getPath().startsWith(prefix)) {
+            index = source.legacyId().getPath().substring(prefix.length());
+        }
+        return source.ownerKind() + "|" + source.ownerId() + "|" + source.rewardSlot() + "|" + index;
     }
 }

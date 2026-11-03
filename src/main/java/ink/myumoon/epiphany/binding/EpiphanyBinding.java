@@ -209,6 +209,16 @@ public interface EpiphanyBinding {
         return AptitudeManager.getTotalInsightPointsSpent(player);
     }
 
+    /** Total budget: spent + unspent. JS: {@code Epiphany.getTotalInsightPoints(player)} */
+    static long getTotalInsightPoints(ServerPlayer player) {
+        return AptitudeManager.getTotalInsightPoints(player);
+    }
+
+    /** Whether the player can receive more points or aptitude under the current limit. */
+    static boolean canGainInsightPoints(ServerPlayer player) {
+        return AptitudeManager.canGainInsightPoints(player);
+    }
+
     /** Sets aptitude to an exact value. JS: {@code Epiphany.setAptitude(player, 500)} */
     static void setAptitude(ServerPlayer player, long value) {
         AptitudeManager.setAptitude(player, value);

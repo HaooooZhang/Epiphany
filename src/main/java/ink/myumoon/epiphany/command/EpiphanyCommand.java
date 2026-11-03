@@ -64,15 +64,19 @@ public final class EpiphanyCommand {
                                         .executes(ctx -> {
                                             ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                             long amount = LongArgumentType.getLong(ctx, "amount");
+                                            if (rejectCappedGrowth(ctx.getSource(), target, false)) return 0;
                                             AptitudeManager.addAptitude(target, amount);
                                             ctx.getSource().sendSuccess(
-                                                    () -> t("commands.epiphany.aptitude.add.success", amount, target.getGameProfile().getName()), true);
+                                                    () -> AptitudeManager.canGainInsightPoints(target)
+                                                            ? t("commands.epiphany.aptitude.add.success", amount, target.getGameProfile().getName())
+                                                            : t("commands.epiphany.aptitude.add.capped", target.getGameProfile().getName()), true);
                                             return 1;
                                         }))
                                 .then(Commands.literal(SILENT_FLAG)
                                         .then(Commands.argument("amount", LongArgumentType.longArg(1))
                                                 .executes(ctx -> {
                                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                                    if (rejectCappedGrowth(ctx.getSource(), target, true)) return 0;
                                                     AptitudeManager.addAptitude(target, LongArgumentType.getLong(ctx, "amount"));
                                                     return 1;
                                                 })))))
@@ -83,16 +87,22 @@ public final class EpiphanyCommand {
                                         .executes(ctx -> {
                                             ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                             long value = LongArgumentType.getLong(ctx, "value");
+                                            if (value > AptitudeManager.getAptitude(target)
+                                                    && rejectCappedGrowth(ctx.getSource(), target, false)) return 0;
                                             AptitudeManager.setAptitude(target, value);
+                                            long actual = AptitudeManager.getAptitude(target);
                                             ctx.getSource().sendSuccess(
-                                                    () -> t("commands.epiphany.aptitude.set.success", value, target.getGameProfile().getName()), true);
+                                                    () -> t("commands.epiphany.aptitude.set.success", actual, target.getGameProfile().getName()), true);
                                             return 1;
                                         }))
                                 .then(Commands.literal(SILENT_FLAG)
                                         .then(Commands.argument("value", LongArgumentType.longArg(0))
                                                 .executes(ctx -> {
                                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
-                                                    AptitudeManager.setAptitude(target, LongArgumentType.getLong(ctx, "value"));
+                                                    long value = LongArgumentType.getLong(ctx, "value");
+                                                    if (value > AptitudeManager.getAptitude(target)
+                                                            && rejectCappedGrowth(ctx.getSource(), target, true)) return 0;
+                                                    AptitudeManager.setAptitude(target, value);
                                                     return 1;
                                                 })))))
                 // query <player>
@@ -112,6 +122,7 @@ public final class EpiphanyCommand {
                         .then(Commands.argument("player", EntityArgument.player())
                                 .executes(ctx -> {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                    if (rejectCappedGrowth(ctx.getSource(), target, false)) return 0;
                                     long required = AptitudeManager.getRequiredForNextPoint(target);
                                     AptitudeManager.fillAptitude(target);
                                     ctx.getSource().sendSuccess(
@@ -121,6 +132,7 @@ public final class EpiphanyCommand {
                                 .then(Commands.literal(SILENT_FLAG)
                                         .executes(ctx -> {
                                             ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                            if (rejectCappedGrowth(ctx.getSource(), target, true)) return 0;
                                             AptitudeManager.fillAptitude(target);
                                             return 1;
                                         }))));
@@ -220,15 +232,19 @@ public final class EpiphanyCommand {
                                                 .executes(ctx -> {
                                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                                     int amt = IntegerArgumentType.getInteger(ctx, "amount");
+                                                    if (rejectCappedGrowth(ctx.getSource(), target, false)) return 0;
+                                                    int before = AptitudeManager.getInsightPoints(target);
                                                     AptitudeManager.addInsightPoints(target, amt);
+                                                    int actual = AptitudeManager.getInsightPoints(target) - before;
                                                     ctx.getSource().sendSuccess(
-                                                            () -> t("commands.epiphany.insight.points.add.success", amt, target.getGameProfile().getName()), true);
+                                                            () -> t("commands.epiphany.insight.points.add.success", actual, target.getGameProfile().getName()), true);
                                                     return 1;
                                                 }))
                                         .then(Commands.literal(SILENT_FLAG)
                                                 .then(Commands.argument("amount", IntegerArgumentType.integer(1))
                                                         .executes(ctx -> {
                                                             ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                                                            if (rejectCappedGrowth(ctx.getSource(), target, true)) return 0;
                                                             AptitudeManager.addInsightPoints(target, IntegerArgumentType.getInteger(ctx, "amount"));
                                                             return 1;
                                                         })))))
@@ -238,16 +254,22 @@ public final class EpiphanyCommand {
                                                 .executes(ctx -> {
                                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                                     int amt = IntegerArgumentType.getInteger(ctx, "amount");
+                                                    if (amt > AptitudeManager.getInsightPoints(target)
+                                                            && rejectCappedGrowth(ctx.getSource(), target, false)) return 0;
                                                     AptitudeManager.setInsightPoints(target, amt);
+                                                    int actual = AptitudeManager.getInsightPoints(target);
                                                     ctx.getSource().sendSuccess(
-                                                            () -> t("commands.epiphany.insight.points.set.success", amt, target.getGameProfile().getName()), true);
+                                                            () -> t("commands.epiphany.insight.points.set.success", actual, target.getGameProfile().getName()), true);
                                                     return 1;
                                                 }))
                                         .then(Commands.literal(SILENT_FLAG)
                                                 .then(Commands.argument("amount", IntegerArgumentType.integer(0))
                                                         .executes(ctx -> {
                                                             ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
-                                                            AptitudeManager.setInsightPoints(target, IntegerArgumentType.getInteger(ctx, "amount"));
+                                                            int amount = IntegerArgumentType.getInteger(ctx, "amount");
+                                                            if (amount > AptitudeManager.getInsightPoints(target)
+                                                                    && rejectCappedGrowth(ctx.getSource(), target, true)) return 0;
+                                                            AptitudeManager.setInsightPoints(target, amount);
                                                             return 1;
                                                         }))))));
     }
@@ -255,6 +277,12 @@ public final class EpiphanyCommand {
     // ============================================================
     // module
     // ============================================================
+
+    private static boolean rejectCappedGrowth(CommandSourceStack source, ServerPlayer player, boolean silent) {
+        if (AptitudeManager.canGainInsightPoints(player)) return false;
+        if (!silent) source.sendFailure(t("commands.epiphany.growth.capped", player.getGameProfile().getName()));
+        return true;
+    }
 
     private static LiteralArgumentBuilder<CommandSourceStack> moduleGroup() {
         var moduleArg = Commands.argument("module", ResourceLocationArgument.id())

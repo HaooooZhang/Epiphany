@@ -20,13 +20,18 @@ public class Config {
             .comment("Maximum number of Modules a player can have selected at once")
             .defineInRange("maxSelectedModules", 8, 1, 64);
 
+    public static final ModConfigSpec.IntValue MAX_TOTAL_INSIGHT_POINTS = BUILDER
+            .comment("Maximum total Insight Points per player (spent + unspent). -1: unlimited; 0: no new points.",
+                    "Lowering this limit preserves existing points and aptitude. New gains stop when total points are at or above the limit.")
+            .defineInRange("maxTotalInsightPoints", -1, -1, Integer.MAX_VALUE);
+
     // 阅历计算公式
     public static final ModConfigSpec.LongValue BASE_APTITUDE_CAP = BUILDER
             .comment("Base aptitude required to earn the first Insight Point")
             .defineInRange("baseAptitudeCap", 10L, 1L, Long.MAX_VALUE);
 
     public static final ModConfigSpec.LongValue APTITUDE_CAP_GROWTH = BUILDER
-            .comment("Additional aptitude required per Insight Point already spent. Formula: cap = baseCap + totalSpent * growth")
+            .comment("Additional aptitude required per total Insight Point (spent + unspent). Formula: required = baseCap + (totalSpent + insightPoints) * growth")
             .defineInRange("aptitudeCapGrowth", 1L, 0L, Long.MAX_VALUE);
             
     // ============================================================

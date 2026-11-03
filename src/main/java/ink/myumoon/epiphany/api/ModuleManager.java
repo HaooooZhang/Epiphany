@@ -325,6 +325,8 @@ public final class ModuleManager {
             }
         }
 
+        // Reward removal can change currency and receipts; never overwrite it with the old snapshot.
+        data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         PlayerEpiphanyData newData = data.withModuleState(moduleId, newState)
                 .withInsightPoints(data.insightPoints() + refund)
                 .withTotalInsightPointsSpent(Math.max(0, data.totalInsightPointsSpent() - refund));
@@ -378,8 +380,6 @@ public final class ModuleManager {
             }
 
             newData = DisplayDataManager.removeModule(newData.withoutModule(moduleId), moduleId);
-            newData = newData.withInsightPoints(newData.insightPoints() + refund)
-                    .withTotalInsightPointsSpent(Math.max(0, newData.totalInsightPointsSpent() - refund));
                 removedModules.add(moduleId);
                 totalRefund += refund;
             changed = true;
@@ -394,8 +394,6 @@ public final class ModuleManager {
 
             InsightPlayerState iState = entry.getValue();
             if (iState.selected()) {
-                newData = newData.withInsightPoints(newData.insightPoints() + 1)
-                        .withTotalInsightPointsSpent(Math.max(0, newData.totalInsightPointsSpent() - 1));
                 totalRefund += 1;
             }
             newData = newData.withoutInsight(insightId);
@@ -404,6 +402,11 @@ public final class ModuleManager {
         }
 
         if (changed) {
+            PlayerEpiphanyData latest = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+            newData = newData.withAptitude(latest.aptitude())
+                    .withInsightPoints(Math.addExact(latest.insightPoints(), totalRefund))
+                    .withTotalInsightPointsSpent(Math.max(0, latest.totalInsightPointsSpent() - totalRefund))
+                    .withInsightPointRewards(latest.insightPointRewards());
             player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, newData);
                 String playerName = player.getGameProfile().getName();
                 Epiphany.LOGGER.warn(

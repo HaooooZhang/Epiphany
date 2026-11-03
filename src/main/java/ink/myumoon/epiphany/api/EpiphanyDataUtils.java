@@ -163,7 +163,8 @@ public final class EpiphanyDataUtils {
                 data.claimedFirsts(),
                 data.displayData()
                         .withSelectedModuleOrder(List.of())
-                        .withSelectedEpiphanyOrder(List.of())
+                        .withSelectedEpiphanyOrder(List.of()),
+                data.insightPointRewards()
         );
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, cleaned);
     }

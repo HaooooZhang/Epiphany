@@ -1,6 +1,7 @@
 package ink.myumoon.epiphany.api;
 
 import ink.myumoon.epiphany.Epiphany;
+import ink.myumoon.epiphany.Config;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.event.AptitudeChangedEvent;
 import ink.myumoon.epiphany.event.AptitudeLevelUpEvent;
@@ -15,6 +16,8 @@ import org.jetbrains.annotations.Nullable;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.ArrayList;
+import java.util.List;
 
 public final class AptitudeManager {
 
@@ -33,19 +36,38 @@ public final class AptitudeManager {
         return player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA).totalInsightPointsSpent();
     }
 
+    public static long getTotalInsightPoints(ServerPlayer player) {
+        return totalPoints(player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA));
+    }
+
+    public static boolean canGainInsightPoints(ServerPlayer player) {
+        return remainingPoints(player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)) > 0;
+    }
+
+    private static long totalPoints(PlayerEpiphanyData data) {
+        return (long) data.totalInsightPointsSpent() + data.insightPoints();
+    }
+
+    private static long remainingPoints(PlayerEpiphanyData data) {
+        int limit = Config.MAX_TOTAL_INSIGHT_POINTS.get();
+        long storage = (long) Integer.MAX_VALUE - data.insightPoints();
+        return limit < 0 ? storage : Math.max(0, Math.min(storage, (long) limit - totalPoints(data)));
+    }
+
     /**
-     * Sets aptitude to an exact value, clamped to the current cap.
+     * Sets aptitude through normal settlement. Positive gains obey the total point limit.
      * Fires {@link AptitudeChangedEvent}.
      */
     public static void setAptitude(ServerPlayer player, long value) {
-        long delta = value - getAptitude(player);
+        long clamped = Math.max(0, value);
+        long delta = clamped - getAptitude(player);
         if (delta == 0) return;
         if (delta > 0) {
             addAptitude(player, delta);
         } else {
             // Reducing aptitude: clamp to >=0, no level-down
             PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
-            long newValue = Math.max(0, value);
+            long newValue = clamped;
             if (newValue == data.aptitude()) return;
             player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, data.withAptitude(newValue));
             NeoForge.EVENT_BUS.post(new AptitudeChangedEvent(player, data.aptitude(), newValue));
@@ -67,6 +89,8 @@ public final class AptitudeManager {
         if (amount <= 0) return false;
 
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+        long remaining = remainingPoints(data);
+        if (remaining <= 0) return false;
         if (claimKey != null && data.claimedFirsts().containsKey(claimKey)) return false;
         long aptitude;
         long oldValue = data.aptitude();
@@ -76,7 +100,7 @@ public final class AptitudeManager {
         // Level up loop in order to apply all changes in one setData call
         try {
             aptitude = Math.addExact(data.aptitude(), amount);
-            while (aptitude > 0) {
+            while (aptitude > 0 && pointsEarned < remaining) {
                 int points = Math.addExact(data.insightPoints(), pointsEarned);
                 long required = AptitudeFormula.calcRequiredAptitude(data.totalInsightPointsSpent(), points);
                 if (required <= 0) throw new ArithmeticException("Non-positive aptitude price");
@@ -85,6 +109,7 @@ public final class AptitudeManager {
                 pointsEarned = Math.incrementExact(pointsEarned);
                 Math.addExact(data.insightPoints(), pointsEarned);
             }
+            if (pointsEarned == remaining) aptitude = 0;
         } catch (ArithmeticException e) {
             Epiphany.LOGGER.warn("Rejected aptitude gain before settlement: {}", e.getMessage());
             return false;
@@ -124,6 +149,7 @@ public final class AptitudeManager {
      * benefit from the player's aptitude-gain multiplier.
      */
     public static void addAptitudeWithMultiplier(ServerPlayer player, long amount) {
+        if (!canGainInsightPoints(player)) return;
         addAptitude(player, scaleAptitudeWithMultiplier(player, amount));
     }
 
@@ -144,28 +170,73 @@ public final class AptitudeManager {
     }
 
     /**
-     * Sets the available Insight Points to an exact value (clamped to {@code >= 0}).
+     * Sets the balance, clipping only increases to the remaining total point budget.
+     * Existing balances above a lowered limit can still be reduced normally.
      * Fires {@link InsightPointsChangedEvent} so command/award paths also notify the player.
      */
     public static void setInsightPoints(ServerPlayer player, int value) {
-        int clamped = Math.max(0, value);
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
-        int old = data.insightPoints();
-        if (old == clamped) return;
-        player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA,
-                data.withInsightPoints(clamped));
-        NeoForge.EVENT_BUS.post(new InsightPointsChangedEvent(player, old, clamped));
+        commitPointChange(player, data, pointBalance(data, value));
     }
 
     /**
      * Adds the given amount to the player's Insight Points.
-     * Equivalent to {@code setInsightPoints(player, getInsightPoints(player) + amount)}, and fires
+     * Uses long arithmetic before clipping the balance, and fires
      * {@link InsightPointsChangedEvent} when the value changes. Symmetric with {@link #addAptitude}.
      *
      * @param amount may be negative; final value is clamped to {@code >= 0}
      */
     public static void addInsightPoints(ServerPlayer player, int amount) {
-        setInsightPoints(player, getInsightPoints(player) + amount);
+        PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+        commitPointChange(player, data, pointBalance(data, (long) data.insightPoints() + amount));
+    }
+
+    private static PlayerEpiphanyData pointBalance(PlayerEpiphanyData data, long requested) {
+        long balance = Math.max(0, Math.min(Integer.MAX_VALUE, requested));
+        if (balance > data.insightPoints()) {
+            balance = Math.min(balance, data.insightPoints() + remainingPoints(data));
+        }
+        PlayerEpiphanyData updated = data.withInsightPoints((int) balance);
+        if (balance > data.insightPoints() && remainingPoints(updated) == 0) {
+            updated = updated.withAptitude(0);
+        }
+        return updated;
+    }
+
+    private static void commitPointChange(ServerPlayer player, PlayerEpiphanyData before, PlayerEpiphanyData after) {
+        if (before.equals(after)) return;
+        player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, after);
+        if (before.insightPoints() != after.insightPoints()) {
+            NeoForge.EVENT_BUS.post(new InsightPointsChangedEvent(player, before.insightPoints(), after.insightPoints()));
+        }
+        if (before.aptitude() != after.aptitude()) {
+            NeoForge.EVENT_BUS.post(new AptitudeChangedEvent(player, before.aptitude(), after.aptitude()));
+        }
+    }
+
+    /** Records even a zero delta, so a clipped reward can never remove unrelated points. */
+    public static void applyInsightPointsReward(ServerPlayer player, String sourceKey, int amount) {
+        PlayerEpiphanyData before = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+        PlayerEpiphanyData after = pointBalance(before, (long) before.insightPoints() + amount);
+        var receipts = new ArrayList<>(before.insightPointRewards().getOrDefault(sourceKey, List.of()));
+        receipts.add(after.insightPoints() - before.insightPoints());
+        after = after.withInsightPointReward(sourceKey, receipts);
+        commitPointChange(player, before, after);
+    }
+
+    /** Consumes the latest receipt before events. Unknown historical amounts are never guessed. */
+    public static void removeInsightPointsReward(ServerPlayer player, String sourceKey) {
+        PlayerEpiphanyData before = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+        List<Integer> receipts = before.insightPointRewards().get(sourceKey);
+        if (receipts == null || receipts.isEmpty()) {
+            Epiphany.LOGGER.warn("Cannot reverse untracked historical insight-points reward {} for {}; preserving balance",
+                    sourceKey, player.getUUID());
+            return;
+        }
+        int delta = receipts.getLast();
+        PlayerEpiphanyData after = pointBalance(before, (long) before.insightPoints() - delta)
+                .withInsightPointReward(sourceKey, receipts.subList(0, receipts.size() - 1));
+        commitPointChange(player, before, after);
     }
 
     /**
@@ -191,11 +262,11 @@ public final class AptitudeManager {
      * @return the amount of aptitude actually granted (0 if the player was already at/above threshold)
      */
     public static long fillAptitude(ServerPlayer player) {
+        if (!canGainInsightPoints(player)) return 0;
         long required = getRequiredForNextPoint(player);
         long toAdd = required - getAptitude(player);
         if (toAdd > 0) {
-            addAptitude(player, toAdd);
-            return toAdd;
+            return grantAptitude(player, toAdd, null) ? toAdd : 0;
         }
         return 0L;
     }

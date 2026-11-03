@@ -71,7 +71,7 @@ public final class AptitudeSourceManager {
 
     /** Package-private to verify settlement independently of registry lookup. */
     static boolean grantResolved(ServerPlayer sp, AptitudeSourceResolver.Resolution res) {
-        if (!res.applies()) return false;
+        if (!res.applies() || !AptitudeManager.canGainInsightPoints(sp)) return false;
 
         final long scaled;
         try {

@@ -148,6 +148,7 @@ public final class EpiphanyManager {
         }
 
         int refund = state.selected() ? 1 : 0;
+        data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
         EpiphanyPlayerState newState = EpiphanyPlayerState.createDefault();
         PlayerEpiphanyData newData = data.withEpiphanyState(epiphanyId, newState)
                 .withUsedEpiphanySlots(Math.max(0, data.usedEpiphanySlots() - refund));
