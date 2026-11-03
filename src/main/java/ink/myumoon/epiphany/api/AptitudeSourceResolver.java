@@ -1,7 +1,7 @@
 package ink.myumoon.epiphany.api;
 
-import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.content.AptitudeSourceConfig;
+import ink.myumoon.epiphany.content.AptitudeAmount;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
 import net.minecraft.core.Registry;
@@ -12,6 +12,7 @@ import net.minecraft.tags.TagKey;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * Resolves a single behavior+target pair to an aptitude reward.
@@ -28,9 +29,9 @@ import java.util.Optional;
  *   <li>If {@code exclude} contains either the target id or a {@code #tag} that
  *       the target belongs to (per {@code registryKey}) → SKIP (apply = false).</li>
  *   <li>If {@code specials} contains the target → reward = special.reward.orElse(default).</li>
- *   <li>Otherwise reward = default. reward {@code <=} 0 → SKIP.</li>
+ *   <li>Otherwise reward = default. No positive possible base or first reward → SKIP.</li>
  *   <li>If the matched special defines {@code first_reward} and the player hasn't
- *       claimed it yet → add it to the reward and request a claim mark.</li>
+ *       claimed it yet → describe its range separately and request a claim mark.</li>
  * </ol>
  * <p>
  * Tag resolution: pass a {@code registryKey} (e.g. {@link net.minecraft.core.registries.Registries#ENTITY_TYPE})
@@ -47,13 +48,42 @@ public final class AptitudeSourceResolver {
     private AptitudeSourceResolver() {
     }
 
-    /** Result of a resolve call; immutable. */
+    /** Pure reward description. Base and first reward are sampled independently by grant. */
     public record Resolution(
             boolean applies,
-            long reward,
-            ResourceLocation claimKey // non-null iff a first_reward was granted and needs marking
+            AptitudeAmount baseReward,
+            AptitudeAmount firstReward,
+            @Nullable ResourceLocation claimKey // non-null iff a first reward is available
     ) {
-        public static Resolution skip() { return new Resolution(false, 0L, null); }
+        /** Retains the old constructor for callers describing a fixed reward. */
+        public Resolution(boolean applies, long reward, @Nullable ResourceLocation claimKey) {
+            this(applies, AptitudeAmount.fixed(reward), AptitudeAmount.ZERO, claimKey);
+        }
+
+        public static Resolution skip() {
+            return new Resolution(false, AptitudeAmount.ZERO, AptitudeAmount.ZERO, null);
+        }
+
+        public boolean isFixed() {
+            return baseReward.isFixed() && firstReward.isFixed();
+        }
+
+        public long minReward() {
+            return Math.addExact(baseReward.min(), firstReward.min());
+        }
+
+        public long maxReward() {
+            return Math.addExact(baseReward.max(), firstReward.max());
+        }
+
+        /**
+         * Legacy exact query. Fixed configurations retain their previous result.
+         * Random configurations must inspect baseReward/firstReward or minReward/maxReward.
+         */
+        @Deprecated
+        public long reward() {
+            return Math.addExact(baseReward.fixedValue(), firstReward.fixedValue());
+        }
     }
 
     /**
@@ -79,7 +109,14 @@ public final class AptitudeSourceResolver {
                 .registry(EpiphanyRegistries.APTITUDE_SOURCE_REGISTRY_KEY)
                 .map(reg -> reg.get(behaviorId));
         if (configOpt.isEmpty()) return Resolution.skip();
-        AptitudeSourceConfig config = configOpt.get();
+        return resolve(configOpt.get(), behaviorId, targetId, registry,
+                key -> sp.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA).claimedFirsts().containsKey(key));
+    }
+
+    /** Shared pure matching logic; the predicate only inspects existing first-reward claims. */
+    static Resolution resolve(AptitudeSourceConfig config, ResourceLocation behaviorId,
+                              ResourceLocation targetId, @Nullable Registry<?> registry,
+                              Predicate<ResourceLocation> alreadyClaimed) {
 
         // (2) exclude — short-circuit on first match
         for (String ex : config.exclude()) {
@@ -87,8 +124,8 @@ public final class AptitudeSourceResolver {
         }
 
         // (3) specials override + (5) first_reward gating
-        long reward;
-        Optional<Long> optFirst = Optional.empty();
+        AptitudeAmount reward;
+        Optional<AptitudeAmount> optFirst = Optional.empty();
         AptitudeSourceConfig.SpecialEntry matched = null;
         for (AptitudeSourceConfig.SpecialEntry s : config.specials()) {
             if (matchesReference(registry, s.target(), targetId)) {
@@ -97,21 +134,19 @@ public final class AptitudeSourceResolver {
             }
         }
         if (matched != null) {
-            reward = matched.reward().orElse(config.defaultOrZero());
+            reward = matched.reward().orElse(config.defaultAmountOrZero());
             optFirst = matched.firstReward();
         } else {
-            reward = config.defaultOrZero();
+            reward = config.defaultAmountOrZero();
         }
-        if (reward <= 0 && optFirst.isEmpty()) return Resolution.skip();
-
         if (optFirst.isPresent()) {
             ResourceLocation claimKey = claimKey(behaviorId, targetId);
-            PlayerEpiphanyData data = sp.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
-            if (!data.claimedFirsts().containsKey(claimKey)) {
-                return new Resolution(true, reward + optFirst.get(), claimKey);
+            if (!alreadyClaimed.test(claimKey)) {
+                AptitudeAmount first = optFirst.get();
+                return new Resolution(reward.max() > 0 || first.max() > 0, reward, first, claimKey);
             }
         }
-        return new Resolution(true, reward, null);
+        return new Resolution(reward.max() > 0, reward, AptitudeAmount.ZERO, null);
     }
 
     /**

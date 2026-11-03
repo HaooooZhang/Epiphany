@@ -1,5 +1,6 @@
 package ink.myumoon.epiphany.api;
 
+import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.event.AptitudeChangedEvent;
 import ink.myumoon.epiphany.event.AptitudeLevelUpEvent;
@@ -7,8 +8,13 @@ import ink.myumoon.epiphany.event.InsightPointsChangedEvent;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyAttributes;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.neoforged.neoforge.common.NeoForge;
+import org.jetbrains.annotations.Nullable;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 
 public final class AptitudeManager {
 
@@ -53,20 +59,35 @@ public final class AptitudeManager {
      * Multiple {@link AptitudeLevelUpEvent}s may fire in a single call.
      */
     public static void addAptitude(ServerPlayer player, long amount) {
-        if (amount <= 0) return;
+        grantAptitude(player, amount, null);
+    }
+
+    /** Commits a positive gain and an optional first claim together, before events. */
+    static boolean grantAptitude(ServerPlayer player, long amount, @Nullable ResourceLocation claimKey) {
+        if (amount <= 0) return false;
 
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
-        long aptitude = data.aptitude() + amount;
+        if (claimKey != null && data.claimedFirsts().containsKey(claimKey)) return false;
+        long aptitude;
         long oldValue = data.aptitude();
         int oldInsightPoints = data.insightPoints();
         int pointsEarned = 0;
 
         // Level up loop in order to apply all changes in one setData call
-        long required;
-        while ((required = AptitudeFormula.calcRequiredAptitude(
-                data.totalInsightPointsSpent(), data.insightPoints() + pointsEarned)) <= aptitude) {
-            aptitude -= required;
-            pointsEarned++;
+        try {
+            aptitude = Math.addExact(data.aptitude(), amount);
+            while (aptitude > 0) {
+                int points = Math.addExact(data.insightPoints(), pointsEarned);
+                long required = AptitudeFormula.calcRequiredAptitude(data.totalInsightPointsSpent(), points);
+                if (required <= 0) throw new ArithmeticException("Non-positive aptitude price");
+                if (aptitude < required) break;
+                aptitude -= required;
+                pointsEarned = Math.incrementExact(pointsEarned);
+                Math.addExact(data.insightPoints(), pointsEarned);
+            }
+        } catch (ArithmeticException e) {
+            Epiphany.LOGGER.warn("Rejected aptitude gain before settlement: {}", e.getMessage());
+            return false;
         }
 
         if (pointsEarned > 0) {
@@ -75,6 +96,7 @@ public final class AptitudeManager {
         } else {
             data = data.withAptitude(aptitude);
         }
+        if (claimKey != null) data = data.withClaimedFirst(claimKey);
         player.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, data);
 
         // Fire level-up events (per +1, for achievement/stat listeners)
@@ -90,6 +112,7 @@ public final class AptitudeManager {
         }
 
         NeoForge.EVENT_BUS.post(new AptitudeChangedEvent(player, oldValue, aptitude));
+        return true;
     }
 
     /**
@@ -114,7 +137,10 @@ public final class AptitudeManager {
 
         AttributeInstance attr = player.getAttribute(EpiphanyAttributes.APTITUDE_GAIN_MULTIPLIER);
         double multiplier = attr != null ? attr.getValue() : 1.0;
-        return (long) Math.floor(amount * multiplier);
+        if (!Double.isFinite(multiplier)) throw new ArithmeticException("Non-finite aptitude multiplier");
+        if (multiplier <= 0) return 0;
+        return BigDecimal.valueOf(amount).multiply(BigDecimal.valueOf(multiplier))
+                .setScale(0, RoundingMode.FLOOR).longValueExact();
     }
 
     /**

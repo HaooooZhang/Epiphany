@@ -1,11 +1,11 @@
 package ink.myumoon.epiphany.content;
 
 import com.mojang.serialization.Codec;
+import com.mojang.serialization.DataResult;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
-import net.minecraft.resources.ResourceLocation;
 
 import java.util.List;
 import java.util.Optional;
@@ -18,7 +18,9 @@ import java.util.Optional;
  * registry; the entry id (e.g. {@code epiphany:kill_entity}) is the behavior
  * identifier that a listener looks up when an event fires.
  * <p>
- * JSON shape:
+ * Amount fields accept a fixed number, [min, max], or {min, max}.
+ * Ranges are inclusive non-negative integers; missing reward falls back to default.
+ * JSON shape (fixed amounts remain supported):
  * <pre>{@code
  * {
  *   "default": 3,                       // reward applied when target is not in specials/exclude
@@ -39,7 +41,7 @@ import java.util.Optional;
  * parsing; the resolver interprets the prefix per registry at runtime.
  */
 public record AptitudeSourceConfig(
-        Optional<Long> defaultReward,
+        Optional<AptitudeAmount> defaultReward,
         List<SpecialEntry> specials,
         List<String> exclude
 ) {
@@ -49,29 +51,49 @@ public record AptitudeSourceConfig(
 
     public record SpecialEntry(
             String target,
-            Optional<Long> reward,
-            Optional<Long> firstReward
+            Optional<AptitudeAmount> reward,
+            Optional<AptitudeAmount> firstReward
     ) {
         public static final Codec<SpecialEntry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.STRING.fieldOf("target").forGetter(SpecialEntry::target),
-                Codec.LONG.optionalFieldOf("reward").forGetter(SpecialEntry::reward),
-                Codec.LONG.optionalFieldOf("first_reward").forGetter(SpecialEntry::firstReward)
+                AptitudeAmount.CODEC.optionalFieldOf("reward").forGetter(SpecialEntry::reward),
+                AptitudeAmount.CODEC.optionalFieldOf("first_reward").forGetter(SpecialEntry::firstReward)
         ).apply(instance, SpecialEntry::new));
     }
 
-    public static final Codec<AptitudeSourceConfig> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Codec.LONG.optionalFieldOf("default").forGetter(AptitudeSourceConfig::defaultReward),
+    public static final Codec<AptitudeSourceConfig> CODEC = RecordCodecBuilder.<AptitudeSourceConfig>create(instance -> instance.group(
+            AptitudeAmount.CODEC.optionalFieldOf("default").forGetter(AptitudeSourceConfig::defaultReward),
             SpecialEntry.CODEC.listOf().optionalFieldOf("specials", List.of())
                     .forGetter(AptitudeSourceConfig::specials),
             Codec.STRING.listOf().optionalFieldOf("exclude", List.of())
                     .forGetter(AptitudeSourceConfig::exclude)
-    ).apply(instance, AptitudeSourceConfig::new));
+    ).apply(instance, AptitudeSourceConfig::new)).validate(config -> {
+        for (SpecialEntry special : config.specials()) {
+            if (special.firstReward().isPresent()) {
+                long regularMax = special.reward().orElse(config.defaultAmountOrZero()).max();
+                if (regularMax > Long.MAX_VALUE - special.firstReward().get().max()) {
+                    return DataResult.error(() -> "Aptitude reward + first_reward exceeds Long.MAX_VALUE for "
+                            + special.target());
+                }
+            }
+        }
+        return DataResult.success(config);
+    });
 
     public static final StreamCodec<RegistryFriendlyByteBuf, AptitudeSourceConfig> STREAM_CODEC =
             ByteBufCodecs.fromCodecWithRegistries(CODEC);
 
-    /** Convenience: reward used for any target not in {@link #specials()}. */
+    /** Range used when no special supplies a reward. No randomness is consumed. */
+    public AptitudeAmount defaultAmountOrZero() {
+        return defaultReward.orElse(AptitudeAmount.ZERO);
+    }
+
+    /**
+     * Exact-value compatibility helper for fixed configurations.
+     * @throws IllegalStateException when the default is a random range
+     */
+    @Deprecated
     public long defaultOrZero() {
-        return defaultReward.orElse(0L);
+        return defaultAmountOrZero().fixedValue();
     }
 }

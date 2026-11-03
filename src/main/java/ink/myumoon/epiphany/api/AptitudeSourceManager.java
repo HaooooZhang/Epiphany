@@ -1,7 +1,6 @@
 package ink.myumoon.epiphany.api;
 
-import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
-import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
+import ink.myumoon.epiphany.Epiphany;
 import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
@@ -32,8 +31,9 @@ public final class AptitudeSourceManager {
     }
 
     /**
-     * Pure resolution: figure out the reward for one behavior+target pair without
-     * applying any side effect. Useful for inspection, UI hints, etc.
+     * Pure resolution: describes base and first-reward ranges without sampling.
+     * Use the result's minReward/maxReward for bounds, or baseReward/firstReward
+     * for the independently sampled components. Legacy reward() is fixed-only.
      */
     public static AptitudeSourceResolver.Resolution resolve(
             ServerPlayer sp,
@@ -45,10 +45,9 @@ public final class AptitudeSourceManager {
     }
 
     /**
-     * Resolve + grant: applies the player's {@code aptitude_gain_multiplier}
-     * attribute, marks the {@code first_reward} claim if applicable, and finally
-     * calls {@link AptitudeManager#addAptitudeWithMultiplier} which fires the standard aptitude
-     * events ({@code AptitudeChanged}, {@code AptitudeLevelUp}, {@code InsightPointsChanged}).
+     * Resolve + grant: samples base and first reward independently on the server,
+     * applies the player's multiplier once to their sum, then atomically commits
+     * the gain and first-reward claim before posting the standard aptitude events.
      *
      * @param sp          the player who triggered the behavior
      * @param behaviorId  entry id in {@code epiphany:aptitude} registry (e.g. {@code epiphany:kill_entity})
@@ -67,20 +66,24 @@ public final class AptitudeSourceManager {
             ResourceLocation targetId,
             @Nullable Registry<?> registry
     ) {
-        var res = AptitudeSourceResolver.resolve(sp, behaviorId, targetId, registry);
+        return grantResolved(sp, AptitudeSourceResolver.resolve(sp, behaviorId, targetId, registry));
+    }
+
+    /** Package-private to verify settlement independently of registry lookup. */
+    static boolean grantResolved(ServerPlayer sp, AptitudeSourceResolver.Resolution res) {
         if (!res.applies()) return false;
 
-        long scaled = AptitudeManager.scaleAptitudeWithMultiplier(sp, res.reward());
+        final long scaled;
+        try {
+            long sampled = Math.addExact(res.baseReward().sample(sp.getRandom()),
+                    res.firstReward().sample(sp.getRandom()));
+            scaled = AptitudeManager.scaleAptitudeWithMultiplier(sp, sampled);
+        } catch (ArithmeticException e) {
+            Epiphany.LOGGER.warn("Rejected aptitude source gain: {}", e.getMessage());
+            return false;
+        }
         if (scaled <= 0) return false;
 
-        // Mark first_reward claim FIRST so downstream consumers (e.g. events fired by
-        // AptitudeManager.addAptitude) see a consistent state even if they cancel.
-        if (res.claimKey() != null) {
-            PlayerEpiphanyData data = sp.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
-            sp.setData(EpiphanyAttachmentTypes.EPIPHANY_DATA, data.withClaimedFirst(res.claimKey()));
-        }
-
-        AptitudeManager.addAptitudeWithMultiplier(sp, res.reward());
-        return true;
+        return AptitudeManager.grantAptitude(sp, scaled, res.claimKey());
     }
 }

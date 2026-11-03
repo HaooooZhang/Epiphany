@@ -260,7 +260,9 @@ public interface EpiphanyBinding {
     // ─── Aptitude Source API (third-party behavior integration) ────
 
     /**
-     * Pure resolution: returns the reward for one behavior+target pair without applying side effects.
+     * Pure resolution without sampling. Inspect r.baseReward().min()/max(),
+     * r.firstReward().min()/max(), or r.minReward()/maxReward(). Legacy r.reward()
+     * returns the exact value only when r.isFixed(); it rejects random ranges.
      * JS: {@code var r = Epiphany.resolveAptitudeSource(player, id("epiphany","kill_entity"), id("minecraft","zombie"), null)}
      */
     static AptitudeSourceResolver.Resolution resolveAptitudeSource(

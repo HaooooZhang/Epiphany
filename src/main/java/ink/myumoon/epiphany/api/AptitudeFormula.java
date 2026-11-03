@@ -31,7 +31,7 @@ public final class AptitudeFormula {
      */
     public static long calcRequiredAptitude(long totalSpent, int insightPoints) {
         long totalEarned = totalSpent + insightPoints;
-        return Config.BASE_APTITUDE_CAP.get()
-                + totalEarned * Config.APTITUDE_CAP_GROWTH.get();
+        return Math.addExact(Config.BASE_APTITUDE_CAP.get(),
+                Math.multiplyExact(totalEarned, Config.APTITUDE_CAP_GROWTH.get()));
     }
 }
