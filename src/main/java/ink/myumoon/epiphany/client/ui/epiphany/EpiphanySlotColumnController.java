@@ -3,10 +3,9 @@ package ink.myumoon.epiphany.client.ui.epiphany;
 import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
-import com.lowdragmc.lowdraglib2.gui.ui.event.UIEventListener;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
 import com.lowdragmc.lowdraglib2.gui.util.UISoundUtils;
-import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.config.CommonConfig;
 import ink.myumoon.epiphany.api.DisplayDataManager;
 import ink.myumoon.epiphany.client.EpiphanyIcons;
 import ink.myumoon.epiphany.client.ui.ClientData;
@@ -57,7 +56,7 @@ public final class EpiphanySlotColumnController {
     // Rebuild the slot column.
     private static void refreshColumn(UI ui, UIElement col) {
         col.clearAllChildren();
-        int maxSlots = Config.MAX_EPIPHANY_SLOTS.get();
+        int maxSlots = CommonConfig.MAX_EPIPHANY_SLOTS.get();
 
         // Selected epiphanies in stable display order.
         List<ResourceLocation> selected = new ArrayList<>();

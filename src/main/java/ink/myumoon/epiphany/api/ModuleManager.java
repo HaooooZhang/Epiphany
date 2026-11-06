@@ -1,6 +1,6 @@
 package ink.myumoon.epiphany.api;
 
-import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.config.CommonConfig;
 import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.attachment.InsightPlayerState;
 import ink.myumoon.epiphany.attachment.ModulePlayerState;
@@ -65,9 +65,9 @@ public final class ModuleManager {
                 .count();
     }
 
-    /** Hard cap on simultaneously selected Modules, from {@link Config#MAX_SELECTED_MODULES}. */
+    /** Hard cap on simultaneously selected Modules, from {@link CommonConfig#MAX_SELECTED_MODULES}. */
     public static int getMaxSelectedModules() {
-        return Config.MAX_SELECTED_MODULES.get();
+        return CommonConfig.MAX_SELECTED_MODULES.get();
     }
 
     // unlock
@@ -101,13 +101,13 @@ public final class ModuleManager {
         if (!isUnlocked(player, moduleId)) return;
         if (state.selected()) return;
 
-        int cost = Config.MODULE_SELECT_COST.get();
+        int cost = CommonConfig.MODULE_SELECT_COST.get();
         if (data.insightPoints() < cost) return;
 
         // Module selection limit
         long selectedCount = data.modules().values().stream()
                 .filter(ModulePlayerState::selected).count();
-        if (selectedCount >= Config.MAX_SELECTED_MODULES.get()) return;
+        if (selectedCount >= CommonConfig.MAX_SELECTED_MODULES.get()) return;
 
         ModuleSelectEvent pre = new ModuleSelectEvent(player, moduleId);
         NeoForge.EVENT_BUS.post(pre);
@@ -156,7 +156,7 @@ public final class ModuleManager {
         NeoForge.EVENT_BUS.post(pre);
         if (pre.isCanceled()) return;
 
-        int newSlots = Math.min(data.epiphanySlots() + 1, Config.MAX_EPIPHANY_SLOTS.get());
+        int newSlots = Math.min(data.epiphanySlots() + 1, CommonConfig.MAX_EPIPHANY_SLOTS.get());
         ModulePlayerState newState = new ModulePlayerState(
                 state.unlocked(), state.selected(), true, state.unlockedInsights()
         );
@@ -262,7 +262,7 @@ public final class ModuleManager {
         for (var e : module.insights()) allIds.add(e.id());
 
         ModulePlayerState newState = new ModulePlayerState(true, true, true, allIds);
-        int newSlots = Math.min(data.epiphanySlots() + 1, Config.MAX_EPIPHANY_SLOTS.get());
+        int newSlots = Math.min(data.epiphanySlots() + 1, CommonConfig.MAX_EPIPHANY_SLOTS.get());
         PlayerEpiphanyData newData = data.withEpiphanySlots(newSlots)
                 .withModuleState(moduleId, newState);
         if (!oldState.selected()) {
@@ -304,7 +304,7 @@ public final class ModuleManager {
             }
         }
         if (state.selected()) {
-            refund += Config.MODULE_SELECT_COST.get();
+            refund += CommonConfig.MODULE_SELECT_COST.get();
         }
 
         ModulePlayerState newState = ModulePlayerState.createDefault();
@@ -376,7 +376,7 @@ public final class ModuleManager {
                 alreadyRefundedInsights.add(insightId);
             }
             if (state.selected()) {
-                refund += Config.MODULE_SELECT_COST.get();
+                refund += CommonConfig.MODULE_SELECT_COST.get();
             }
 
             newData = DisplayDataManager.removeModule(newData.withoutModule(moduleId), moduleId);

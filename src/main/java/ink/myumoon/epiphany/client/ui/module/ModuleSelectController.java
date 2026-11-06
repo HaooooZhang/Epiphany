@@ -14,7 +14,7 @@ import dev.vfyjxf.taffy.style.AlignContent;
 import dev.vfyjxf.taffy.style.AlignItems;
 import dev.vfyjxf.taffy.style.FlexDirection;
 import dev.vfyjxf.taffy.style.TaffyPosition;
-import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.config.CommonConfig;
 import ink.myumoon.epiphany.attachment.ModulePlayerState;
 import ink.myumoon.epiphany.client.ui.ClientData;
 import ink.myumoon.epiphany.client.ui.EmptyStateElement;
@@ -108,7 +108,7 @@ public final class ModuleSelectController {
         var data = ClientData.clientData();
         if (lookup == null || data == null) return;
 
-        int moduleSelectCost = Config.MODULE_SELECT_COST.get();
+        int moduleSelectCost = CommonConfig.MODULE_SELECT_COST.get();
         int playerPoints = data.insightPoints();
 
         // Collect candidate modules

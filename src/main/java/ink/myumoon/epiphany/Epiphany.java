@@ -1,6 +1,8 @@
 package ink.myumoon.epiphany;
 
+import ink.myumoon.epiphany.config.CommonConfig;
 import ink.myumoon.epiphany.registry.*;
+import ink.myumoon.epiphany.config.ProgressionConfig;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.EntityType;
 import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
@@ -27,7 +29,8 @@ public class Epiphany {
     public static final Logger LOGGER = LogUtils.getLogger();
 
     public Epiphany(IEventBus modEventBus, ModContainer modContainer) {
-        modContainer.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
+        modContainer.registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC);
+        ProgressionConfig.register(modEventBus, modContainer);
         EpiphanyAttachmentTypes.REGISTRY.register(modEventBus);
         EpiphanyConditionTypes.REGISTRY.register(modEventBus);
         EpiphanyInsightRewardTypes.REGISTRY.register(modEventBus);

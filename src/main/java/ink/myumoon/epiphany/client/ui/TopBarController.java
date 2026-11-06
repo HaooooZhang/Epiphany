@@ -5,8 +5,6 @@ import com.lowdragmc.lowdraglib2.gui.ui.UI;
 import com.lowdragmc.lowdraglib2.gui.ui.UIElement;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.elements.ProgressBar;
-import ink.myumoon.epiphany.Config;
-import ink.myumoon.epiphany.api.AptitudeFormula;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import net.minecraft.network.chat.Component;
 import net.neoforged.api.distmarker.Dist;
@@ -37,8 +35,9 @@ public final class TopBarController {
         PlayerEpiphanyData data = ClientData.clientData();
         if (data == null) return 0f;
         if (isAtPointLimit(data)) return 1f;
-        long cap = AptitudeFormula.calcRequiredAptitude(
-                data.totalInsightPointsSpent(), data.insightPoints());
+        long cap;
+        try { cap = ClientData.progressionRules().requiredAptitude(data.totalInsightPointsSpent(), data.insightPoints()); }
+        catch (ArithmeticException exception) { return 0f; }
         if (cap <= 0) return 0f;
         double ratio = data.aptitude() / (double) cap;
         return (float) Math.max(0, Math.min(1, ratio));
@@ -48,8 +47,9 @@ public final class TopBarController {
         PlayerEpiphanyData data = ClientData.clientData();
         if (data == null) return Component.translatable("epiphany.ui.apt_ratio", 0, 0);
         if (isAtPointLimit(data)) return Component.translatable("epiphany.ui.apt_capped");
-        long cap = AptitudeFormula.calcRequiredAptitude(
-                data.totalInsightPointsSpent(), data.insightPoints());
+        long cap;
+        try { cap = ClientData.progressionRules().requiredAptitude(data.totalInsightPointsSpent(), data.insightPoints()); }
+        catch (ArithmeticException exception) { return Component.translatable("epiphany.curve.overflow"); }
         return Component.translatable("epiphany.ui.apt_ratio", data.aptitude(), cap);
     }
 
@@ -59,9 +59,7 @@ public final class TopBarController {
     }
 
     private static boolean isAtPointLimit(PlayerEpiphanyData data) {
-        int limit = Config.MAX_TOTAL_INSIGHT_POINTS.get();
-        long total = (long) data.totalInsightPointsSpent() + data.insightPoints();
-        return data.insightPoints() == Integer.MAX_VALUE || (limit >= 0 && total >= limit);
+        return ClientData.progressionRules().remainingPoints(data.totalInsightPointsSpent(), data.insightPoints()) == 0;
     }
 
     private static <T extends UIElement> T selectOne(UI ui, String selector, Class<T> type) {

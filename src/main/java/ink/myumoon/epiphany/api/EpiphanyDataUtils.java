@@ -1,6 +1,6 @@
 package ink.myumoon.epiphany.api;
 
-import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.config.CommonConfig;
 import ink.myumoon.epiphany.attachment.EpiphanyPlayerState;
 import ink.myumoon.epiphany.attachment.ModulePlayerState;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
@@ -41,7 +41,7 @@ public final class EpiphanyDataUtils {
 
     /**
      * Sums the cost of every unlockable that the player currently holds, for refund purposes:
-     * {@link Config#MODULE_SELECT_COST} per selected Module, plus each unlocked Insight's
+     * {@link CommonConfig#MODULE_SELECT_COST} per selected Module, plus each unlocked Insight's
      * {@code cost()} value (looked up from the datapack registry).
      * <p>
      * Pure read — does not mutate player data.
@@ -51,7 +51,7 @@ public final class EpiphanyDataUtils {
                 .registryOrThrow(EpiphanyRegistries.INSIGHT_REGISTRY_KEY);
         int total = 0;
         for (var moduleState : data.modules().values()) {
-            if (moduleState.selected()) total += Config.MODULE_SELECT_COST.get();
+            if (moduleState.selected()) total += CommonConfig.MODULE_SELECT_COST.get();
             for (ResourceLocation insightId : moduleState.unlockedInsights()) {
                 var insight = iReg.get(insightId);
                 if (insight != null) total += insight.cost();

@@ -2,6 +2,7 @@ package ink.myumoon.epiphany;
 
 import com.mojang.blaze3d.platform.InputConstants;
 import ink.myumoon.epiphany.client.ui.EpiphanyUIFactory;
+import ink.myumoon.epiphany.client.ui.progression.EpiphanyConfigurationScreen;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.neoforged.api.distmarker.Dist;
@@ -11,7 +12,6 @@ import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
-import net.neoforged.neoforge.client.gui.ConfigurationScreen;
 import net.neoforged.neoforge.client.gui.IConfigScreenFactory;
 
 @Mod(value = Epiphany.MODID, dist = Dist.CLIENT)
@@ -23,7 +23,7 @@ public class EpiphanyClient {
             "key.categories.epiphany");
 
     public EpiphanyClient(ModContainer container, net.neoforged.bus.api.IEventBus modEventBus) {
-        container.registerExtensionPoint(IConfigScreenFactory.class, ConfigurationScreen::new);
+        container.registerExtensionPoint(IConfigScreenFactory.class, EpiphanyConfigurationScreen::create);
         modEventBus.addListener(this::onRegisterKeyMappings);
     }
 

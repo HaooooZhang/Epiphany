@@ -8,7 +8,7 @@ import com.lowdragmc.lowdraglib2.gui.ui.elements.Label;
 import com.lowdragmc.lowdraglib2.gui.ui.event.HoverTooltips;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEventListener;
 import com.lowdragmc.lowdraglib2.gui.ui.event.UIEvents;
-import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.config.CommonConfig;
 import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.api.InsightManager;
 import ink.myumoon.epiphany.api.DisplayDataManager;
@@ -64,7 +64,7 @@ public final class ModuleGridController {
     // Rebuild the grid
     private static void refreshGrid(UI ui, UIElement grid) {
         grid.clearAllChildren();
-        int slotCount = Math.max(1, Config.MAX_SELECTED_MODULES.get());
+        int slotCount = Math.max(1, CommonConfig.MAX_SELECTED_MODULES.get());
 
         // Collect selected Module IDs from the client-side attachment mirror.
         List<Map.Entry<ResourceLocation, ModulePlayerState>> selected =
@@ -210,7 +210,7 @@ public final class ModuleGridController {
 
         // Determine affordability from the latest client attachment snapshot.
         var data = ClientData.clientData();
-        int cost = Config.MODULE_SELECT_COST.get();
+        int cost = CommonConfig.MODULE_SELECT_COST.get();
         boolean canAfford = data != null && data.insightPoints() >= cost;
 
         Button button = new Button();

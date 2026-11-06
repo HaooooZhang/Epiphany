@@ -1,6 +1,6 @@
 package ink.myumoon.epiphany.api;
 
-import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.config.CommonConfig;
 import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.attachment.EpiphanyPlayerState;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
@@ -54,9 +54,9 @@ public final class EpiphanyManager {
         return player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA).usedEpiphanySlots();
     }
 
-    /** Hard cap on selectable Epiphanies, from {@link Config#MAX_EPIPHANY_SLOTS}. */
+    /** Hard cap on selectable Epiphanies, from {@link CommonConfig#MAX_EPIPHANY_SLOTS}. */
     public static int getMaxEpiphanySlots() {
-        return Config.MAX_EPIPHANY_SLOTS.get();
+        return CommonConfig.MAX_EPIPHANY_SLOTS.get();
     }
 
     // unlock
@@ -94,7 +94,7 @@ public final class EpiphanyManager {
         if (!isUnlocked(player, epiphanyId)) return;
         if (state.selected()) return;
 
-        int maxSlots = Config.MAX_EPIPHANY_SLOTS.get();
+        int maxSlots = CommonConfig.MAX_EPIPHANY_SLOTS.get();
         if (data.usedEpiphanySlots() >= data.epiphanySlots()
                 || data.usedEpiphanySlots() >= maxSlots) return;
 

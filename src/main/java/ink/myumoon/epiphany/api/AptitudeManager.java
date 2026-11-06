@@ -1,7 +1,7 @@
 package ink.myumoon.epiphany.api;
 
 import ink.myumoon.epiphany.Epiphany;
-import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.config.ProgressionConfig;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.event.AptitudeChangedEvent;
 import ink.myumoon.epiphany.event.AptitudeLevelUpEvent;
@@ -49,9 +49,7 @@ public final class AptitudeManager {
     }
 
     private static long remainingPoints(PlayerEpiphanyData data) {
-        int limit = Config.MAX_TOTAL_INSIGHT_POINTS.get();
-        long storage = (long) Integer.MAX_VALUE - data.insightPoints();
-        return limit < 0 ? storage : Math.max(0, Math.min(storage, (long) limit - totalPoints(data)));
+        return ProgressionConfig.serverRules().remainingPoints(data.totalInsightPointsSpent(), data.insightPoints());
     }
 
     /**
@@ -89,7 +87,8 @@ public final class AptitudeManager {
         if (amount <= 0) return false;
 
         PlayerEpiphanyData data = player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
-        long remaining = remainingPoints(data);
+        var rules = ProgressionConfig.serverRules();
+        long remaining = rules.remainingPoints(data.totalInsightPointsSpent(), data.insightPoints());
         if (remaining <= 0) return false;
         if (claimKey != null && data.claimedFirsts().containsKey(claimKey)) return false;
         long aptitude;
@@ -102,7 +101,7 @@ public final class AptitudeManager {
             aptitude = Math.addExact(data.aptitude(), amount);
             while (aptitude > 0 && pointsEarned < remaining) {
                 int points = Math.addExact(data.insightPoints(), pointsEarned);
-                long required = AptitudeFormula.calcRequiredAptitude(data.totalInsightPointsSpent(), points);
+                long required = rules.requiredAptitude(data.totalInsightPointsSpent(), points);
                 if (required <= 0) throw new ArithmeticException("Non-positive aptitude price");
                 if (aptitude < required) break;
                 aptitude -= required;
@@ -263,7 +262,12 @@ public final class AptitudeManager {
      */
     public static long fillAptitude(ServerPlayer player) {
         if (!canGainInsightPoints(player)) return 0;
-        long required = getRequiredForNextPoint(player);
+        long required;
+        try { required = getRequiredForNextPoint(player); }
+        catch (ArithmeticException exception) {
+            Epiphany.LOGGER.warn("Rejected aptitude fill: {}", exception.getMessage());
+            return 0;
+        }
         long toAdd = required - getAptitude(player);
         if (toAdd > 0) {
             return grantAptitude(player, toAdd, null) ? toAdd : 0;

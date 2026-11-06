@@ -1,6 +1,6 @@
 package ink.myumoon.epiphany.listener;
 
-import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.config.CommonConfig;
 import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.content.EpiphanyData;
 import ink.myumoon.epiphany.content.InitialState;
@@ -39,7 +39,7 @@ public final class NotificationListener {
 
     @SubscribeEvent
     static void onInsightPointsChanged(InsightPointsChangedEvent event) {
-        if (!Config.NOTIFY_INSIGHT_POINTS.get()) return;
+        if (!CommonConfig.NOTIFY_INSIGHT_POINTS.get()) return;
         if (!event.isGain()) return; // only notify gains, not spends
 
         var sp = event.getPlayer();
@@ -52,7 +52,7 @@ public final class NotificationListener {
     @SubscribeEvent
     static void onModuleUnlocked(ModuleUnlockedEvent event) {
         if (event.isSilent()) return;
-        if (!Config.NOTIFY_MODULE_UNLOCK.get()) return;
+        if (!CommonConfig.NOTIFY_MODULE_UNLOCK.get()) return;
 
         var sp = event.getPlayer();
         ModuleData module = moduleData(sp, event.getModuleId());
@@ -67,7 +67,7 @@ public final class NotificationListener {
     @SubscribeEvent
     static void onEpiphanyUnlocked(EpiphanyUnlockedEvent event) {
         if (event.isSilent()) return;
-        if (!Config.NOTIFY_EPIPHANY_UNLOCK.get()) return;
+        if (!CommonConfig.NOTIFY_EPIPHANY_UNLOCK.get()) return;
 
         var sp = event.getPlayer();
         EpiphanyData epiphany = epiphanyData(sp, event.getEpiphanyId());

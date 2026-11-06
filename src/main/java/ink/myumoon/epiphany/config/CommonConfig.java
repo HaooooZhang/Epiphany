@@ -1,8 +1,8 @@
-package ink.myumoon.epiphany;
+package ink.myumoon.epiphany.config;
 
 import net.neoforged.neoforge.common.ModConfigSpec;
 
-public class Config {
+public class CommonConfig {
     private static final ModConfigSpec.Builder BUILDER = new ModConfigSpec.Builder();
 
     // 顿悟槽上限
@@ -20,20 +20,6 @@ public class Config {
             .comment("Maximum number of Modules a player can have selected at once")
             .defineInRange("maxSelectedModules", 8, 1, 64);
 
-    public static final ModConfigSpec.IntValue MAX_TOTAL_INSIGHT_POINTS = BUILDER
-            .comment("Maximum total Insight Points per player (spent + unspent). -1: unlimited; 0: no new points.",
-                    "Lowering this limit preserves existing points and aptitude. New gains stop when total points are at or above the limit.")
-            .defineInRange("maxTotalInsightPoints", -1, -1, Integer.MAX_VALUE);
-
-    // 阅历计算公式
-    public static final ModConfigSpec.LongValue BASE_APTITUDE_CAP = BUILDER
-            .comment("Base aptitude required to earn the first Insight Point")
-            .defineInRange("baseAptitudeCap", 10L, 1L, Long.MAX_VALUE);
-
-    public static final ModConfigSpec.LongValue APTITUDE_CAP_GROWTH = BUILDER
-            .comment("Additional aptitude required per total Insight Point (spent + unspent). Formula: required = baseCap + (totalSpent + insightPoints) * growth")
-            .defineInRange("aptitudeCapGrowth", 1L, 0L, Long.MAX_VALUE);
-            
     // ============================================================
     // Notifications
     // Current implementation sends a chat message + advancement sound.
@@ -51,5 +37,6 @@ public class Config {
             .comment("Notify the player when an Epiphany is unlocked via condition or command. Selectable epiphanies are NOT notified.")
             .define("notifyEpiphanyUnlock", true);
 
-    static final ModConfigSpec SPEC = BUILDER.build();
+    public static final ModConfigSpec SPEC = BUILDER.build();
+
 }

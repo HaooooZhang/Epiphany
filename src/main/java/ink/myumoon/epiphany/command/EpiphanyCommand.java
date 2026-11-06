@@ -4,12 +4,8 @@ import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
-import ink.myumoon.epiphany.Config;
 import ink.myumoon.epiphany.api.*;
-import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.client.ui.EpiphanyUIFactory;
-import ink.myumoon.epiphany.content.reward.RewardListHelper;
-import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -123,7 +119,12 @@ public final class EpiphanyCommand {
                                 .executes(ctx -> {
                                     ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
                                     if (rejectCappedGrowth(ctx.getSource(), target, false)) return 0;
-                                    long required = AptitudeManager.getRequiredForNextPoint(target);
+                                    long required;
+                                    try { required = AptitudeManager.getRequiredForNextPoint(target); }
+                                    catch (ArithmeticException exception) {
+                                        ctx.getSource().sendFailure(t("epiphany.curve.overflow"));
+                                        return 0;
+                                    }
                                     AptitudeManager.fillAptitude(target);
                                     ctx.getSource().sendSuccess(
                                             () -> t("commands.epiphany.aptitude.fill.success", required, target.getGameProfile().getName()), true);

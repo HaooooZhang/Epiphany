@@ -1,26 +1,12 @@
 package ink.myumoon.epiphany.api;
 
-import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.config.ProgressionConfig;
 
-/**
- * Calculates the aptitude required to earn the next Insight Point.
- * <p>
- * Current formula: {@code baseAptitudeCap + totalEarned × aptitudeCapGrowth}
- * where {@code totalEarned = totalSpent + insightPoints}.
- * <p>
- * Example (default: base=10, growth=1):
- * <ul>
- *   <li>1st (0 earned): 10</li>
- *   <li>2nd (1 earned): 11</li>
- *   <li>3rd (2 earned): 12</li>
- * </ul>
- */
+/** Server-side price API for the active segmented curve. Client displays use the synced rule snapshot. */
 public final class AptitudeFormula {
 
     private AptitudeFormula() {
     }
-
-    // TODO: Design more complex formulas (exponential growth, diminishing returns, etc.)
 
     /**
      * Calculates the aptitude required based on total Insight Points ever acquired.
@@ -30,8 +16,6 @@ public final class AptitudeFormula {
      * @return required aptitude
      */
     public static long calcRequiredAptitude(long totalSpent, int insightPoints) {
-        long totalEarned = totalSpent + insightPoints;
-        return Math.addExact(Config.BASE_APTITUDE_CAP.get(),
-                Math.multiplyExact(totalEarned, Config.APTITUDE_CAP_GROWTH.get()));
+        return ProgressionConfig.serverRules().requiredAptitude(totalSpent, insightPoints);
     }
 }

@@ -8,6 +8,7 @@ import ink.myumoon.epiphany.content.ModuleData;
 import ink.myumoon.epiphany.content.PathData;
 import ink.myumoon.epiphany.registry.EpiphanyAttachmentTypes;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
+import ink.myumoon.epiphany.config.ProgressionRules;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.Holder;
@@ -48,6 +49,11 @@ public final class ClientData {
         LocalPlayer player = Minecraft.getInstance().player;
         if (player == null) return null;
         return player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA);
+    }
+
+    public static ProgressionRules progressionRules() {
+        LocalPlayer player = Minecraft.getInstance().player;
+        return player == null ? ProgressionRules.DEFAULT : player.getData(EpiphanyAttachmentTypes.PROGRESSION_RULES);
     }
 
     @Nullable

@@ -3,7 +3,8 @@ package ink.myumoon.epiphany.api;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.attachment.ModulePlayerState;
 import ink.myumoon.epiphany.attachment.EpiphanyPlayerState;
-import ink.myumoon.epiphany.Config;
+import ink.myumoon.epiphany.config.ProgressionConfig;
+import ink.myumoon.epiphany.config.ProgressionRules;
 import ink.myumoon.epiphany.ConfigTestSupport;
 import ink.myumoon.epiphany.content.reward.InsightPointsReward;
 import ink.myumoon.epiphany.content.reward.RewardListHelper;
@@ -92,10 +93,55 @@ class AptitudeSourceGrantTest {
                 .when(player).setData(eq(EpiphanyAttachmentTypes.EPIPHANY_DATA), any(PlayerEpiphanyData.class));
     }
 
-    private MockedStatic<AptitudeFormula> price(long required) {
-        MockedStatic<AptitudeFormula> formula = mockStatic(AptitudeFormula.class);
-        formula.when(() -> AptitudeFormula.calcRequiredAptitude(anyLong(), anyInt())).thenReturn(required);
-        return formula;
+    private MockedStatic<ProgressionConfig> price(long required) {
+        ProgressionRules rules = mock(ProgressionRules.class);
+        when(rules.requiredAptitude(anyLong(), anyInt())).thenReturn(required);
+        when(rules.remainingPoints(anyInt(), anyInt())).thenAnswer(call ->
+                (long) Integer.MAX_VALUE - (int) call.getArgument(1));
+        MockedStatic<ProgressionConfig> config = mockStatic(ProgressionConfig.class);
+        config.when(ProgressionConfig::serverRules).thenReturn(rules);
+        return config;
+    }
+
+    @Test
+    void settlesAcrossSegmentsAndRejectsOverflowWithoutPartialCommitOrClaim() {
+        var rules = ink.myumoon.epiphany.config.ProgressionConfigIO.readFile("""
+                maxTotalInsightPoints = -1
+                [[curve]]
+                from = 0
+                type = "constant"
+                base = 10
+                [[curve]]
+                from = 2
+                type = "linear"
+                base = 20
+                slope = 5
+                """, ProgressionRules.DEFAULT);
+        ConfigTestSupport.setRules(rules);
+        assertTrue(AptitudeManager.grantAptitude(player, 66, CLAIM));
+        assertEquals(4, state.get().insightPoints());
+        assertEquals(1, state.get().aptitude());
+        assertTrue(state.get().claimedFirsts().containsKey(CLAIM));
+
+        state.set(PlayerEpiphanyData.createDefault());
+        ConfigTestSupport.setRules(ink.myumoon.epiphany.config.ProgressionConfigIO.readFile("""
+                maxTotalInsightPoints = -1
+                [[curve]]
+                from = 0
+                type = "constant"
+                base = 1
+                [[curve]]
+                from = 1
+                type = "quadratic"
+                base = 9223372036854775807
+                slope = 1
+                quadratic = 1
+                """, ProgressionRules.DEFAULT));
+        state.set(state.get().withInsightPoints(2));
+        var before = state.get();
+        assertFalse(AptitudeManager.grantAptitude(player, 10, CLAIM));
+        assertSame(before, state.get());
+        assertEquals(0, AptitudeManager.fillAptitude(player));
     }
 
     @SuppressWarnings("unchecked")
@@ -227,7 +273,7 @@ class AptitudeSourceGrantTest {
 
     @Test
     void finiteCapSettlesOnlyRemainingPointsAndDiscardsOverflow() {
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(3);
+        ConfigTestSupport.setLimit(3);
         state.set(state.get().withInsightPoints(1).withTotalInsightPointsSpent(1).withAptitude(5));
         AtomicInteger levels = new AtomicInteger();
         var changes = new ArrayList<String>();
@@ -256,7 +302,7 @@ class AptitudeSourceGrantTest {
 
     @Test
     void cappedSourceDoesNotSampleConsumeFirstOrNotify() {
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(0);
+        ConfigTestSupport.setLimit(0);
         var resolution = new AptitudeSourceResolver.Resolution(true,
                 new AptitudeAmount(1, 10), new AptitudeAmount(1, 10), CLAIM);
         AtomicInteger events = new AtomicInteger();
@@ -281,7 +327,7 @@ class AptitudeSourceGrantTest {
     @Test
     void loweringLimitPreservesOldDataAndRaisingLimitResumesGrowth() {
         state.set(state.get().withInsightPoints(3).withTotalInsightPointsSpent(4).withAptitude(8));
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(5);
+        ConfigTestSupport.setLimit(5);
         PlayerEpiphanyData before = state.get();
         assertFalse(AptitudeManager.grantAptitude(player, 100, CLAIM));
         AptitudeManager.setInsightPoints(player, 10);
@@ -289,7 +335,7 @@ class AptitudeSourceGrantTest {
         AptitudeManager.setInsightPoints(player, 2); // A reduction must not silently clip to L - spent = 1.
         assertEquals(2, state.get().insightPoints());
         assertEquals(8, state.get().aptitude());
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(7);
+        ConfigTestSupport.setLimit(7);
         assertTrue(AptitudeManager.grantAptitude(player, 100, CLAIM));
         assertEquals(3, state.get().insightPoints());
         assertEquals(0, state.get().aptitude());
@@ -297,7 +343,7 @@ class AptitudeSourceGrantTest {
 
     @Test
     void spendingAndRefundingCannotReopenBudget() {
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(5);
+        ConfigTestSupport.setLimit(5);
         state.set(state.get().withInsightPoints(5));
         state.set(state.get().withInsightPoints(2).withTotalInsightPointsSpent(3));
         assertFalse(AptitudeManager.canGainInsightPoints(player));
@@ -312,12 +358,12 @@ class AptitudeSourceGrantTest {
 
     @Test
     void directPointGrantsClipClearAptitudeAndDoNotOverflow() {
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(5);
+        ConfigTestSupport.setLimit(5);
         state.set(state.get().withTotalInsightPointsSpent(3).withInsightPoints(1).withAptitude(8));
         AptitudeManager.addInsightPoints(player, Integer.MAX_VALUE);
         assertEquals(2, state.get().insightPoints());
         assertEquals(0, state.get().aptitude());
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(-1);
+        ConfigTestSupport.setLimit(-1);
         AptitudeManager.addInsightPoints(player, Integer.MAX_VALUE);
         assertEquals(Integer.MAX_VALUE, state.get().insightPoints());
         assertEquals((long) Integer.MAX_VALUE + 3, AptitudeManager.getTotalInsightPoints(player));
@@ -327,7 +373,7 @@ class AptitudeSourceGrantTest {
 
     @Test
     void fillRespectsRealLinearPriceAndStopsAtLastPoint() {
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(2);
+        ConfigTestSupport.setLimit(2);
         state.set(state.get().withInsightPoints(1).withAptitude(4));
         assertEquals(7, AptitudeManager.fillAptitude(player));
         assertEquals(2, state.get().insightPoints());
@@ -344,7 +390,7 @@ class AptitudeSourceGrantTest {
 
     @Test
     void partialRewardUndoUsesReceiptEvenIfDefinitionChanged() {
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(5);
+        ConfigTestSupport.setLimit(5);
         state.set(state.get().withInsightPoints(4));
         var source = new RewardSource("module", ResourceLocation.parse("epiphany:test"), "on_select_reward");
         new InsightPointsReward(3).apply(player, source);
@@ -381,7 +427,7 @@ class AptitudeSourceGrantTest {
 
     @Test
     void clippedZeroRewardsDoNotRemoveUnrelatedPointsAndRepeatedApplicationsUnwindInOrder() {
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(5);
+        ConfigTestSupport.setLimit(5);
         state.set(state.get().withInsightPoints(4));
         AptitudeManager.applyInsightPointsReward(player, "test", 3); // +1
         AptitudeManager.applyInsightPointsReward(player, "test", 3); // +0
@@ -396,7 +442,7 @@ class AptitudeSourceGrantTest {
         state.set(state.get().withInsightPoints(2));
         AptitudeManager.applyInsightPointsReward(player, "negative", -5);
         assertEquals(0, state.get().insightPoints());
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(1);
+        ConfigTestSupport.setLimit(1);
         AptitudeManager.removeInsightPointsReward(player, "negative");
         assertEquals(1, state.get().insightPoints());
         assertTrue(state.get().insightPointRewards().isEmpty());
@@ -449,10 +495,10 @@ class AptitudeSourceGrantTest {
         when(modules.get(moduleId)).thenReturn(module);
         state.set(state.get().withInsightPoints(3).withTotalInsightPointsSpent(1)
                 .withModuleState(moduleId, new ModulePlayerState(true, true, false, Set.of())));
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(5);
+        ConfigTestSupport.setLimit(5);
         RewardListHelper.applyInsight(module.onSelectReward(), player, moduleId, "on_select_reward");
         assertEquals(4, state.get().insightPoints());
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(2);
+        ConfigTestSupport.setLimit(2);
         ModuleManager.resetModule(player, moduleId);
         assertEquals(4, state.get().insightPoints()); // -1 actually granted, +1 cost refund
         assertEquals(0, state.get().totalInsightPointsSpent());
@@ -470,7 +516,7 @@ class AptitudeSourceGrantTest {
         mockRegistries(insight, null);
         state.set(state.get().withInsightPoints(3).withTotalInsightPointsSpent(1)
                 .withModuleState(moduleId, new ModulePlayerState(true, true, false, Set.of(insightId))));
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(5);
+        ConfigTestSupport.setLimit(5);
         RewardListHelper.applyInsight(insight.reward(), player, insightId);
         InsightManager.resetInsight(player, insightId);
         assertEquals(4, state.get().insightPoints());
@@ -487,7 +533,7 @@ class AptitudeSourceGrantTest {
         mockRegistries(null, epiphany);
         state.set(state.get().withEpiphanySlots(1).withUsedEpiphanySlots(1)
                 .withEpiphanyState(epiphanyId, new EpiphanyPlayerState(true, true)));
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(1);
+        ConfigTestSupport.setLimit(1);
         RewardListHelper.applyEpiphany(epiphany.reward(), player, epiphanyId);
         EpiphanyManager.resetEpiphany(player, epiphanyId);
         assertEquals(0, state.get().insightPoints());
@@ -505,7 +551,7 @@ class AptitudeSourceGrantTest {
         mockRegistries(insight, null); // Module absent, Insight definition still present.
         state.set(state.get().withInsightPoints(2).withTotalInsightPointsSpent(2)
                 .withModuleState(moduleId, new ModulePlayerState(true, true, false, Set.of(insightId))));
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(5);
+        ConfigTestSupport.setLimit(5);
         RewardListHelper.applyInsight(insight.reward(), player, insightId);
         ModuleManager.cleanupOrphanedData(player);
         assertEquals(4, state.get().insightPoints());
@@ -523,7 +569,7 @@ class AptitudeSourceGrantTest {
         when(modules.get(moduleId)).thenReturn(module);
         state.set(state.get().withInsightPoints(3).withTotalInsightPointsSpent(1)
                 .withModuleState(moduleId, new ModulePlayerState(true, true, false, Set.of())));
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(5);
+        ConfigTestSupport.setLimit(5);
         RewardListHelper.applyInsight(module.onSelectReward(), player, moduleId, "on_select_reward");
         EpiphanyDataUtils.resetSelections(player);
         assertEquals(4, state.get().insightPoints());
@@ -536,7 +582,7 @@ class AptitudeSourceGrantTest {
 
     @Test
     void cappedCommandsReturnFailureIncludingSilentVariants() throws Exception {
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(0);
+        ConfigTestSupport.setLimit(0);
         when(player.getGameProfile()).thenReturn(new GameProfile(UUID.randomUUID(), "Test"));
         CommandSourceStack source = mock(CommandSourceStack.class);
         when(source.hasPermission(anyInt())).thenReturn(true);
@@ -560,7 +606,7 @@ class AptitudeSourceGrantTest {
 
     @Test
     void pointCommandFeedbackReportsActualClippedAmount() throws Exception {
-        Config.MAX_TOTAL_INSIGHT_POINTS.set(5);
+        ConfigTestSupport.setLimit(5);
         state.set(state.get().withInsightPoints(4));
         when(player.getGameProfile()).thenReturn(new GameProfile(UUID.randomUUID(), "Test"));
         CommandSourceStack source = mock(CommandSourceStack.class);
