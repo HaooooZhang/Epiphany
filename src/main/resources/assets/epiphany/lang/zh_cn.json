@@ -11,17 +11,17 @@
   "epiphany.configuration.maxSelectedModules": "最大选择模块数",
   "epiphany.configuration.maxSelectedModules.tooltip": "玩家最多可同时选择的模块数量。",
   "epiphany.configuration.progression.maxTotalInsightPoints": "心得点总上限",
-  "epiphany.configuration.progression.maxTotalInsightPoints.tooltip": "每位玩家的心得点总上限（已花费＋未花费）。-1 表示无限制，0 表示无法获得新点数。达到上限后停止获得阅历和新点数，花费点数不会恢复获取额度。调低上限会保留已有点数和阅历；总点数达到或超过新上限时停止成长。",
+  "epiphany.configuration.progression.maxTotalInsightPoints.tooltip": "每位玩家的心得点总上限-1 表示无限制，0 表示无法获得新点数。",
   "epiphany.configuration.progression.baseAptitudeCap": "初始心得点所需阅历",
-  "epiphany.configuration.progression.baseAptitudeCap.tooltip": "获得第一个心得点所需的阅历，必须为正整数。下一点所需阅历＝此值＋心得点总数（已花费＋未花费）×每点阅历需求增量。服务端规则会同步给客户端。",
+  "epiphany.configuration.progression.baseAptitudeCap.tooltip": "获得第一个心得点所需的阅历，必须为正整数。",
   "epiphany.configuration.progression.aptitudeCapGrowth": "每点阅历需求增量",
-  "epiphany.configuration.progression.aptitudeCapGrowth.tooltip": "心得点总数每增加 1，获得下一点所需阅历的增加量，必须为非负整数。0 表示每点所需阅历固定；花费心得点不会降低阅历需求。修改规则会保留现有阅历，直到下一次正向发放时才结算。",
+  "epiphany.configuration.progression.aptitudeCapGrowth.tooltip": "心得点总数每增加 1，获得下一点所需阅历的增加量，必须为非负整数。0 表示每点所需阅历固定。",
   "epiphany.configuration.notifyInsightPoints": "心得点获得通知",
-  "epiphany.configuration.notifyInsightPoints.tooltip": "玩家通过阅历成长、命令或奖励获得心得点时，发送聊天消息并播放提示音。",
+  "epiphany.configuration.notifyInsightPoints.tooltip": "玩家奖励获得心得点时，发送聊天消息并播放提示音。",
   "epiphany.configuration.notifyModuleUnlock": "模块解锁通知",
-  "epiphany.configuration.notifyModuleUnlock.tooltip": "模块通过条件或命令解锁时，发送聊天消息并播放提示音。初始状态为可选择的模块不会触发通知。",
+  "epiphany.configuration.notifyModuleUnlock.tooltip": "模块通过条件或命令解锁时，发送聊天消息并播放提示音。",
   "epiphany.configuration.notifyEpiphanyUnlock": "顿悟解锁通知",
-  "epiphany.configuration.notifyEpiphanyUnlock.tooltip": "顿悟通过条件或命令解锁时，发送聊天消息并播放提示音。初始状态为可选择的顿悟不会触发通知。",
+  "epiphany.configuration.notifyEpiphanyUnlock.tooltip": "顿悟通过条件或命令解锁时，发送聊天消息并播放提示音。",
 
   "commands.epiphany.aptitude.add.success": "已为 %2$s 增加 %1$s 阅历",
   "commands.epiphany.aptitude.add.capped": "已为 %s 结算阅历收益，心得点已达总上限",
@@ -56,7 +56,7 @@
   "commands.epiphany.path.list.success": "已注册的道路: %s",
 
   "commands.epiphany.reset.all.success": "已完全重置 %s，所有 Epiphany 数据已清除",
-  "commands.epiphany.reset.select.success": "已重置 %s 的模块/顿悟选择（阅历与心得点已保留）",
+  "commands.epiphany.reset.select.success": "已重置 %s 的模块/顿悟选择",
 
   "commands.epiphany.open.success": "已为 %s 打开 Epiphany 界面",
 
