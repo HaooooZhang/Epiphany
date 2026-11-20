@@ -1,45 +1,17 @@
-# Epiphany - Modular Skill Tree
+# Epiphany · 1.20.1 Forge
 
-![title.png](title.png)
+顿悟（Epiphany）为整合包提供数据驱动的技能树，包括模块、心得、顿悟、道路和阅历来源。本分支正在将 NeoForge 1.3.0 移植到 Minecraft 1.20.1 Forge。当前可构建内容是 Forge 模组入口，技能树、命令和界面将在后续阶段接入。
 
-> 夫尽小者大，积微者著。  
-> Greatness is built from the smallest deeds; distinction from the smallest gains.  
-> *<p align="right">Xunzi · General Principles</p>*
+## 开发
 
+使用 JDK 17。若终端默认使用其他 Java 版本，先将 `JAVA_HOME` 指向 JDK 17。开发入口见 [移植计划表](Docs/forge-port-plan.md)、[项目规范](AGENTS.md) 和 [平台调研](Docs/forge-port.md)。
 
-<p align="middle">
-  <a href="README.md">English</a> | <a href="README_CN.md">简体中文</a>
-</p>
+```powershell
+.\gradlew.bat build
+.\gradlew.bat runClient
+.\gradlew.bat runServer -PwithoutIntegrations
+```
 
-Inspired by the Tradition mechanics of the classic sci-fi strategy game Stellaris, **Epiphany** adds a **data-driven**, modular skill tree system to Minecraft. As an API mod designed for developers, it does not include any builtin skill trees. Instead, it provides a flexible building system for modpack and mod authors.   
-- Players can freely combine **modules**, accumulate **Aptitude**, unlock **Insights**, and choose **Epiphanies** to forge their own unique build.  
-- Fully data-driven — developers can define skill trees via datapacks without writing any Java code.  
-- Currently supports **1.21.1 NeoForge**.  
-- Requires **LDLib** as a dependency.  
+Linux 和 macOS 使用 `bash ./gradlew`。客户端目录为 `run/`，独立服务端目录为 `run-server/`。默认开发运行环境包含 FTB Quests 与 KubeJS，传入 `-PwithoutIntegrations` 可仅加载必需依赖。
 
-## Quick Start
-
-- Press the **K** key to open the Build System GUI.
-- Check out the example **datapack** and the **Wiki** to dive deeper into Epiphany and quickly create your own skill trees.
-
-## Links
-- [CurseForge](https://www.curseforge.com/minecraft/mc-mods/epiphany-mod)
-- [Modrinth](https://modrinth.com/mod/epiphany-mod)
-- [红石中继站 / MCZWLT](https://www.mczwlt.net/resource/o2ibcjz7)
-- [MCMOD](https://www.mcmod.cn/class/28680.html)
-- [MCBBS Memorial Edition](https://www.mcbbs.co/thread-5487-1-1.html)
-- [Github](https://github.com/HaooooZhang/Epiphany)
-- [Issues](https://github.com/HaooooZhang/Epiphany/issues)
-- [Discord](https://discord.gg/xSEWpdae9C)
-- [Wiki](https://docs.myumoon.ink/Epiphany/Overview.html)
-
-
-## Advanced Development
-
-- Provides a series of **custom events and APIs**.
-- Supports **KubeJS** for event invocation and data management.
-- Conditions, Rewards, and Aptitude sources can all be registered through the registry system.
-- Future plans include addon mods that integrate with more mainstream mods to extend compatibility.
-
-## AI Content Disclosure
-During the development of this mod, AI tools were extensively used to automate batch coding tasks, greatly improving development efficiency. However, the core logic, framework architecture, UI/UX design, and all product details were fully directed and executed by human authors, while AI served only as an assistive tool.
+[NeoForge 源码基线](https://github.com/HaooooZhang/Epiphany/tree/1cbffb31ef4474fec73d66f1a888b4db27c4a71d) · [MIT License](LICENSE)

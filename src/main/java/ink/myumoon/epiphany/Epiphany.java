@@ -1,63 +1,8 @@
 package ink.myumoon.epiphany;
 
-import ink.myumoon.epiphany.config.CommonConfig;
-import ink.myumoon.epiphany.registry.*;
-import ink.myumoon.epiphany.config.ProgressionConfig;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.EntityType;
-import net.neoforged.neoforge.event.entity.EntityAttributeModificationEvent;
-import org.slf4j.Logger;
-
-import com.mojang.logging.LogUtils;
-
-import ink.myumoon.epiphany.client.ui.EpiphanyUIFactory;
-import ink.myumoon.epiphany.command.EpiphanyCommand;
-import ink.myumoon.epiphany.content.condition.builtin.ftbq.FTBQHelper;
-import ink.myumoon.epiphany.content.reward.PersistentReward;
-import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.ModContainer;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.fml.config.ModConfig;
-import net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.RegisterCommandsEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.minecraftforge.fml.common.Mod;
 
 @Mod(Epiphany.MODID)
-public class Epiphany {
+public final class Epiphany {
     public static final String MODID = "epiphany";
-    public static final Logger LOGGER = LogUtils.getLogger();
-
-    public Epiphany(IEventBus modEventBus, ModContainer modContainer) {
-        modContainer.registerConfig(ModConfig.Type.COMMON, CommonConfig.SPEC);
-        ProgressionConfig.register(modEventBus, modContainer);
-        EpiphanyAttachmentTypes.REGISTRY.register(modEventBus);
-        EpiphanyConditionTypes.REGISTRY.register(modEventBus);
-        EpiphanyInsightRewardTypes.REGISTRY.register(modEventBus);
-        EpiphanyEpiphanyRewardTypes.REGISTRY.register(modEventBus);
-        EpiphanyAttributes.ATTRIBUTES.register(modEventBus);
-
-        // Register the main UI on both sides.
-        modEventBus.addListener(FMLCommonSetupEvent.class, event ->
-                event.enqueueWork(EpiphanyUIFactory::register));
-
-        NeoForge.EVENT_BUS.addListener(RegisterCommandsEvent.class, event ->
-                EpiphanyCommand.register(event.getDispatcher()));
-
-        // Re-apply persistent rewards after entity rebuild (death, end portal)
-        NeoForge.EVENT_BUS.addListener(PlayerEvent.PlayerRespawnEvent.class, event -> {
-            var sp = (ServerPlayer) event.getEntity();
-            PersistentReward.reapplyAll(sp);
-            sp.setHealth(sp.getMaxHealth());
-        });
-
-        modEventBus.addListener(EntityAttributeModificationEvent.class, event ->
-            event.add(EntityType.PLAYER, EpiphanyAttributes.APTITUDE_GAIN_MULTIPLIER)
-        );
-
-        // FTB Quests Architectury event listeners (soft dependency)
-        FTBQHelper.init();
-
-        LOGGER.info("Epiphany initialized");
-    }
 }

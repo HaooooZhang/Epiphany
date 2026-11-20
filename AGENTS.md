@@ -1,214 +1,28 @@
-# AGENTS.md — Epiphany (顿悟)
+# Epiphany 1.20.1 Forge 项目规范
 
-NeoForge 1.21.1 library mod providing a modular skill-tree system (~120 Java files). Data-driven, API-first. Design docs: [Docs/README.md](Docs/README.md) | dev plan: [Docs/todo.md](Docs/todo.md).
+目标为 Minecraft 1.20.1 Forge、Java 17 和现有单一 Gradle 项目。保留 `epiphany` 模组 ID 与包根 `ink.myumoon.epiphany`。开发依赖以 `build.gradle`、`gradle.properties` 和 Wrapper 为准。实施顺序、当前阶段和退出条件见 [移植计划表](Docs/forge-port-plan.md)。
 
-## Build & Run
+## 行为基线
 
-```bash
-./gradlew build          # Full build
-./gradlew runClient      # Launch client
-./gradlew runServer      # Launch server
-./gradlew runData        # Data generators (currently unused — datapack JSONs are hand-authored)
-```
+- 移植行为以 NeoForge 1.3.0 源码提交 `1cbffb3` 为准。迁移前对照该提交和目标版本依赖的实际签名。遇到平台差异时，记录受影响的数据、API 或玩家操作及可复现证据。涉及对外行为差异时，将决策落到移植方案。 [平台差异与资料](Docs/forge-port.md)
+- 保留模块、心得、顿悟、道路与阅历来源的数据包 ID、路径、字段与默认值。公共 Manager 的方法语义、命令权限、可取消 Pre 事件和对应 Post 事件沿用基线。条件与两类奖励的默认分派同样按基线核对。
+- 进度、条件与奖励由服务端裁定。模块/心得/顿悟选择、消耗与退款由 Manager 统一处理。客户端从权威快照刷新，命令、界面和脚本统一调用相应的服务端 API。
 
-- **Java 21**, **Gradle 9.2.1** with NeoGradle (`net.neoforged.moddev` 2.0.141), **Parchment** (2024.11.17)
-- modid: `epiphany` | package: `ink.myumoon.epiphany` | NeoForge: `21.1.234`
-- No mixins. No access transformers. Configuration cache enabled.
+## 代码职责
 
-## Package Map
+沿用上游领域包。以下职责按阶段接入，目录随实际实现加入。
 
-```
-ink.myumoon.epiphany/
-  Epiphany.java              @Mod 主类 — 注册 registry, attachment, command, listeners, UI factory
-  EpiphanyClient.java        @Mod(dist=CLIENT) — K 键绑定 + Config screen factory
-  Config.java                ModConfigSpec (8+ options)
-  EpiphanyConstants.java     "type" / "always" / "no_op" 字符串常量
+| 位置 | 职责与依赖 |
+| --- | --- |
+| 模组入口、`registry`、`config` | 入口注册总线、配置和网络，注册表负责类型与数据包定义。服务端配置负责生效及保存成长规则，并在生效时触发同步 |
+| `content`、`content.condition`、`content.reward` | 定义内容 Codec、条件与奖励。扩展奖励时检查心得和顿悟两套类型注册 |
+| `api`、`command`、`event`、`listener` | Manager 持有玩法规则与写入入口。命令和事件监听转发玩家意图或游戏行为，公开事件按基线顺序发出 |
+| 玩家状态、Capability、网络 | 复用 `PlayerEpiphanyData` 及其状态记录。Forge Capability 管理持久化与 Clone 交接，`SimpleChannel` 传输玩家进度和规则快照。包处理在对应游戏线程应用快照 |
+| `client` 与 LDLib2 菜单入口 | 客户端负责按键、图形、配置界面和当前连接的快照。菜单共享入口保持可由独立服加载，屏幕、渲染类和 XML 初始化由客户端加载 |
+| FTB Quests 与 KubeJS 适配 | 第三方类集中在现有集成边界，依赖存在时才加载。集成通过 Manager、公开事件或绑定转接，保持最小依赖配置可运行 |
 
-  api/                       公共静态 API → 其他模组调用入口
-    AptitudeManager.java     get/set/add aptitude, insightPoints
-    AptitudeFormula.java     calcRequiredAptitude(totalSpent, points)
-    AptitudeSourceManager.java  grant(sp, behaviorId, targetId, registry) — 第三方调用入口
-    AptitudeSourceResolver.java  resolve(...) → Resolution 纯函数
-    ModuleManager.java       isUnlocked/isSelected/isCompleted, setUnlocked, select, deselect, complete, reset, cleanupOrphanedData
-    InsightManager.java      isSelected/isModuleSelected, select
-    EpiphanyManager.java     isUnlocked/isSelected, setUnlocked, select, deselect, forceSelect, cleanupOrphanedData
+## 资源与验证
 
-  registry/                  所有注册表定义 (均使用 DeferredRegister)
-    EpiphanyRegistries.java  ResourceKey + Registry 对象 (3 builtin + 4 datapack + 1 aptitude)
-    EpiphanyAttachmentTypes.java  单个 AttachmentType<PlayerEpiphanyData>
-    EpiphanyConditionTypes.java   20+ condition MapCodec 注册
-    EpiphanyInsightRewardTypes.java  14 insight reward MapCodec 注册
-    EpiphanyEpiphanyRewardTypes.java 14 epiphany reward MapCodec 注册
-
-  attachment/                玩家持久化数据
-    PlayerEpiphanyData.java  record: aptitude, insightPoints, totalSpent, per-module/insight/epiphany Map, slots, claimedFirsts
-    ModulePlayerState.java   record: unlocked, selected, completed, unlockedInsights (Set)
-    InsightPlayerState.java  record: selected, moduleSelected
-    EpiphanyPlayerState.java record: selected, unlocked
-
-  content/                   数据记录 + 工具类 (Codec-based, 由 datapack JSON 驱动)
-    ModuleData.java          模块定义: name, description, icon, condition, initialState, insights[], on_select/complete_reward, weight
-    InsightData.java         心得定义: name, description, icon, cost, reward, weight
-    EpiphanyData.java        顿悟定义: name, description, icon, path, condition, initialState, reward, weight
-    PathData.java            道路定义: name, description, icon, weight
-    InsightEntry.java        record: id + depth (模块内部对心得的引用)
-    InsightTreeResolver.java 树的祖先查找 / canUnlock 判断
-    InitialState.java        enum: LOCKED / SELECTABLE
-    AptitudeSourceConfig.java 行为→阅历映射 JSON 结构
-
-    condition/               条件系统 (~30 files)
-      Condition.java         接口: codec() + test(ServerPlayer) + isEventDriven()
-      Comparison.java        枚举: EQUAL, GREATER, LESS, GREATER_OR_EQUAL, LESS_OR_EQUAL
-      logic/                 Always, Never, And, Or, Not
-      builtin/               Advancement, Aptitude, Attribute, Biome, BlockBroken, Dimension, Effect,
-                             EpiphanySelected, ExperienceLevel, InsightPoints, InsightSelected, Item, ItemUsed,
-                             KillEntity, ModuleCompleted, ModuleSelected, Statistic, Structure
-      builtin/ftbq/          FTBQQuest, FTBQChapterStarted, FTBQChapterCompleted, FTBQTag + FTBQHelper/FTBQInternal
-      builtin/kubejs/        KubeJSStage + KubeJSHelper/KubeJSInternal
-
-    reward/                  奖励系统 (~18 files, InsightReward 和 EpiphanyReward 共享实现类)
-      InsightReward.java     接口: codec() + apply(sp, sourceId) + remove(sp, sourceId)
-      EpiphanyReward.java    同上, 用于顿悟
-      PersistentReward.java  标记接口 + reapplyAll(sp) 静态方法 — 死亡/维度穿越后重新生效
-      实现类: Attribute, Item, Command, Experience, ExperienceLevel, Effect, Particle,
-              UnlockModule, UnlockEpiphany, LockModule, LockEpiphany, Aptitude, InsightPoints, KubeJSStage,
-              NoOpInsight, NoOpEpiphany
-
-  event/                     16 个事件类
-    基类: EpiphanyEvent(ServerPlayer)
-    Pre (可取消): ModuleUnlock, ModuleSelect, ModuleComplete, InsightSelect, EpiphanyUnlock, EpiphanySelect
-    Post (通知): ModuleUnlocked, ModuleSelected, ModuleCompleted, InsightSelected, EpiphanyUnlocked, EpiphanySelected
-    独立: AptitudeChanged, AptitudeLevelUp, InsightPointsChanged
-
-  listener/                  4 个 @EventBusSubscriber 监听器
-    AutoUnlockListener.java  每 10 tick 轮询 + 事件触发 = 自动解锁 locked+condition 的 Module/Epiphany
-    NotificationListener.java  聊天消息 + 音效通知 (临时方案, 计划改为 Toast)
-    AptitudeGainListener.java  9 种内置行为监听 (kill_entity, mine_block, advancement_earn 等)
-    AptitudeStateListener.java  enter_biome + enter_structure (需持久状态追踪)
-
-  client/                    客户端代码 (@OnlyIn 或 @Mod(dist=CLIENT))
-    EpiphanyDebugHud.java    调试 HUD 叠加层
-    EpiphanyIcons.java       图标资源常量
-    ui/
-      EpiphanyUIFactory.java    PlayerUIMenuType 注册 + openFor/requestOpenFromClient
-      TopBarController.java     顶部状态栏 (阅历进度条 + 心得点)
-      ClientData.java           客户端侧 player data 快照 POJO
-      ItemIconElement.java      物品图标渲染 Widget
-      module/
-        ModuleGridController.java   模块网格 (响应式, 自动刷新, 悬停 tooltip, 点击 popup)
-        ModuleSelectController.java 模块详情 popup + 选择/取消按钮
-      insight/
-        InsightTreeView.java        心得树渲染 Widget
-        InsightNodeElement.java     单个心得节点
-        InsightLineElement.java     节点间连线
-        InsightClickHandler.java    心得选择 + 预览逻辑
-        InsightIcons.java           心得节点图标资源
-      epiphany/
-        EpiphanySlotColumnController.java  顿悟槽位列
-        EpiphanySelectController.java      顿悟选择界面
-      overlay/Overlay.java        通用叠加层组件
-
-  command/
-    EpiphanyCommand.java    /epiphany 根命令 (admin-only), 子命令: aptitude, insight, module, epiphany, path, reset, open
-
-  util/
-    DefaultedCodec.java     解析失败时回退到默认值的 Codec 包装器 (来自 Origins 模式)
-```
-
-## Architecture Deep-Dive
-
-### Five datapack registries (JSON-driven, Codec-based)
-
-| Registry | Key | Purpose |
-|----------|-----|---------|
-| `module` | `EpiphanyRegistries.MODULE_REGISTRY_KEY` | 独立技能树单元, 含 Insights 列表 |
-| `insight` | `EpiphanyRegistries.INSIGHT_REGISTRY_KEY` | 模块内增量升级节点 |
-| `epiphany` | `EpiphanyRegistries.EPIPHANY_REGISTRY_KEY` | 完成模块后的质变能力奖励 |
-| `path` | `EpiphanyRegistries.PATH_REGISTRY_KEY` | 顿悟的 UI 分组标签 |
-| `aptitude` | `EpiphanyRegistries.APTITUDE_SOURCE_REGISTRY_KEY` | 行为→阅历值映射配置 |
-
-前四个通过 `@EventBusSubscriber` 在 `EpiphanyRegistries.newDataPackRegistries()` 中注册。`aptitude` 额外注册。
-
-### Three builtin registries (MapCodec dispatch)
-
-| Registry | Key | Purpose |
-|----------|-----|---------|
-| `condition_type` | `CONDITION_SERIALIZERS_KEY` | 条件类型 → MapCodec |
-| `insight_reward_type` | `INSIGHT_REWARD_SERIALIZERS_KEY` | 心得奖励类型 → MapCodec |
-| `epiphany_reward_type` | `EPIPHANY_REWARD_SERIALIZERS_KEY` | 顿悟奖励类型 → MapCodec |
-
-自定义 Registry（非 Vanilla/NeoForge），使用 `DefaultedMappedRegistry` + `NewRegistryEvent` + `DeferredRegister<MapCodec<?>>`。
-
-### Dispatch Codec 模式
-
-所有 Condition / InsightReward / EpiphanyReward 使用 `DefaultedCodec.registryDispatch()`:
-```java
-Codec<Condition> CODEC = DefaultedCodec.registryDispatch(
-    CONDITION_SERIALIZERS, Condition::codec, identity(), () -> AlwaysCondition.INSTANCE
-);
-```
-JSON 中的 `"type"` 字段 → 查注册表 → 对应的 MapCodec → 反序列化为具体类型。解析失败回退到默认值（Always / NoOp），不崩溃。
-
-### Player data flow
-
-```
-ServerPlayer.setData(EPIPHANY_DATA, newData)
-  ├─ .serialize(CODEC) → NBT 持久化
-  ├─ .sync(STREAM_CODEC) → 自动发包到客户端
-  └─ .copyOnDeath() → 死亡保留
-```
-
-`PlayerEpiphanyData` 是 immutable record，所有修改通过 `with*()` 方法返回新实例。客户端通过 `ClientData` POJO 读取。
-
-### Event conventions
-
-- **Pre** 事件 (`ModuleUnlockEvent`, `ModuleSelectEvent`, `ModuleCompleteEvent`, `InsightSelectEvent`, `EpiphanyUnlockEvent`, `EpiphanySelectEvent`) → extends `EpiphanyEvent`, 可取消
-- **Post/无前缀** 事件 (`ModuleUnlockedEvent`, `ModuleSelectedEvent`, `ModuleCompletedEvent`, `InsightSelectedEvent`, `EpiphanyUnlockedEvent`, `EpiphanySelectedEvent`) → 通知, 不可取消
-- 特殊事件: `AptitudeChangedEvent`, `AptitudeLevelUpEvent`, `InsightPointsChangedEvent`
-- 全部 fire on `NeoForge.EVENT_BUS`
-
-### Manager API pattern
-
-所有 Manager 方法签名: `public static ReturnType methodName(ServerPlayer player, ResourceLocation id, ...)` 
-- 内部通过 `player.getData(EpiphanyAttachmentTypes.EPIPHANY_DATA)` 获取数据
-- 通过 `player.server.registryAccess().registryOrThrow(...)` 查找 datapack 注册表
-- 修改后调用 `player.setData(...)` 持久化
-
-### Network (no dedicated network package)
-
-不使用自定义 packet。客户端→服务端通信通过 LDLib2 的 RPC 机制 (`RPCPacketDistributor.rpcToServer`)。服务端→客户端同步通过 Attachment 的 `STREAM_CODEC` 自动处理。
-
-## Key Design Decisions
-
-| 决策 | 详情 |
-|------|------|
-| Insight tree via depth | Module JSON 中 `"insights": [{"id":"...", "depth":N}]`, 同 depth = AND 关系, 父节点 = 前方最近的 depth-1 |
-| Module select cost | 统一, `Config.MODULE_SELECT_COST` (默认 1). 非每模块独立 |
-| Epiphany→Path | 单向: Epiphany.`path` → Path. Path 无 epiphany 列表 |
-| `initial_state`: `locked` vs `selectable` | `locked`+condition→满足时自动解锁; `locked` 无条件→仅 API/命令; `selectable`→立即可选 |
-| Module 选择上限 | `Config.MAX_SELECTED_MODULES` (默认 8), 非无限制 |
-| 顿悟槽上限 | `Config.MAX_EPIPHANY_SLOTS` (默认 8), 完成模块 +1 slot |
-| ModuleComplete cancel | Pre 事件取消时无奖励/无 slot/无 Post 事件, 模块留待重新触发 |
-| 阅历公式 | `cap = baseAptitudeCap + totalEarned × aptitudeCapGrowth` |
-| `AptitudeGainMultiplier` | Player attribute `epiphany:aptitude_gain_multiplier` (default 1.0, range 0~100); grant 读取 `attr.getValue()` (base + 所有 modifier). 其它模组/物品可用原生 AttributeModifier 扩展玩家个体倍率; 管理员可用 vanilla `/attribute` 调整 base 值. 无 Config 字段 |
-| 重置 | `/epiphany reset all` (全清), `/epiphany reset select` (保留 aptitude/points). 无单点撤销 |
-| Registry entry removal | 自动退还已消耗资源 (points/slots) |
-| 通知 | 当前用 chat message + sound (临时), 计划改为 Toast. 可配置开关 |
-| 持久奖励 | `PersistentReward` 接口标记 → `PlayerRespawnEvent` 时 `reapplyAll()` |
-
-## Dependencies
-
-- **LDLib2** `com.lowdragmc.ldlib2:ldlib2-neoforge-1.21.1:2.2.26:all` — UI 框架 (XML-driven), sync, RPC. Docs: `Docs/ldlib2/`
-- **FTB Quests** `curse.maven:ftb-quests-forge-289412:8253474` — soft dependency, Architectury event listeners
-- **KubeJS** `dev.latvian.mods:kubejs-neoforge:2101.7.2-build.368` — soft dependency
-- **Architectury** `compileOnly files("run/mods/architectury-13.0.8-neoforge.jar")` — 仅编译, FTBQ 事件桥接
-
-## Dev Notes
-
-- UI XML 位于 `src/main/resources/assets/epiphany/ui/main.xml`, 由 `EpiphanyUIFactory` 加载
-- Datapack 示例 JSON 位于 `src/main/resources/data/epiphany/epiphany/` (module/insight/epiphany/path/aptitude 子目录)
-- 语言文件: `assets/epiphany/lang/zh_cn.json` + `en_us.json`
-- 配置生成到 `run/config/epiphany-common.toml`
-- Module reward descriptions (`on_select_reward_description`, `on_complete_reward_description`) 是可读文本，非自动生成 — UI tooltip 中直接展示
-- All InsightReward/EpiphanyReward 实现类被两种类型**共享** (同一类实现两个接口), 因此修改 reward 需检查两侧注册
-- FTBQ / KubeJS 的 Helper/Internal 类使用 try-catch ClassNotFoundException 做软依赖隔离
+- 在 `src/main/resources/assets/epiphany/` 放置 LDLib2 XML、纹理与双语文本。数据包定义按 `data/<namespace>/epiphany/<registry>/` 组织，示例使用 1.20.1 可识别的注册 ID 与资源格式。手写资源与 `src/generated/resources/` 分开维护。
+- 代码改动使用 JDK 17 执行 `gradlew build`。迁移纯逻辑时复用基线的成长曲线、阅历和配置测试。改动玩家存档和网络时，按计划验证登录、死亡、末地返回、切维、重连、重启及配置重载。改动客户端与集成时，验证相关的安装组合和独立服务端。
+- 将实际命令、日志或玩家观察记录到计划表。构建结果用于证明编译和打包，运行结果用于验收相应的游戏场景。使用 [计划表的验收记录](Docs/forge-port-plan.md#验收记录) 追踪进度。
