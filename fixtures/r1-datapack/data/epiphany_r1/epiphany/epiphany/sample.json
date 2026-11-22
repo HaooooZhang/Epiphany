@@ -1,0 +1,6 @@
+{
+  "name": "R1 Epiphany",
+  "path": "epiphany_r1:sample",
+  "condition": {"type": "epiphany:always"},
+  "reward": {"type": "epiphany:no_op"}
+}

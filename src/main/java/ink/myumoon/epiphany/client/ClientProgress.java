@@ -1,0 +1,61 @@
+package ink.myumoon.epiphany.client;
+
+import ink.myumoon.epiphany.Epiphany;
+import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
+import ink.myumoon.epiphany.config.ProgressionRules;
+import ink.myumoon.epiphany.command.R1Probe;
+import net.minecraft.client.Minecraft;
+import net.minecraft.network.Connection;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.common.Mod;
+
+import java.util.Optional;
+
+@Mod.EventBusSubscriber(modid = Epiphany.MODID, value = Dist.CLIENT)
+public final class ClientProgress {
+    private static PlayerEpiphanyData progress;
+    private static ProgressionRules rules;
+
+    private ClientProgress() {
+    }
+
+    public static Optional<PlayerEpiphanyData> progress() {
+        return Optional.ofNullable(progress);
+    }
+
+    public static Optional<ProgressionRules> rules() {
+        return Optional.ofNullable(rules);
+    }
+
+    public static void receiveProgress(Connection connection, PlayerEpiphanyData snapshot) {
+        if (isCurrentConnection(connection)) {
+            progress = snapshot;
+            if (Boolean.getBoolean("epiphany.r1.log")) {
+                var listener = Minecraft.getInstance().getConnection();
+                Epiphany.LOGGER.info("{}; progress={}", R1Probe.inspectRegistries(listener.registryAccess()), snapshot);
+            }
+        }
+    }
+
+    public static void receiveRules(Connection connection, ProgressionRules snapshot) {
+        if (isCurrentConnection(connection)) {
+            rules = snapshot;
+            if (Boolean.getBoolean("epiphany.r1.log")) {
+                Epiphany.LOGGER.info("R1 rules={}", snapshot);
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void onLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+        progress = null;
+        rules = null;
+    }
+
+    private static boolean isCurrentConnection(Connection connection) {
+        var listener = Minecraft.getInstance().getConnection();
+        return listener != null && listener.getConnection() == connection;
+    }
+}

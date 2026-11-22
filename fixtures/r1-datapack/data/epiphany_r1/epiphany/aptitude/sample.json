@@ -1,0 +1,4 @@
+{
+  "default": [2, 6],
+  "specials": [{"target":"minecraft:zombie","first_reward":3}]
+}

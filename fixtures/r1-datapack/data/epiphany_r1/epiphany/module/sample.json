@@ -1,0 +1,7 @@
+{
+  "name": {"text": "R1 Module", "bold": true, "extra": [{"text": "!", "color": "gold"}]},
+  "condition": {"type": "epiphany:always"},
+  "insights": [{"id": "epiphany_r1:sample"}],
+  "on_select_reward": {"type": "epiphany:no_op"},
+  "on_complete_reward": [{"type": "epiphany:no_op"}]
+}
