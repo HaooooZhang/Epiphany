@@ -1,0 +1,22 @@
+{
+  id: "6000000000000004"
+  filename: "r4"
+  title: "Epiphany R4"
+  order_index: 0
+  quests: [{
+    id: "6000000000000001"
+    title: "Two-step quest"
+    tags: ["r4"]
+    x: 0.0d
+    y: 0.0d
+    tasks: [{
+      id: "6000000000000002"
+      type: "item"
+      item: "minecraft:stick"
+    }, {
+      id: "6000000000000003"
+      type: "item"
+      item: "minecraft:feather"
+    }]
+  }]
+}

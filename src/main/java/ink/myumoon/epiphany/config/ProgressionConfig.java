@@ -1,6 +1,5 @@
 package ink.myumoon.epiphany.config;
 
-import com.electronwill.nightconfig.core.CommentedConfig;
 import com.electronwill.nightconfig.core.UnmodifiableConfig;
 import com.electronwill.nightconfig.core.file.CommentedFileConfig;
 import ink.myumoon.epiphany.network.EpiphanyNetwork;
@@ -94,10 +93,9 @@ public final class ProgressionConfig {
         onConfig(event.getConfig());
     }
 
-    static void onConfig(ModConfig changed) {
+    static synchronized void onConfig(ModConfig changed) {
         if (changed.getSpec() != SPEC) return;
         if (!(changed.getConfigData() instanceof CommentedFileConfig file)) return;
-        normalizeIntegerTypes(file);
         MinecraftServer server = ServerLifecycleHooks.getCurrentServer();
         if (server == null) return;
         ProgressionRules candidate;
@@ -137,34 +135,33 @@ public final class ProgressionConfig {
     }
 
     /** Called on the integrated server thread. A successful disk commit precedes publication. */
-    public static void save(MinecraftServer server, ProgressionRules expectedRules, String expectedFile,
+    public static synchronized void save(MinecraftServer server, ProgressionRules expectedRules, String expectedFile,
                             ProgressionRules candidate) throws IOException {
         if (!server.isSameThread() || ServerLifecycleHooks.getCurrentServer() != server || server != activeServer)
             throw new IOException("epiphany.curve.error.world_changed");
         if (!activeRules.equals(expectedRules)) throw new IOException("epiphany.curve.error.changed");
         Path path = activePath(server);
-        ProgressionConfigIO.save(path, expectedFile, candidate);
-        ProgressionConfigIO.put(activeConfig.getConfigData(), candidate);
+        var file = (CommentedFileConfig) activeConfig.getConfigData();
+        try {
+            ProgressionConfigIO.save(path, expectedFile, candidate);
+        } catch (ProgressionConfigIO.FileChangedException conflict) {
+            // Forge writes the loaded config again on world unload. Pick up the external
+            // change even if its watcher did not deliver a reload before the save attempt.
+            try {
+                file.load();
+                SPEC.afterReload();
+                onConfig(activeConfig);
+            } catch (RuntimeException failure) {
+                conflict.addSuppressed(failure);
+            }
+            throw conflict;
+        }
+        // Reload the committed TOML without triggering the config object's autosave.
+        file.load();
         SPEC.afterReload();
         revision.incrementAndGet();
         activeRules = candidate;
         EpiphanyNetwork.publishRules(server, candidate);
-    }
-
-    private static void normalizeIntegerTypes(CommentedConfig raw) {
-        // TOML chooses Integer or Long by magnitude. The native editor casts generic
-        // ConfigValue.getRaw() to the declared default's type, so normalize exact integer
-        // representations on every load, including client-only/default/remote loads.
-        // Leave invalid values intact for whole-rule validation; never truncate decimals.
-        Object limit = raw.get("maxTotalInsightPoints");
-        if (limit instanceof Long number && number >= Integer.MIN_VALUE && number <= Integer.MAX_VALUE) {
-            raw.set("maxTotalInsightPoints", number.intValue());
-        }
-        for (String key : List.of("baseAptitudeCap", "aptitudeCapGrowth")) {
-            Object value = raw.get(key);
-            if (value instanceof Integer number) raw.set(key, number.longValue());
-        }
-        SPEC.afterReload();
     }
 
     static void onStopped(ServerStoppedEvent event) {

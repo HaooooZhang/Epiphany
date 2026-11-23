@@ -1,0 +1,8 @@
+{
+  "name": "chapter_complete",
+  "initial_state": "locked",
+  "condition": {
+    "type": "epiphany:ftbq_chapter_completed",
+    "chapter": "6000000000000004"
+  }
+}

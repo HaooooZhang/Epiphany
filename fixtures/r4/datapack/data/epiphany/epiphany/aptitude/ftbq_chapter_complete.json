@@ -1,0 +1,10 @@
+{
+  "default": 0,
+  "specials": [
+    {
+      "target": "6000000000000004",
+      "reward": 7,
+      "first_reward": 0
+    }
+  ]
+}

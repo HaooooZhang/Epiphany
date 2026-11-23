@@ -1,0 +1,8 @@
+{
+  "name": "quest_complete",
+  "initial_state": "locked",
+  "condition": {
+    "type": "epiphany:ftbq_quest",
+    "quest": "6000000000000001"
+  }
+}

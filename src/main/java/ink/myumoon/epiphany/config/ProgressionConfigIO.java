@@ -19,6 +19,14 @@ import java.util.Locale;
 public final class ProgressionConfigIO {
     private ProgressionConfigIO() {}
 
+    static final class FileChangedException extends IOException {
+        private static final long serialVersionUID = 1L;
+
+        FileChangedException() {
+            super("epiphany.curve.error.changed");
+        }
+    }
+
     public static ProgressionRules read(UnmodifiableConfig raw, ProgressionRules fallback) {
         int limit = raw.contains("maxTotalInsightPoints") ? Math.toIntExact(integer(raw, "maxTotalInsightPoints")) : fallback.maxTotalInsightPoints();
         Object curve = raw.get("curve");
@@ -84,7 +92,7 @@ public final class ProgressionConfigIO {
     /** Compare to the opened file as well as the rule snapshot; never overwrite another editor's changes. */
     public static synchronized void save(Path path, String expected, ProgressionRules rules) throws IOException {
         rules.curve().validateLimit(rules.maxTotalInsightPoints());
-        if (!java.util.Objects.equals(expected, readFile(path))) throw new IOException("epiphany.curve.error.changed");
+        if (!java.util.Objects.equals(expected, readFile(path))) throw new FileChangedException();
         CommentedConfig raw = expected == null ? CommentedConfig.inMemory() : new TomlParser().parse(expected);
         put(raw, rules);
         // Round-trip before touching the file, including large integer and decimal TOML values.

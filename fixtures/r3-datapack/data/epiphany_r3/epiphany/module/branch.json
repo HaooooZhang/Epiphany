@@ -1,0 +1,28 @@
+{
+  "name": "R3 Branching Practice",
+  "description": "The first two nodes are prerequisites for both branches. The third row rejoins the paths.",
+  "weight": 30,
+  "initial_state": "selectable",
+  "insights": [
+    {
+      "id": "epiphany_r3:root_a",
+      "depth": 0
+    },
+    {
+      "id": "epiphany_r3:root_b",
+      "depth": 0
+    },
+    {
+      "id": "epiphany_r3:branch_a",
+      "depth": 1
+    },
+    {
+      "id": "epiphany_r3:branch_b",
+      "depth": 1
+    },
+    {
+      "id": "epiphany_r3:finish",
+      "depth": 2
+    }
+  ]
+}

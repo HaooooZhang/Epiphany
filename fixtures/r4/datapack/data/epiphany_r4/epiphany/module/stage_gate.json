@@ -1,0 +1,8 @@
+{
+  "name": "stage_gate",
+  "initial_state": "locked",
+  "condition": {
+    "type": "epiphany:kubejs_stage",
+    "stage": "r4_stage"
+  }
+}

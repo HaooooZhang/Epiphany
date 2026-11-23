@@ -1,0 +1,6 @@
+{
+  "name": "R3 Focus",
+  "path": "epiphany_r3:secondary",
+  "initial_state": "selectable",
+  "item_icon": "minecraft:amethyst_shard"
+}

@@ -1,0 +1,8 @@
+{
+  "name": "R4 Stage Epiphany",
+  "reward": {
+    "type": "epiphany:kubejs_stage",
+    "stage": "r4_insight",
+    "action": "remove"
+  }
+}

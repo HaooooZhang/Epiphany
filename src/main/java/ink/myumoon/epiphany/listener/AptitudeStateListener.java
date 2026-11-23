@@ -83,7 +83,7 @@ public final class AptitudeStateListener {
     @SubscribeEvent
     public static void onEnteringSection(EntityEvent.EnteringSection event) {
         if (!event.didChunkChange()) return;
-        if (!(event.getEntity() instanceof ServerPlayer sp)) return;
+        if (!(event.getEntity() instanceof ServerPlayer sp) || !sp.isAlive()) return;
         checkBiomeChange(sp);
         checkStructureChange(sp);
     }
@@ -97,6 +97,7 @@ public final class AptitudeStateListener {
         if (event.phase != TickEvent.Phase.END) return;
         if (++tickCounter % POLL_INTERVAL_TICKS != 0) return;
         for (var sp : event.getServer().getPlayerList().getPlayers()) {
+            if (!sp.isAlive()) continue;
             checkBiomeChange(sp);
             checkStructureChange(sp);
         }

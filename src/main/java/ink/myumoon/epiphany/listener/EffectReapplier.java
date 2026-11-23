@@ -14,7 +14,7 @@ public final class EffectReapplier {
     public static void onServerTick(TickEvent.ServerTickEvent event) {
         if (event.phase != TickEvent.Phase.END) return;
         for (var player : event.getServer().getPlayerList().getPlayers()) {
-            EffectReward.reapplyStoredEffects(player);
+            if (player.isAlive()) EffectReward.reapplyStoredEffects(player);
         }
     }
 }

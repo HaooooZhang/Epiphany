@@ -1,17 +1,3 @@
-# Epiphany · 1.20.1 Forge
-
-顿悟（Epiphany）为整合包提供数据驱动的技能树，包括模块、心得、顿悟、道路和阅历来源。本分支正在将 NeoForge 1.3.0 移植到 Minecraft 1.20.1 Forge。R1 已接入五类数据包注册表、玩家进度持久化以及客户端同步。核心玩法命令与界面将在后续阶段接入。
-
-## 开发
-
-使用 JDK 17。若终端默认使用其他 Java 版本，先将 `JAVA_HOME` 指向 JDK 17。开发入口见 [移植计划表](Docs/forge-port-plan.md)、[项目规范](AGENTS.md) 和 [平台调研](Docs/forge-port.md)。
-
-```powershell
-.\gradlew.bat build
-.\gradlew.bat runClient
-.\gradlew.bat runServer -PwithoutIntegrations
-```
-
-Linux 和 macOS 使用 `bash ./gradlew`。客户端目录为 `run/`，独立服务端目录为 `run-server/`。默认开发运行环境包含 FTB Quests 与 KubeJS，传入 `-PwithoutIntegrations` 可仅加载必需依赖。
-
-[NeoForge 源码基线](https://github.com/HaooooZhang/Epiphany/tree/1cbffb31ef4474fec73d66f1a888b4db27c4a71d) · [MIT License](LICENSE)
+# Epiphany 顿悟
+Epiphany 模组的 1.20.1 Forge 分支。该分支由 AI 主导开发，会尽可能跟进 1.21.1 NeoForge 主分支的进度与内容。如有任何问题，欢迎反馈。  
+The 1.20.1 Forge Patch of the Epiphany mod. It is primarily developed by AI and aims to follow the progress and content of the 1.21.1 NeoForge main branch as closely as possible. If you encounter any issues, please provide feedback.

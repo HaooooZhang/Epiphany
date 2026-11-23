@@ -16,7 +16,7 @@ public final class EffectDatapackSyncListener {
 
     @SubscribeEvent
     public static void onDatapackSync(OnDatapackSyncEvent event) {
-        event.getPlayers().forEach(player -> {
+        event.getPlayers().stream().filter(player -> player.isAlive()).forEach(player -> {
             ModuleManager.cleanupOrphanedData(player);
             EpiphanyManager.cleanupOrphanedData(player);
             DisplayDataManager.reconcile(player);

@@ -151,5 +151,9 @@
   "epiphany.curve.error.changed": "Configuration changed; reopen the editor",
   "epiphany.curve.error.world_changed": "The world changed; reopen the editor",
   "epiphany.configuration.progression.curve": "Growth curve",
-  "epiphany.configuration.progression.curve.tooltip": "Piecewise Insight Point costs. Edit using the growth curve editor."
+  "epiphany.configuration.progression.curve.tooltip": "Piecewise Insight Point costs. Edit using the growth curve editor.",
+  "epiphany.configuration.common.unavailable": "Common settings are available from the title screen or in a local world.",
+  "epiphany.configuration.common.invalid": "Enter a whole number within the allowed range.",
+  "epiphany.configuration.common.save_failed": "Could not save Epiphany settings.",
+  "epiphany.curve.error.sync": "Waiting for server rules. Reopen the editor after synchronization."
 }

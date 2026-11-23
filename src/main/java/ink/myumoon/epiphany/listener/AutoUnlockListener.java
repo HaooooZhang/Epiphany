@@ -32,7 +32,8 @@ public final class AutoUnlockListener {
         if (event.phase != TickEvent.Phase.END) return;
         if (++tickCounter % 10 != 0) return; // twice per second
         for (var player : event.getServer().getPlayerList().getPlayers()) {
-            auto(player, true); // skip event-driven conditions
+            // Forge invalidates the old player's capabilities before the respawn is requested.
+            if (player.isAlive()) auto(player, true); // skip event-driven conditions
         }
     }
 

@@ -5,6 +5,7 @@ import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.LongArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import ink.myumoon.epiphany.api.*;
+import ink.myumoon.epiphany.client.ui.EpiphanyUIFactory;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.commands.Commands;
@@ -42,12 +43,25 @@ public final class EpiphanyCommand {
                 .then(epiphanyGroup())
                 .then(pathGroup())
                 .then(resetGroup())
+                .then(openGroup())
         );
     }
 
     // ============================================================
     // aptitude
     // ============================================================
+
+    private static LiteralArgumentBuilder<CommandSourceStack> openGroup() {
+        return Commands.literal("open")
+                .then(Commands.argument("player", EntityArgument.player())
+                        .executes(ctx -> {
+                            ServerPlayer target = EntityArgument.getPlayer(ctx, "player");
+                            EpiphanyUIFactory.openFor(target);
+                            ctx.getSource().sendSuccess(
+                                    () -> t("commands.epiphany.open.success", target.getGameProfile().getName()), true);
+                            return 1;
+                        }));
+    }
 
     private static LiteralArgumentBuilder<CommandSourceStack> aptitudeGroup() {
         return Commands.literal("aptitude")

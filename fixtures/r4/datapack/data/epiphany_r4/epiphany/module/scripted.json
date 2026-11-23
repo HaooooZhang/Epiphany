@@ -1,0 +1,13 @@
+{
+  "name": "R4 Scripted",
+  "on_select_reward": {
+    "type": "epiphany:kubejs_stage",
+    "stage": "r4_stage"
+  },
+  "insights": [
+    {
+      "id": "epiphany_r4:stage",
+      "depth": 0
+    }
+  ]
+}

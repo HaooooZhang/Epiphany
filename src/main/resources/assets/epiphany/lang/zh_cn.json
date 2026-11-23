@@ -151,5 +151,9 @@
   "epiphany.curve.error.changed": "配置已被修改，请重新打开编辑器",
   "epiphany.curve.error.world_changed": "当前世界已改变，请重新打开编辑器",
   "epiphany.configuration.progression.curve": "成长曲线",
-  "epiphany.configuration.progression.curve.tooltip": "分段定义心得点需求，使用成长曲线编辑器修改。"
+  "epiphany.configuration.progression.curve.tooltip": "分段定义心得点需求，使用成长曲线编辑器修改。",
+  "epiphany.configuration.common.unavailable": "请在标题界面或本地世界中编辑通用设置。",
+  "epiphany.configuration.common.invalid": "请输入范围内的整数。",
+  "epiphany.configuration.common.save_failed": "无法保存顿悟通用设置。",
+  "epiphany.curve.error.sync": "尚未收到服务器规则，请在同步后重新打开编辑器。"
 }

@@ -113,29 +113,27 @@ class ProgressionCommonConfigTest {
         assertEquals(new ProgressionRules(5, 21, 2), ProgressionConfig.readRules(existing));
     }
 
-    private static Object editorValue(String key) {
-        ForgeConfigSpec.ConfigValue<?> value = ProgressionConfig.SPEC.getValues().get(key);
-        return value.get();
-    }
-
     @Test
-    void nativeEditorReadsSmallTomlIntegersAsDeclaredTypes() throws Exception {
-        CommentedConfig values = new TomlParser().parse("""
+    void readsSmallTomlIntegersWithoutAutosavingFromTheWatcher() throws Exception {
+        Path path = directory.resolve(ProgressionConfig.FILE_NAME);
+        String original = "# Keep this file intact while the listener parses it.\n" + """
                 maxTotalInsightPoints = 10
                 baseAptitudeCap = 10
                 aptitudeCapGrowth = 1
-                """);
-        assertInstanceOf(Integer.class, values.get("baseAptitudeCap"));
-        ProgressionConfig.SPEC.correct(values);
-        ModConfig config = loaded(values);
-        ProgressionConfig.SPEC.acceptConfig(config.getConfigData());
-        ProgressionConfig.onConfig(config);
-
-        // Same casts used by ConfigurationScreen's integer/long editor suppliers.
-        assertEquals(10, (Integer) editorValue("maxTotalInsightPoints"));
-        assertEquals(10L, (Long) editorValue("baseAptitudeCap"));
-        assertEquals(1L, (Long) editorValue("aptitudeCapGrowth"));
-        assertEquals(new ProgressionRules(10, 10, 1), ProgressionConfig.serverRules());
+                curve = "legacy"
+                """;
+        Files.writeString(path, original);
+        try (var file = CommentedFileConfig.builder(path).sync().autosave().build()) {
+            file.load();
+            ModConfig config = mock(ModConfig.class);
+            doReturn(ProgressionConfig.SPEC).when(config).getSpec();
+            when(config.getConfigData()).thenReturn(file);
+            when(config.getFullPath()).thenReturn(path);
+            ProgressionConfig.onConfig(config);
+            assertInstanceOf(Integer.class, file.get("baseAptitudeCap"));
+            assertEquals(original, Files.readString(path));
+            assertEquals(new ProgressionRules(10, 10, 1), ProgressionConfig.serverRules());
+        }
     }
 
     @Test
@@ -275,6 +273,28 @@ class ProgressionCommonConfigTest {
         assertEquals(saved, Files.readString(path));
         assertEquals(candidate, ProgressionConfig.serverRules());
         network.verifyNoInteractions();
+    }
+
+    @Test
+    void conflictingEditorSaveKeepsTheExternalRulesForForgeUnload() throws Exception {
+        var before = new ProgressionRules(20, 10, 1);
+        var config = loaded(raw(20, 10, 1));
+        var file = (CommentedFileConfig) config.getConfigData();
+        ProgressionConfig.onConfig(config);
+        ProgressionConfigIO.save(file.getNioPath(), null, before);
+        var opened = Files.readString(file.getNioPath());
+        var external = new ProgressionRules(30, 23, 1);
+        ProgressionConfigIO.save(file.getNioPath(), opened, external);
+        var draft = new ProgressionRules(40, 28, 1);
+        network.clearInvocations();
+
+        assertThrows(ProgressionConfigIO.FileChangedException.class,
+                () -> ProgressionConfig.save(server, before, opened, draft));
+        assertEquals(external, ProgressionConfig.serverRules());
+        network.verify(() -> EpiphanyNetwork.publishRules(server, external));
+
+        file.save(); // Forge saves the in-memory config before unloading the world.
+        assertEquals(external, ProgressionConfigIO.readFile(Files.readString(file.getNioPath()), ProgressionRules.DEFAULT));
     }
 
     @Test

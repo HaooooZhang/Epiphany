@@ -1,0 +1,8 @@
+{
+  "name": "tag_count",
+  "initial_state": "locked",
+  "condition": {
+    "type": "epiphany:ftbq_tag",
+    "tag": "r4"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "name": "R4 Stage Insight",
+  "cost": 1,
+  "reward": {
+    "type": "epiphany:kubejs_stage",
+    "stage": "r4_insight"
+  }
+}

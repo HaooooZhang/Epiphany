@@ -1,0 +1,5 @@
+{
+  "name": "R3 Locked Epiphany",
+  "path": "epiphany_r3:secondary",
+  "initial_state": "locked"
+}

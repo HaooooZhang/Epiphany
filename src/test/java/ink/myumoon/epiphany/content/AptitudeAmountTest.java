@@ -3,7 +3,6 @@ package ink.myumoon.epiphany.content;
 import com.google.gson.JsonParser;
 import com.mojang.serialization.JsonOps;
 import net.minecraft.util.RandomSource;
-import net.minecraft.core.RegistryAccess;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.nbt.NbtOps;
 import io.netty.buffer.Unpooled;

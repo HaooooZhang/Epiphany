@@ -3,6 +3,7 @@ package ink.myumoon.epiphany.client;
 import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.config.ProgressionRules;
+import ink.myumoon.epiphany.config.SelectionRules;
 import ink.myumoon.epiphany.command.R1Probe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.Connection;
@@ -17,6 +18,7 @@ import java.util.Optional;
 public final class ClientProgress {
     private static PlayerEpiphanyData progress;
     private static ProgressionRules rules;
+    private static SelectionRules selectionRules;
 
     private ClientProgress() {
     }
@@ -27,6 +29,14 @@ public final class ClientProgress {
 
     public static Optional<ProgressionRules> rules() {
         return Optional.ofNullable(rules);
+    }
+
+    public static Optional<SelectionRules> selectionRules() {
+        return Optional.ofNullable(selectionRules);
+    }
+
+    public static void receiveSelectionRules(Connection connection, SelectionRules snapshot) {
+        if (isCurrentConnection(connection)) selectionRules = snapshot;
     }
 
     public static void receiveProgress(Connection connection, PlayerEpiphanyData snapshot) {
@@ -52,6 +62,7 @@ public final class ClientProgress {
     public static void onLogout(ClientPlayerNetworkEvent.LoggingOut event) {
         progress = null;
         rules = null;
+        selectionRules = null;
     }
 
     private static boolean isCurrentConnection(Connection connection) {

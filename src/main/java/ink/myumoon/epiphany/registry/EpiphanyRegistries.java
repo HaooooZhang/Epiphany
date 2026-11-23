@@ -37,6 +37,12 @@ import ink.myumoon.epiphany.content.condition.builtin.ModuleCompletedCondition;
 import ink.myumoon.epiphany.content.condition.builtin.InsightSelectedCondition;
 import ink.myumoon.epiphany.content.condition.builtin.EpiphanySelectedCondition;
 import ink.myumoon.epiphany.content.condition.builtin.AptitudeCondition;
+import ink.myumoon.epiphany.content.condition.builtin.ftbq.FTBQChapterCompletedCondition;
+import ink.myumoon.epiphany.content.condition.builtin.ftbq.FTBQChapterStartedCondition;
+import ink.myumoon.epiphany.content.condition.builtin.ftbq.FTBQQuestCondition;
+import ink.myumoon.epiphany.content.condition.builtin.ftbq.FTBQTagCondition;
+import ink.myumoon.epiphany.content.condition.builtin.kubejs.KubeJSStageCondition;
+import ink.myumoon.epiphany.content.reward.KubeJSStageReward;
 import ink.myumoon.epiphany.content.condition.builtin.InsightPointsCondition;
 import ink.myumoon.epiphany.content.reward.AttributeReward;
 import ink.myumoon.epiphany.content.reward.ItemReward;
@@ -121,6 +127,11 @@ public final class EpiphanyRegistries {
         CONDITION_TYPES.register("epiphany_selected", () -> EpiphanySelectedCondition.CODEC);
         CONDITION_TYPES.register("aptitude", () -> AptitudeCondition.CODEC);
         CONDITION_TYPES.register("insight_points", () -> InsightPointsCondition.CODEC);
+        CONDITION_TYPES.register("ftbq_quest", () -> FTBQQuestCondition.CODEC);
+        CONDITION_TYPES.register("ftbq_chapter_started", () -> FTBQChapterStartedCondition.CODEC);
+        CONDITION_TYPES.register("ftbq_chapter_completed", () -> FTBQChapterCompletedCondition.CODEC);
+        CONDITION_TYPES.register("ftbq_tag", () -> FTBQTagCondition.CODEC);
+        CONDITION_TYPES.register("kubejs_stage", () -> KubeJSStageCondition.CODEC);
         CONDITION_TYPES.register(modBus);
         INSIGHT_REWARD_TYPES.register("attribute", () -> AttributeReward.CODEC);
         INSIGHT_REWARD_TYPES.register("item", () -> ItemReward.CODEC);
@@ -135,6 +146,7 @@ public final class EpiphanyRegistries {
         INSIGHT_REWARD_TYPES.register("lock_epiphany", () -> LockEpiphanyReward.CODEC);
         INSIGHT_REWARD_TYPES.register("aptitude", () -> AptitudeReward.CODEC);
         INSIGHT_REWARD_TYPES.register("insight_points", () -> InsightPointsReward.CODEC);
+        INSIGHT_REWARD_TYPES.register("kubejs_stage", () -> KubeJSStageReward.CODEC);
         INSIGHT_REWARD_TYPES.register(modBus);
         EPIPHANY_REWARD_TYPES.register("attribute", () -> AttributeReward.CODEC);
         EPIPHANY_REWARD_TYPES.register("item", () -> ItemReward.CODEC);
@@ -149,6 +161,7 @@ public final class EpiphanyRegistries {
         EPIPHANY_REWARD_TYPES.register("lock_epiphany", () -> LockEpiphanyReward.CODEC);
         EPIPHANY_REWARD_TYPES.register("aptitude", () -> AptitudeReward.CODEC);
         EPIPHANY_REWARD_TYPES.register("insight_points", () -> InsightPointsReward.CODEC);
+        EPIPHANY_REWARD_TYPES.register("kubejs_stage", () -> KubeJSStageReward.CODEC);
         EPIPHANY_REWARD_TYPES.register(modBus);
         modBus.addListener(EpiphanyRegistries::registerDatapackRegistries);
     }
