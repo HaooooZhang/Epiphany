@@ -28,9 +28,7 @@ import java.util.LinkedHashMap;
 
 public final class EpiphanyNetwork {
     private static final String PROTOCOL = "1";
-    private static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-            ResourceLocation.fromNamespaceAndPath(Epiphany.MODID, "progress"),
-            () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
+    private static SimpleChannel channel;
 
     private static ProgressionRules activeRules = ProgressionRules.DEFAULT;
 
@@ -38,14 +36,17 @@ public final class EpiphanyNetwork {
     }
 
     public static void register(IEventBus gameBus) {
-        CHANNEL.messageBuilder(ProgressSnapshot.class, 0, NetworkDirection.PLAY_TO_CLIENT)
+        channel = NetworkRegistry.newSimpleChannel(
+                ResourceLocation.fromNamespaceAndPath(Epiphany.MODID, "progress"),
+                () -> PROTOCOL, PROTOCOL::equals, PROTOCOL::equals);
+        channel.messageBuilder(ProgressSnapshot.class, 0, NetworkDirection.PLAY_TO_CLIENT)
                 .encoder((message, buffer) -> buffer.writeWithCodec(NbtOps.INSTANCE, PlayerEpiphanyData.CODEC, message.data()))
                 .decoder(buffer -> new ProgressSnapshot(buffer.readWithCodec(NbtOps.INSTANCE, PlayerEpiphanyData.CODEC)))
                 .consumerMainThread((message, context) -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
                         () -> () -> ClientProgress.receiveProgress(context.get().getNetworkManager(), message.data())))
                 .add();
 
-        CHANNEL.messageBuilder(ProgressionRules.class, 1, NetworkDirection.PLAY_TO_CLIENT)
+        channel.messageBuilder(ProgressionRules.class, 1, NetworkDirection.PLAY_TO_CLIENT)
                 .encoder(EpiphanyNetwork::encodeRules)
                 .decoder(EpiphanyNetwork::decodeRules)
                 .consumerMainThread((rules, context) -> DistExecutor.unsafeRunWhenOn(Dist.CLIENT,
@@ -66,16 +67,17 @@ public final class EpiphanyNetwork {
     }
 
     public static void syncProgress(ServerPlayer player, PlayerEpiphanyData data) {
-        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), new ProgressSnapshot(data));
+        channel.send(PacketDistributor.PLAYER.with(() -> player), new ProgressSnapshot(data));
     }
 
     public static void publishRules(MinecraftServer server, ProgressionRules rules) {
         activeRules = rules;
-        server.getPlayerList().getPlayers().forEach(player -> syncRules(player, rules));
+        var players = server.getPlayerList();
+        if (players != null) players.getPlayers().forEach(player -> syncRules(player, rules));
     }
 
     private static void syncRules(ServerPlayer player, ProgressionRules rules) {
-        CHANNEL.send(PacketDistributor.PLAYER.with(() -> player), rules);
+        channel.send(PacketDistributor.PLAYER.with(() -> player), rules);
     }
 
     private static void encodeRules(ProgressionRules rules, FriendlyByteBuf buffer) {

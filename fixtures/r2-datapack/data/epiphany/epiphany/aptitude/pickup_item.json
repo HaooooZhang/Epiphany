@@ -1,0 +1,19 @@
+{
+  "default": 0,
+  "exclude": [
+    "minecraft:dirt"
+  ],
+  "specials": [
+    {
+      "target": "minecraft:cobblestone",
+      "reward": [
+        12,
+        12
+      ],
+      "first_reward": [
+        30,
+        30
+      ]
+    }
+  ]
+}

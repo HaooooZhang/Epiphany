@@ -5,6 +5,7 @@ import ink.myumoon.epiphany.network.EpiphanyNetwork;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.NbtOps;
+import net.minecraft.nbt.Tag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.Entity;
@@ -24,7 +25,10 @@ import java.util.Objects;
 /** The server-side holder for a player's persisted progress. */
 public final class EpiphanyPlayerData {
     private static final ResourceLocation ID = ResourceLocation.fromNamespaceAndPath(Epiphany.MODID, "epiphany_data");
-    private static final Capability<EpiphanyPlayerData> CAPABILITY = CapabilityManager.get(new CapabilityToken<>() {});
+    private static final class RegisteredCapability {
+        private static final Capability<EpiphanyPlayerData> TOKEN =
+                CapabilityManager.get(new CapabilityToken<>() {});
+    }
 
     private PlayerEpiphanyData data = PlayerEpiphanyData.createDefault();
 
@@ -51,13 +55,13 @@ public final class EpiphanyPlayerData {
     }
 
     private static EpiphanyPlayerData store(ServerPlayer player) {
-        return player.getCapability(CAPABILITY).orElseThrow(
+        return player.getCapability(RegisteredCapability.TOKEN).orElseThrow(
                 () -> new IllegalStateException("Missing Epiphany capability for " + player.getScoreboardName()));
     }
 
     private static void attach(AttachCapabilitiesEvent<Entity> event) {
-        if (event.getObject() instanceof ServerPlayer) {
-            Provider provider = new Provider();
+        if (event.getObject() instanceof ServerPlayer player) {
+            Provider provider = new Provider(player);
             event.addCapability(ID, provider);
             event.addListener(provider::invalidate);
         }
@@ -77,13 +81,18 @@ public final class EpiphanyPlayerData {
         }
     }
 
-    private static final class Provider implements ICapabilitySerializable<CompoundTag> {
+    private static final class Provider implements ICapabilitySerializable<Tag> {
+        private final ServerPlayer player;
         private final EpiphanyPlayerData store = new EpiphanyPlayerData();
         private LazyOptional<EpiphanyPlayerData> optional;
 
+        private Provider(ServerPlayer player) {
+            this.player = player;
+        }
+
         @Override
         public <T> LazyOptional<T> getCapability(Capability<T> capability, @Nullable Direction side) {
-            if (capability != CAPABILITY) {
+            if (capability != RegisteredCapability.TOKEN) {
                 return LazyOptional.empty();
             }
             if (optional == null) {
@@ -106,9 +115,14 @@ public final class EpiphanyPlayerData {
         }
 
         @Override
-        public void deserializeNBT(CompoundTag nbt) {
-            store.data = PlayerEpiphanyData.CODEC.parse(NbtOps.INSTANCE, nbt)
-                    .getOrThrow(false, Epiphany.LOGGER::error);
+        public void deserializeNBT(Tag nbt) {
+            try {
+                store.data = PlayerEpiphanyData.CODEC.parse(NbtOps.INSTANCE, nbt)
+                        .getOrThrow(false, ignored -> {});
+            } catch (RuntimeException cause) {
+                throw new IllegalStateException(
+                        "Failed to load capability " + ID + " for player " + player.getUUID(), cause);
+            }
         }
     }
 }

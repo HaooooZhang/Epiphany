@@ -1,0 +1,26 @@
+{
+  "name": "R2 Practice",
+  "initial_state": "locked",
+  "condition": {
+    "type":"epiphany:experience_level",
+    "value": 1,
+    "comparison": ">="
+  },
+  "insights": [
+    {
+      "id": "epiphany_r2:practice",
+      "depth": 0
+    }
+  ],
+  "on_select_reward": {
+    "type": "epiphany:attribute",
+    "attribute": "minecraft:generic.max_health",
+    "amount": 4,
+    "operation": "add_value"
+  },
+  "on_complete_reward": {
+    "type": "epiphany:item",
+    "item": "minecraft:emerald",
+    "count": 1
+  }
+}

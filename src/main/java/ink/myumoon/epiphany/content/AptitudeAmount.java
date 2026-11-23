@@ -20,6 +20,10 @@ public record AptitudeAmount(long min, long max) {
     private static final Codec<Long> INTEGER_CODEC = new PrimitiveCodec<>() {
         @Override
         public <T> DataResult<Long> read(DynamicOps<T> ops, T input) {
+            // Older JsonOps accepts booleans as numbers. NBT uses numeric tags on the wire.
+            if (input instanceof com.google.gson.JsonPrimitive primitive && primitive.isBoolean()) {
+                return DataResult.error(() -> "Aptitude amount must be an integer");
+            }
             return ops.getNumberValue(input).flatMap(number -> {
                 try {
                     long value = new BigDecimal(number.toString()).longValueExact();

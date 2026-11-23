@@ -8,3 +8,13 @@
 - 修改 `path/sample.json` 的名称，在 `/reload` 和重启后分别执行 `epiphany_r1 registries` 并核对客户端登录日志。Forge 47.4.28 在本次实测中于重启时加载修改后的五类动态注册表数据。
 
 `epiphany_r1` 命令由开发环境注册，需要权限等级 2。
+
+## R2 核心玩法数据包
+
+将 `r2-datapack` 放进新建测试世界的 `datapacks/` 后启动。测试条件、奖励和阅历来源使用 1.3.0 JSON 字段。以下命令在服务端控制台执行，以 `R2Alpha` 为测试玩家。
+
+1. 使用旧线性成长规则，起始消耗 10、斜率 1、心得点上限 10。执行 `execute at R2Alpha run summon minecraft:item ~ ~ ~ {Item:{id:"minecraft:cobblestone",Count:1b},PickupDelay:0s}`，让玩家拾取。预期 3 心得点、9 阅历并自动解锁模块。
+2. 执行 `attribute R2Alpha epiphany:aptitude_gain_multiplier base set 2`，再拾取一次圆石。预期 5 心得点、6 阅历。拾取泥土可检查排除规则。
+3. 依次执行 `epiphany module try_select R2Alpha epiphany_r2:practice`、`epiphany insight try_select R2Alpha epiphany_r2:practice`、`epiphany epiphany try_select R2Alpha epiphany_r2:practice`。预期剩余 2 心得点，模块完成后有 1 个槽位，顿悟使用该槽位。生命上限 24、攻击力 4、永久速度，模块完成奖绿宝石 1 个。
+4. 使用 `epiphany_r1 progress R2Alpha` 查看完整状态，重复步骤 3 检查幂等性。用 `attribute`、`data get entity R2Alpha ActiveEffects` 和 `clear R2Alpha minecraft:emerald 0` 分别查询属性、效果和物品。
+5. 从测试世界的数据包里移除模块、心得、顿悟的 `practice.json`，运行 `reload` 并查询进度。随后重启并连续登录两次。预期首次登录退款 2 点、清空选择顺序、释放已用槽位，第二次保持相同进度。

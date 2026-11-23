@@ -81,6 +81,11 @@ def integrationConfiguration = providers.gradleProperty('withoutIntegrations').i
         ? 'compileOnly' : 'implementation'
 
 dependencies {
+    testImplementation platform('org.junit:junit-bom:5.11.4')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.mockito:mockito-core:5.14.2'
+
     minecraft "net.minecraftforge:forge:${minecraft_version}-${forge_version}"
     implementation fg.deobf("com.lowdragmc.ldlib2:ldlib2-forge-${minecraft_version}:${ldlib2_version}")
     runtimeOnly fg.deobf('curse.maven:kotlin-for-forge-351264:7291067')
@@ -119,4 +124,13 @@ tasks.named('jar', Jar).configure {
 
 tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
+}
+
+tasks.named('test', Test).configure {
+    useJUnitPlatform()
+    def testRunDirectory = layout.buildDirectory.dir('test-run')
+    workingDir testRunDirectory.get().asFile
+    doFirst {
+        testRunDirectory.get().asFile.mkdirs()
+    }
 }

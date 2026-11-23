@@ -1,0 +1,10 @@
+{
+  "name": "R2 Insight",
+  "cost": 2,
+  "reward": {
+    "type": "epiphany:effect",
+    "effect": "minecraft:speed",
+    "duration": -1,
+    "amplifier": 0
+  }
+}

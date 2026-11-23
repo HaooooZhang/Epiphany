@@ -2,12 +2,17 @@ package ink.myumoon.epiphany.content;
 
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.DataResult;
+import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.MapLike;
+import com.mojang.serialization.RecordBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.util.ExtraCodecs;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /**
  * Data-pack defined mapping from a single game behavior (e.g. "kill_entity",
@@ -55,16 +60,16 @@ public record AptitudeSourceConfig(
     ) {
         public static final Codec<SpecialEntry> CODEC = RecordCodecBuilder.create(instance -> instance.group(
                 Codec.STRING.fieldOf("target").forGetter(SpecialEntry::target),
-                AptitudeAmount.CODEC.optionalFieldOf("reward").forGetter(SpecialEntry::reward),
-                AptitudeAmount.CODEC.optionalFieldOf("first_reward").forGetter(SpecialEntry::firstReward)
+                strictOptionalField("reward", AptitudeAmount.CODEC).forGetter(SpecialEntry::reward),
+                strictOptionalField("first_reward", AptitudeAmount.CODEC).forGetter(SpecialEntry::firstReward)
         ).apply(instance, SpecialEntry::new));
     }
 
     public static final Codec<AptitudeSourceConfig> CODEC = ExtraCodecs.validate(RecordCodecBuilder.<AptitudeSourceConfig>create(instance -> instance.group(
-            AptitudeAmount.CODEC.optionalFieldOf("default").forGetter(AptitudeSourceConfig::defaultReward),
-            SpecialEntry.CODEC.listOf().optionalFieldOf("specials", List.of())
+            strictOptionalField("default", AptitudeAmount.CODEC).forGetter(AptitudeSourceConfig::defaultReward),
+            strictList("specials", SpecialEntry.CODEC)
                     .forGetter(AptitudeSourceConfig::specials),
-            Codec.STRING.listOf().optionalFieldOf("exclude", List.of())
+            strictList("exclude", Codec.STRING)
                     .forGetter(AptitudeSourceConfig::exclude)
     ).apply(instance, AptitudeSourceConfig::new)), config -> {
         for (SpecialEntry special : config.specials()) {
@@ -78,6 +83,35 @@ public record AptitudeSourceConfig(
         }
         return DataResult.success(config);
     });
+
+    private static <A> MapCodec<List<A>> strictList(String name, Codec<A> element) {
+        return strictOptionalField(name, element.listOf()).xmap(
+                value -> value.orElse(List.of()), value -> value.isEmpty() ? Optional.empty() : Optional.of(value));
+    }
+
+    // DFU 6 optionalFieldOf treats an invalid present value as absent.
+    private static <A> MapCodec<Optional<A>> strictOptionalField(String name, Codec<A> codec) {
+        return new MapCodec<>() {
+            @Override
+            public <T> DataResult<Optional<A>> decode(DynamicOps<T> ops, MapLike<T> input) {
+                T field = input.get(name);
+                return field == null ? DataResult.success(Optional.empty())
+                        : codec.parse(ops, field).map(Optional::of);
+            }
+
+            @Override
+            public <T> RecordBuilder<T> encode(Optional<A> value, DynamicOps<T> ops,
+                                                RecordBuilder<T> prefix) {
+                return value.isEmpty() ? prefix
+                        : prefix.add(name, codec.encodeStart(ops, value.orElseThrow()));
+            }
+
+            @Override
+            public <T> Stream<T> keys(DynamicOps<T> ops) {
+                return Stream.of(ops.createString(name));
+            }
+        };
+    }
 
     /** Range used when no special supplies a reward. No randomness is consumed. */
     public AptitudeAmount defaultAmountOrZero() {

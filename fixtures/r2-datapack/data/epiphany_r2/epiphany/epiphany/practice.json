@@ -1,0 +1,10 @@
+{
+  "name": "R2 Epiphany",
+  "path": "epiphany_r2:practice",
+  "reward": {
+    "type": "epiphany:attribute",
+    "attribute": "minecraft:generic.attack_damage",
+    "amount": 3,
+    "operation": "ADD_VALUE"
+  }
+}
