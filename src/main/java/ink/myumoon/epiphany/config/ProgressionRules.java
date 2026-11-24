@@ -15,7 +15,10 @@ public record ProgressionRules(int maxTotalInsightPoints, AptitudeCurve curve) {
     }
 
     /** Compatibility accessors for the old single linear rule. */
-    public long baseAptitudeCap() { return curve.segments().get(0).value("base").longValueExact(); }
+    public long baseAptitudeCap() {
+        return curve.segments().get(0).value("base").longValueExact();
+    }
+
     public long aptitudeCapGrowth() {
         var segment = curve.segments().get(0);
         if (curve.segments().size() != 1 || segment.type() != AptitudeCurve.Function.LINEAR)

@@ -3,7 +3,6 @@ package ink.myumoon.epiphany;
 import com.mojang.logging.LogUtils;
 import ink.myumoon.epiphany.attachment.EpiphanyPlayerData;
 import ink.myumoon.epiphany.client.ui.EpiphanyUIFactory;
-import ink.myumoon.epiphany.command.R1Probe;
 import ink.myumoon.epiphany.command.EpiphanyCommand;
 import ink.myumoon.epiphany.config.CommonConfig;
 import ink.myumoon.epiphany.config.ProgressionConfig;
@@ -21,7 +20,6 @@ import ink.myumoon.epiphany.network.EpiphanyNetwork;
 import ink.myumoon.epiphany.registry.EpiphanyRegistries;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.loading.FMLEnvironment;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
@@ -53,8 +51,5 @@ public final class Epiphany {
                 player.setHealth(player.getMaxHealth());
             }
         });
-        if (!FMLEnvironment.production) {
-            R1Probe.register(gameBus);
-        }
     }
 }

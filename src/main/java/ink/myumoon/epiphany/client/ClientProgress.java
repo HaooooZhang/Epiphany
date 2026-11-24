@@ -4,7 +4,6 @@ import ink.myumoon.epiphany.Epiphany;
 import ink.myumoon.epiphany.attachment.PlayerEpiphanyData;
 import ink.myumoon.epiphany.config.ProgressionRules;
 import ink.myumoon.epiphany.config.SelectionRules;
-import ink.myumoon.epiphany.command.R1Probe;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.Connection;
 import net.minecraftforge.api.distmarker.Dist;
@@ -40,22 +39,11 @@ public final class ClientProgress {
     }
 
     public static void receiveProgress(Connection connection, PlayerEpiphanyData snapshot) {
-        if (isCurrentConnection(connection)) {
-            progress = snapshot;
-            if (Boolean.getBoolean("epiphany.r1.log")) {
-                var listener = Minecraft.getInstance().getConnection();
-                Epiphany.LOGGER.info("{}; progress={}", R1Probe.inspectRegistries(listener.registryAccess()), snapshot);
-            }
-        }
+        if (isCurrentConnection(connection)) progress = snapshot;
     }
 
     public static void receiveRules(Connection connection, ProgressionRules snapshot) {
-        if (isCurrentConnection(connection)) {
-            rules = snapshot;
-            if (Boolean.getBoolean("epiphany.r1.log")) {
-                Epiphany.LOGGER.info("R1 rules={}", snapshot);
-            }
-        }
+        if (isCurrentConnection(connection)) rules = snapshot;
     }
 
     @SubscribeEvent
