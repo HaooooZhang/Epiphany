@@ -82,7 +82,8 @@ class ProgressionCommonConfigTest {
 
     private ModConfig loaded(CommentedConfig raw) throws ReflectiveOperationException {
         ModConfig config = mock(ModConfig.class);
-        var file = CommentedFileConfig.of(directory.resolve(ProgressionConfig.FILE_NAME));
+        // Forge loads its configs with synchronous writes, including the save on unload.
+        var file = CommentedFileConfig.builder(directory.resolve(ProgressionConfig.FILE_NAME)).sync().build();
         file.putAll(raw);
         doReturn(ProgressionConfig.SPEC).when(config).getSpec();
         when(config.getConfigData()).thenReturn(file);
